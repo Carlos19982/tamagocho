@@ -29,6 +29,7 @@ const puestos = [
 // --- Configuración del ciclo ---
 const cicloMs = 280000; // Aproximadamente 4.67 minutos
 const tiempoTotalSueñoPersonalizado =3000000; // 50 minutos
+let promotionCheckedThisCycle = false;
 
 // Parámetros de Flappy Bird
 let birdY = 0, birdVelocity = 0, gravity, jumpImpulse, obstacleSpeed = 2;
@@ -656,7 +657,7 @@ alert("No estás enfermo, la jeringuilla no es necesaria.");
     }
   }
   actualizarEstado() {
-    this.hambre = Math.min(10, this.hambre + 0.7);
+    this.hambre = Math.min(10, this.hambre + 1);
     this.aburrimiento = Math.min(10, this.aburrimiento + 0.3);
     this.sueno = Math.min(10, this.sueno + 0.2);
     this.higiene = Math.min(10, this.higiene + 0.4);
@@ -686,7 +687,7 @@ alert("No estás enfermo, la jeringuilla no es necesaria.");
     this.statsHistory.higiene.push(this.higiene);
   }
   actualizarEstadoDormido() {
-    this.hambre = Math.min(10, this.hambre + 0.7);
+    this.hambre = Math.min(10, this.hambre + 1);
     this.aburrimiento = Math.min(10, this.aburrimiento + 0.3);
     this.higiene = Math.min(10, this.higiene + 0.4);
     if (this.enfermo) {
@@ -770,20 +771,26 @@ function pagarSalario() {
 }
 // Ascenso de Pasante a Junior y de Junior en adelante.
 function checkPromotion() {
-if (tamagotchi.nivel === 0) { 
-// Ascenso de Pasante a Empleado Junior
-if (tamagotchi.hambre < 7 && tamagotchi.sueno < 7 && tamagotchi.higiene < 7 && !tamagotchi.enfermo) {
-tamagotchi.consecutiveGoodCycles++;
-} else {
-tamagotchi.consecutiveGoodCycles = 0;
-}
-if (tamagotchi.consecutiveGoodCycles >= 3) {
-tamagotchi.nivel = 1; // Ascenso a Empleado Junior
-actualizarSalario();
-tamagotchi.consecutiveGoodCycles = 0;
-tamagotchi.lastPromotionAge = tamagotchi.edad;
-alert("¡Felicidades! Tu Tamagotchi ha ascendido a Empleado Junior.");
-}
+    if (tamagotchi.nivel === 0) { 
+      if (!promotionCheckedThisCycle) {
+        if (tamagotchi.hambre < 7 && tamagotchi.sueno < 7 && tamagotchi.higiene < 7 && !tamagotchi.enfermo) {
+            console.log("El contador que quiero ver es:"+tamagotchi.consecutiveGoodCycles);
+          tamagotchi.consecutiveGoodCycles++;
+        } else {
+            console.log("El contador fallos es:"+tamagotchi.consecutiveGoodCycles);
+          tamagotchi.consecutiveGoodCycles = 0;
+        }
+        promotionCheckedThisCycle = true;
+      }
+      
+      if (tamagotchi.consecutiveGoodCycles >= 3) {
+        tamagotchi.nivel = 1; // Ascenso a Empleado Junior
+        actualizarSalario();
+        tamagotchi.consecutiveGoodCycles = 0;
+        tamagotchi.lastPromotionAge = tamagotchi.edad;
+        alert("¡Felicidades! Tu Tamagotchi ha ascendido a Empleado Junior.");
+      }
+    
 } else if (tamagotchi.nivel === 1) { 
 // Ascenso de Empleado Junior a Empleado Senior
 const avgStats = (tamagotchi.hambre + tamagotchi.aburrimiento + tamagotchi.sueno + tamagotchi.higiene) / 4;
@@ -978,7 +985,7 @@ if (tamagotchi.estado === "muerto") {
 mostrarMensajeDeMuerte();
 return;
 }
-
+promotionCheckedThisCycle = false;
 let cycleStart = parseInt(localStorage.getItem("cycleStart"));
 if (!cycleStart) {
 cycleStart = Date.now();
@@ -990,39 +997,49 @@ const elapsed = now - cycleStart;
 // Calculamos cuántos ciclos completos han pasado mientras estabas desconectado
 const fullCyclesPassed = Math.floor(elapsed / cicloMs);
 if (fullCyclesPassed > 0) {
-console.log("Simulando " + fullCyclesPassed + " ciclos offline.");
-for (let i = 0; i < fullCyclesPassed; i++) {
-tamagotchi.actualizarEstado();
-if (tamagotchi.hambre === 10 || tamagotchi.aburrimiento === 10 ||
-    tamagotchi.sueno === 10 || tamagotchi.higiene === 10) {
-  if (tamagotchi.hambre === 10) tamagotchi.cause = "hambre";
-  else if (tamagotchi.aburrimiento === 10) tamagotchi.cause = "insomnio";
-  else if (tamagotchi.sueno === 10) tamagotchi.cause = "insomnio";
-  else if (tamagotchi.higiene === 10) tamagotchi.cause = "falta de higiene";
-  tamagotchi.estado = "muerto";
-  mostrarMensajeDeMuerte();
-  return;
-}
-contadorCiclosImpuestos++;
-if (contadorCiclosImpuestos >= ciclosParaImpuestos) {
-  const impuestoActual = impuestosPorNivel[tamagotchi.nivel] || 0;
-  tamagotchi.coins -= impuestoActual;
-  showPopup("Se te ha cobrado " + impuestoActual + " monedas por impuestos.", 3000);
-  contadorCiclosImpuestos = 0;
-}
-ciclosDesdeCumple++;
-if (ciclosDesdeCumple >= 4) {
-  tamagotchi.cumpleAnios();
-  ciclosDesdeCumple = 0;
-}
-pagarSalario();
-checkPromotion();
-}
-actualizarInterfaz();
-// Reajustamos cycleStart para conservar el tiempo sobrante del ciclo actual
-cycleStart = now - (elapsed % cicloMs);
-localStorage.setItem("cycleStart", cycleStart);
-}
+    console.log("Simulando " + fullCyclesPassed + " ciclos offline.");
+    for (let i = 0; i < fullCyclesPassed; i++) {
+        console.log("Nuevo ciclo offline iniciado. Reiniciando promotionCheckedThisCycle.");
+        promotionCheckedThisCycle = false;
+      tamagotchi.actualizarEstado();
+      if (tamagotchi.hambre === 10 || tamagotchi.aburrimiento === 10 ||
+          tamagotchi.sueno === 10 || tamagotchi.higiene === 10) {
+        if (tamagotchi.hambre === 10) tamagotchi.cause = "hambre";
+        else if (tamagotchi.aburrimiento === 10) tamagotchi.cause = "insomnio";
+        else if (tamagotchi.sueno === 10) tamagotchi.cause = "insomnio";
+        else if (tamagotchi.higiene === 10) tamagotchi.cause = "falta de higiene";
+        tamagotchi.estado = "muerto";
+        mostrarMensajeDeMuerte();
+        return;
+      }
+      contadorCiclosImpuestos++;
+      if (contadorCiclosImpuestos >= ciclosParaImpuestos) {
+        const impuestoActual = impuestosPorNivel[tamagotchi.nivel] || 0;
+        tamagotchi.coins -= impuestoActual;
+        showPopup("Se te ha cobrado " + impuestoActual + " monedas por impuestos.", 3000);
+        contadorCiclosImpuestos = 0;
+      }
+      ciclosDesdeCumple++;
+      if (ciclosDesdeCumple >= 4) {
+        tamagotchi.cumpleAnios();
+        ciclosDesdeCumple = 0;
+      }
+      pagarSalario();
+      checkPromotion();
+  
+      // Al finalizar este ciclo, reiniciamos la verificación para el próximo
+      console.log("Nuevo ciclo iniciado. Reiniciando promotionCheckedThisCycle.");
+      promotionCheckedThisCycle = false;
+    }
+    actualizarInterfaz();
+    // Reajustamos cycleStart para conservar el tiempo sobrante del ciclo actual
+    cycleStart = now - (elapsed % cicloMs);
+    localStorage.setItem("cycleStart", cycleStart);
+  
+    // También, antes de salir del bloque offline, reiniciamos la variable
+    promotionCheckedThisCycle = false;
+  }
+  
 
 const updatedElapsed = now - cycleStart;
 let remainingMs = cicloMs - (updatedElapsed % cicloMs);
@@ -1358,7 +1375,7 @@ function startFlappyGame() {
       return;
     }
     
-
+    // Usamos un factor ajustado; aquí lo hacemos con delta/10 en vez de delta/16.67
     const factor = delta / 8; // Experimenta con este divisor
     
     // Actualizamos la física
