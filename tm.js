@@ -1201,6 +1201,11 @@ function disableControls() {
     
     // --- Inicialización del Juego ---
     document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("work-menu").style.display = "none";
+  document.getElementById("clean-menu").style.display = "none";
+  document.getElementById("game-menu").style.display = "none";
+  document.getElementById("food-menu").style.display = "none";
+  document.getElementById("minijuego-container").style.display = "none";
       const menuContainer = document.querySelector(".menu-container");
       const gameContainer = document.querySelector(".tamagochi-container");
       const startBtn = document.getElementById("start-game");
