@@ -34,6 +34,8 @@
         --color-input: rgba(255, 255, 255, 0.5);
         --shadow: rgba(0, 0, 0, 0.1);
       }
+
+      
       * { box-sizing: border-box; }
       body {
         margin: 0;
@@ -102,12 +104,22 @@
         box-shadow: 0 4px 10px var(--shadow);
         z-index: 10;
       }
+      .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0); /* invisible, pero bloquea clicks */
+        z-index: 9;
+      }
+      
       #clean-menu,
       #game-menu,
       #work-menu {
-        display: none;
         position: absolute;
-        top: 50%; left: 50%;
+        top: 50%;
+        left: 50%;
         transform: translate(-50%, -50%);
         background-color: var(--color-input);
         padding: 10px;
@@ -115,6 +127,23 @@
         border-radius: 8px;
         box-shadow: 0 4px 10px var(--shadow);
         z-index: 10;
+      }
+      
+      .close-btn {
+        position: absolute;
+        top: -25px;
+        right: -140px;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        font-weight: bold;
+        cursor: pointer;
+        color: var(--color-text); /* Usa tu variable o el color que prefieras */
+        transition: color 0.3s ease;
+      }
+      
+      .close-btn:hover {
+        color: var(--color-accent); /* Cambia a tu color de acento o el que prefieras */
       }
       #game-menu button,
       #clean-menu button,
