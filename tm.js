@@ -85,56 +85,45 @@ const foodEffects = {
 // Excluye los botones de work-menu, de minijuegos y de food-menu al desactivar controles,
 // y además, NO desactiva la interacción en el contenedor del personaje.
 function disableControls() {
-    // Deshabilita todos los botones, excepto:
-    // - Los que están dentro del menú de trabajo
-    // - Los de minijuegos: #boton-saltar, #juego-saltar, #juego-reaccion, #juego-ducha
-    // - Los botones del menú de alimentos (#food-menu button)
-    // - Los botones de compra (.buy-btn)
-    document.querySelectorAll(
-      "button:not(#work-menu button):not(#boton-saltar):not(#juego-saltar):not(#juego-reaccion):not(#juego-ducha):not(#food-menu button):not(.buy-btn)"
-    ).forEach(button => {
-      button.disabled = true;
+    // Recorre todos los botones y desactiva aquellos que NO estén
+    // dentro de: #work-menu, #admin-menu, #food-menu, ni tengan los IDs de los minijuegos, ni la clase "buy-btn"
+    document.querySelectorAll("button").forEach(button => {
+      if (
+        button.closest("#work-menu") ||
+        button.closest("#admin-menu") ||
+        button.closest("#food-menu") ||
+        ["juego-saltar", "juego-reaccion", "juego-ducha", "boton-saltar"].includes(button.id) ||
+        button.classList.contains("buy-btn")
+      ) {
+        // Estos botones se dejan activos.
+      } else {
+        button.disabled = true;
+      }
     });
-    
-    // No bloqueamos el contenedor del personaje para poder despertarlo.
-    
-    // Deshabilita el botón de acceso a la tienda (store-icon)
+  
+    // Bloqueamos la interacción con el botón de tienda
     const storeIcon = document.getElementById("store-icon");
     if (storeIcon) {
       storeIcon.style.pointerEvents = "none";
     }
-    
-    // Deshabilita el contenedor de minijuegos solo si no está activo un minijuego
-    const minijuegoContainer = document.getElementById("minijuego-container");
-    if (minijuegoContainer && !minijuegoActivo) {
-      minijuegoContainer.style.pointerEvents = "none";
-    }
+  
+    // Si fuera necesario, puedes bloquear otros contenedores,
+    // pero en este caso no bloqueamos el contenedor de minijuegos ni el del personaje,
+    // para que sigan interactuables (por ejemplo, para despertar al personaje).
   }
   
   function enableControls() {
-    // Reactiva TODOS los botones
+    // Reactiva todos los botones
     document.querySelectorAll("button").forEach(button => {
       button.disabled = false;
     });
-    
-    // Reactiva la interacción en el contenedor del personaje (para poder despertarlo)
-    const personaje = document.getElementById("muñeco-container");
-    if (personaje) {
-      personaje.style.pointerEvents = "auto";
-    }
-    
-    // Reactiva el contenedor de minijuegos si no está activo un minijuego
-    const minijuegoContainer = document.getElementById("minijuego-container");
-    if (minijuegoContainer && !minijuegoActivo) {
-      minijuegoContainer.style.pointerEvents = "auto";
-    }
-    
-    // Reactiva el botón de acceso a la tienda SOLO si no estamos en un minijuego.
-    // Así, si se está jugando, el acceso a la tienda se mantiene bloqueado.
-    const storeIcon = document.getElementById("store-icon");
-    if (storeIcon && !minijuegoActivo) {
-      storeIcon.style.pointerEvents = "auto";
-    }
+    // Reactiva la interacción en los contenedores clave
+    ["store-icon", "minijuego-container", "muñeco-container"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.style.pointerEvents = "auto";
+      }
+    });
   }
   
   
@@ -1260,8 +1249,7 @@ function disableControls() {
       }
       document.getElementById("close-work-menu").addEventListener("click", (e) => {
         e.stopPropagation();
-        const workMenu = document.getElementById("work-menu");
-        workMenu.style.display = "none";
+        document.getElementById("work-menu").style.display = "none";
         enableControls();
       });
       
@@ -1324,9 +1312,11 @@ function disableControls() {
       muñecoContainer.addEventListener("touchcancel", function(e) {
         clearTimeout(this.longPressTimer);
       });
-      document.getElementById("btn-flappy").addEventListener("click", function(e) {
+      document.getElementById("btn-flappy").addEventListener("click", (e) => {
         e.stopPropagation();
-        startFlappyGame();
+        document.getElementById("work-menu").style.display = "none";
+        enableControls();
+        startFlappyGame(); // O la función que inicie la acción de trabajar
       });
       document.getElementById("btn-hambre").addEventListener("click", (e) => {
         e.stopPropagation();
@@ -1422,9 +1412,9 @@ function disableControls() {
     });
     
     function showWorkMenu() {
-      disableControls();
-      document.getElementById("work-menu").style.display = "block";
-    }
+        disableControls();
+        document.getElementById("work-menu").style.display = "block";
+      }
     
     // --- Funciones para el juego Flappy Bird ---
     let flappyGameRunning = false;
@@ -1800,5 +1790,28 @@ document.getElementById("reset-stats").addEventListener("click", () => {
     actualizarSalario(); // Actualiza puesto y salario
     guardarTamagotchi();
     alert("Ascendido a " + puestos[nuevoNivel].nombre);
+  });
+  // Función para actualizar el display de la vida interna en el menú admin
+function actualizarAdminVidaInterna() {
+    const span = document.getElementById("admin-vida-actual");
+    if (span && tamagotchi) {
+      span.textContent = tamagotchi.edadInterna;
+    }
+  }
+  
+  // Listener para el botón "Aceptar" que actualiza la vida interna
+  document.getElementById("admin-edad-aceptar").addEventListener("click", (e) => {
+    e.stopPropagation();
+    const input = document.getElementById("admin-edad-interna");
+    const newEdadInterna = parseFloat(input.value);
+    if (!isNaN(newEdadInterna)) {
+      tamagotchi.edadInterna = newEdadInterna;
+      actualizarInterfaz();
+      guardarTamagotchi();
+      actualizarAdminVidaInterna();
+      alert("Vida interna actualizada a " + newEdadInterna);
+    } else {
+      alert("Por favor, ingresa un número válido.");
+    }
   });
   
