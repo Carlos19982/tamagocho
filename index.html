@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tamagochi - Ciclo Dinámico y Minijuegos</title>
+    <link defer rel="stylesheet" type="text/css" href="style.css">
+    <script defer src="tm.js"></script>
+  </head>
+  <body>
+    <div id="popup-message" style="
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: rgba(0,0,0,0.8);
+  color: #fff;
+  padding: 10px 15px;
+  border-radius: 5px;
+  display: none;
+  z-index: 10000;
+  font-family: sans-serif;
+  font-size: 0.9rem;
+"></div>
+    <!-- Menú de configuración -->
+    <div class="menu-container">
+      <h1>Configura tu Tamagotchi</h1>
+      <label for="nombre">Nombre:</label>
+      <input type="text" id="nombre" placeholder="Ingresa un nombre" />
+      <label for="trabajo">Futuro Trabajo:</label>
+      <input type="text" id="trabajo" placeholder="¿Qué te gustaría ser?" />
+      <label for="edad">Edad de inicio:</label>
+      <input type="number" id="edad" placeholder="Ej: 5" />
+      <button id="start-game">¡Comenzar Juego!</button>
+    </div>
+
+    <!-- Área del juego -->
+    <div class="tamagochi-container">
+      <!-- Menús existentes -->
+      <!-- MENÚ DE ALIMENTACIÓN: se rellenará dinámicamente -->
+      <div id="food-menu"></div>
+      <div id="clean-menu">
+        <button id="juego-ducha">Ducha Minijuego</button>
+      </div>
+      <div id="game-menu">
+        <button id="juego-saltar">Juego Saltar</button>
+        <button id="juego-reaccion">Juego Reacción</button>
+      </div>
+      <div id="work-menu">
+        <p>¡Hoy vas a trabajar en: <strong>Flappy Bird</strong>!</p>
+        <button id="btn-flappy">Ir a trabajar</button>
+        <button id="btn-requisitos">Requisitos para ascender</button>
+        <div id="requisitos-display" style="margin-top: 10px;"></div>
+      </div>
+      
+      
+      <div id="minijuego-container">
+        <div id="minijuego-gamearea">
+          <div id="game-character">(*_*)</div>
+        </div>
+        <div id="minijuego-instructions">
+          ¡Presiona el botón cuando sea tu turno!
+        </div>
+        <button id="boton-saltar">Saltar</button>
+      </div>
+
+      <!-- Contenedor superior: Muñeco y notificaciones -->
+      <div class="top-container">
+        <div id="muñeco-container">
+          <pre id="tamagochi-feliz">
+(\_/)
+( ^_^)
+(>   <)
+          </pre>
+          <pre id="tamagochi-feliz-caca">
+(\_/)
+( ⚆_⚆ )
+(>💩<)
+          </pre>
+          <pre id="tamagochi">
+(\_/)
+( °_° )
+(>   <)
+          </pre>
+          <pre id="tamagochi-domir">
+(\_/)
+    ( -_-) Zzz
+(>  <)
+          </pre>
+          <pre id="tamagochi_caca">
+(\_/)
+( ⚆_⚆ )
+(>💩<)
+          </pre>
+          <pre id="tamagochi_caca-domir">
+(\_/)
+     ( -_-) Zzz
+(>💩<)
+          </pre>
+          <pre id="tamagochi_sueño">
+   (\_/) zZz
+( °_°)
+(>  <)
+          </pre>
+          <pre id="tamagochi_sueño_caca">
+   (\_/) zZz
+( °_°)
+(>💩<)
+          </pre>
+          <pre id="tamagochi_aburrido">
+(\_/)
+( °~° )
+<(   )>
+          </pre>
+          <pre id="tamagochi_aburrido_caca">
+(\_/)
+( °~° )
+<(💩)>
+          </pre>
+          <pre id="tamagochi_hambriento">
+     (\_/) ~ 🍕
+( °﹃° )
+<(   )>
+          </pre>
+          <pre id="tamagochi_hambriento_caca">
+(\_/)
+( °﹃° )
+<(💩)>
+          </pre>
+          <pre id="tamagochi_muerto">
+  ⚰️
+(\_/)
+( x_x )
+<(   )>
+          </pre>
+        </div>
+        <div id="notification-container"></div>
+      </div>
+
+      <!-- Información y controles -->
+      <div id="info-container"></div>
+      <div class="buttons-container">
+        <div class="stat">
+          Hambre
+          <div class="progress">
+            <div class="progress-bar" id="progress-hambre"></div>
+          </div>
+        </div>
+        <button id="btn-hambre">Alimentar</button>
+        <div class="stat">
+          Aburrimiento
+          <div class="progress">
+            <div class="progress-bar" id="progress-aburrimiento"></div>
+          </div>
+        </div>
+        <button id="btn-aburrimiento">Jugar</button>
+        <div class="stat">
+          Sueño
+          <div class="progress">
+            <div class="progress-bar" id="progress-sueno"></div>
+          </div>
+        </div>
+        <button id="btn-sueno">Dormir</button>
+        <div class="stat">
+          Higiene
+          <div class="progress">
+            <div class="progress-bar" id="progress-higiene"></div>
+          </div>
+        </div>
+        <button id="btn-higiene">Limpiar</button>
+      </div>
+    </div>
+
+    <!-- Juego Flappy Bird a pantalla completa -->
+    <div id="flappy-game">
+      <div id="flappy-game-area">
+        <div id="flappy-bird">(*_*)</div>
+      </div>
+      <div id="flappy-start-overlay">Click to start</div>
+    </div>
+
+    <!-- ==============================
+         NUEVA SECCIÓN: LA TIENDA
+      ============================== -->
+    <div id="store-icon">🛒</div>
+    <div id="store-overlay">
+      <h2>Tienda</h2>
+      <div class="store-menu">
+        <div class="store-section healthy">
+          <h3>Comida Sana</h3>
+          <div class="store-item">
+            <span>Ensalada - 120 monedas</span>
+            <button class="buy-btn">Comprar</button>
+          </div>
+          <div class="store-item">
+            <span>Manzana - 100 monedas</span>
+            <button class="buy-btn">Comprar</button>
+          </div>
+          <div class="store-item">
+            <span>Yogurt - 110 monedas</span>
+            <button class="buy-btn">Comprar</button>
+          </div>
+          <div class="store-item">
+            <span>Smoothie - 150 monedas</span>
+            <button class="buy-btn">Comprar</button>
+          </div>
+          <div class="store-item">
+            <span>Zanahoria - 80 monedas</span>
+            <button class="buy-btn">Comprar</button>
+          </div>
+        </div>
+        
+        <div class="store-section fast">
+          <h3>Comida Rápida</h3>
+          <div class="store-item">
+            <span>Hamburguesa - 250 monedas</span>
+            <button class="buy-btn">Comprar</button>
+          </div>
+          <div class="store-item">
+            <span>Pizza - 500 monedas</span>
+            <button class="buy-btn">Comprar</button>
+          </div>
+          <div class="store-item">
+            <span>Papas Fritas - 160 monedas</span>
+            <button class="buy-btn">Comprar</button>
+          </div>
+          <div class="store-item">
+            <span>Refresco - 140 monedas</span>
+            <button class="buy-btn">Comprar</button>
+          </div>
+          <div class="store-item">
+            <span>Helado - 160 monedas</span>
+            <button class="buy-btn">Comprar</button>
+          </div>
+        </div>
+        
+        <div class="store-section medicines">
+          <h3>Medicinas</h3>
+          <div class="store-item">
+            <span>Pastilla - 250 monedas</span>
+            <button class="buy-btn">Comprar</button>
+          </div>
+          <div class="store-item">
+            <span>Jeringuilla - 600 monedas</span>
+            <button class="buy-btn">Comprar</button>
+          </div>
+        </div>
+    </body>
+    </html>
+    
