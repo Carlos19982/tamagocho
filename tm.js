@@ -1753,4 +1753,52 @@ function disableControls() {
     
     // --- Resto de la lógica (guardar, cargar, eventos, etc.) ---
     // Se mantiene lo establecido en el código original.
-    
+    let adminTapCount = 0;
+let adminTapTimeout;
+
+function resetAdminTap() {
+  adminTapCount = 0;
+  clearTimeout(adminTapTimeout);
+}
+
+// Suponiendo que usas el contenedor del muñeco para activar el menú secreto:
+document.getElementById("muñeco-container").addEventListener("click", () => {
+  adminTapCount++;
+  // Si es la primera pulsación, iniciamos un timer para contar el lapso
+  if (adminTapCount === 1) {
+    adminTapTimeout = setTimeout(resetAdminTap, 2000); // 2 segundos para hacer la secuencia
+  }
+  
+  // Si llega a 5 pulsaciones dentro de ese lapso, activamos el menú secreto
+  if (adminTapCount === 10) {
+    resetAdminTap();
+    // Aquí activamos el menú de administrador, por ejemplo, mostrando el div oculto
+    const adminMenu = document.getElementById("admin-menu");
+    if (adminMenu) {
+      adminMenu.style.display = "block";
+    }
+  }
+});
+// Listener para resetear todas las stats a 0
+document.getElementById("reset-stats").addEventListener("click", () => {
+    if (!tamagotchi) return;
+    tamagotchi.hambre = 0;
+    tamagotchi.aburrimiento = 0;
+    tamagotchi.sueno = 0;
+    tamagotchi.higiene = 0;
+    actualizarInterfaz();
+    guardarTamagotchi();
+    alert("¡Tus stats se han reseteado a 0!");
+  });
+  
+  // Listener para cambiar de puesto (ascender) al seleccionar un trabajo en el menú de admin
+  document.getElementById("admin-work-position").addEventListener("change", (e) => {
+    if (!tamagotchi) return;
+    // Suponemos que el valor del option es el índice correspondiente en el array "puestos"
+    const nuevoNivel = parseInt(e.target.value);
+    tamagotchi.nivel = nuevoNivel;
+    actualizarSalario(); // Actualiza puesto y salario
+    guardarTamagotchi();
+    alert("Ascendido a " + puestos[nuevoNivel].nombre);
+  });
+  
