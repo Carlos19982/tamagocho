@@ -1358,8 +1358,8 @@ function startFlappyGame() {
       return;
     }
     
-    // Usamos un factor ajustado; aquí lo hacemos con delta/10 en vez de delta/16.67
-    const factor = delta / 7; // Experimenta con este divisor
+
+    const factor = delta / 8; // Experimenta con este divisor
     
     // Actualizamos la física
     birdVelocity += gravity * factor;
