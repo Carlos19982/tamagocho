@@ -656,7 +656,7 @@ alert("No estás enfermo, la jeringuilla no es necesaria.");
     }
   }
   actualizarEstado() {
-    this.hambre = Math.min(10, this.hambre + 1);
+    this.hambre = Math.min(10, this.hambre + 0.7);
     this.aburrimiento = Math.min(10, this.aburrimiento + 0.3);
     this.sueno = Math.min(10, this.sueno + 0.2);
     this.higiene = Math.min(10, this.higiene + 0.4);
@@ -686,7 +686,7 @@ alert("No estás enfermo, la jeringuilla no es necesaria.");
     this.statsHistory.higiene.push(this.higiene);
   }
   actualizarEstadoDormido() {
-    this.hambre = Math.min(10, this.hambre + 1);
+    this.hambre = Math.min(10, this.hambre + 0.7);
     this.aburrimiento = Math.min(10, this.aburrimiento + 0.3);
     this.higiene = Math.min(10, this.higiene + 0.4);
     if (this.enfermo) {
