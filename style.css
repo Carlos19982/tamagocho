@@ -147,7 +147,7 @@
       }
       @media (max-width: 600px) {
         #work-menu .close-btn {
-          right: -90px; /* Ajusta este valor según lo que necesites para móviles */
+          right: -75px; /* Ajusta este valor según lo que necesites para móviles */
         }
       }
       #game-menu button,
