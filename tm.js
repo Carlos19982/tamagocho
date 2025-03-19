@@ -1350,57 +1350,62 @@ function startFlappyGame() {
     // Si es el primer frame, inicializamos lastTimestamp
     if (!lastTimestamp) lastTimestamp = timestamp;
     
-    // Calcula el delta time (tiempo transcurrido entre frames)
+    // Calcula el tiempo transcurrido entre frames
     const delta = timestamp - lastTimestamp;
     lastTimestamp = timestamp;
-  
-    // Obtenemos el elemento del juego dentro del loop para asegurarnos de que esté definido
+    
+    // Primero obtenemos el elemento del juego para asegurarnos de que esté definido
     const flappyGame = document.getElementById("flappy-game");
-  
-    // Actualiza la física usando delta time (ajustamos basándonos en 16.67 ms para 60fps)
+    if (!flappyGame) {
+      console.error("No se encontró el elemento 'flappy-game'.");
+      return;
+    }
+    
+    // Actualiza la física usando delta time (ajuste basado en 16.67 ms para 60fps)
     birdVelocity += gravity * (delta / 16.67);
     birdY += birdVelocity * (delta / 16.67);
     flappyBird.style.top = birdY + "px";
-  
-    // Verifica si el pájaro se sale de los límites
+    
+    // Verifica si el pájaro se sale de los límites del área de juego
     if (birdY < 0 || birdY + flappyBird.offsetHeight > flappyGame.offsetHeight) {
       endFlappyGame();
       return;
     }
-  
-    // Crea nuevos obstáculos cada 2000ms
+    
+    // Crea nuevos obstáculos cada 2000 ms
     if (Date.now() - flappyLastObstacleTime > 2000) {
       createFlappyObstacles();
       flappyLastObstacleTime = Date.now();
     }
-  
+    
     // Actualiza la posición de cada obstáculo
     flappyObstacles.forEach((obs, index) => {
       obs.x -= obstacleSpeed * (delta / 16.67);
       obs.element.style.left = obs.x + "px";
-  
+      
       // Si el obstáculo superior ha pasado al pájaro, incrementa el puntaje
       if (obs.type === "top" && !obs.passed && obs.x + obs.width < flappyBird.offsetLeft) {
         obs.passed = true;
         flappyScore++;
       }
-  
+      
       // Verifica colisión con el pájaro
       if (checkFlappyCollision(obs)) {
         endFlappyGame();
         return;
       }
-  
+      
       // Elimina obstáculos que ya salieron de la pantalla
       if (obs.x + obs.width < 0) {
         obs.element.remove();
         flappyObstacles.splice(index, 1);
       }
     });
-  
+    
     // Solicita el siguiente frame
     requestAnimationFrame(flappyGameLoop);
   }
+  
 function flappyFlap() {
   birdVelocity = jumpImpulse;
 }
