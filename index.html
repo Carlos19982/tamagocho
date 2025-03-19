@@ -4,23 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tamagochi - Ciclo Dinámico y Minijuegos</title>
-    <link defer rel="stylesheet" type="text/css" href="style.css">
+    <link rel="stylesheet" type="text/css" href="style.css" />
     <script defer src="tm.js"></script>
   </head>
   <body>
-    <div id="popup-message" style="
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  background: rgba(0,0,0,0.8);
-  color: #fff;
-  padding: 10px 15px;
-  border-radius: 5px;
-  display: none;
-  z-index: 10000;
-  font-family: sans-serif;
-  font-size: 0.9rem;
-"></div>
+    <div
+      id="popup-message"
+      style="position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 10px 15px; border-radius: 5px; display: none; z-index: 10000; font-family: sans-serif; font-size: 0.9rem;"
+    ></div>
 
     <!-- Menú de configuración -->
     <div class="menu-container">
@@ -47,14 +38,14 @@
         <button id="juego-reaccion">Juego Reacción</button>
       </div>
       <div id="work-menu">
+        <!-- Botón de cierre en la esquina superior derecha -->
         <button id="close-work-menu" class="close-btn">×</button>
         <p>¡Hoy vas a trabajar en: <strong>Flappy Bird</strong>!</p>
         <button id="btn-flappy">Ir a trabajar</button>
         <button id="btn-requisitos">Requisitos para ascender</button>
         <div id="requisitos-display" style="margin-top: 10px;"></div>
       </div>
-      
-      
+
       <div id="minijuego-container">
         <div id="minijuego-gamearea">
           <div id="game-character">(*_*)</div>
@@ -180,9 +171,7 @@
       <div id="flappy-start-overlay">Click to start</div>
     </div>
 
-    <!-- ==============================
-         NUEVA SECCIÓN: LA TIENDA
-      ============================== -->
+    <!-- Sección: Tienda -->
     <div id="store-icon">🛒</div>
     <div id="store-overlay">
       <h2>Tienda</h2>
@@ -210,7 +199,6 @@
             <button class="buy-btn">Comprar</button>
           </div>
         </div>
-        
         <div class="store-section fast">
           <h3>Comida Rápida</h3>
           <div class="store-item">
@@ -234,7 +222,6 @@
             <button class="buy-btn">Comprar</button>
           </div>
         </div>
-        
         <div class="store-section medicines">
           <h3>Medicinas</h3>
           <div class="store-item">
@@ -246,6 +233,27 @@
             <button class="buy-btn">Comprar</button>
           </div>
         </div>
-    </body>
-    </html>
-    
+      </div>
+    </div>
+
+    <!-- Menú secreto de Administrador (oculto por defecto) -->
+    <div
+      id="admin-menu"
+      style="display: none; position: absolute; top: 10px; left: 10px; background: var(--color-input); padding: 10px; border: 1px solid var(--color-primary); border-radius: 8px; z-index: 50;"
+    >
+      <h2>Admin Menu</h2>
+      <button id="reset-stats">Resetear Stats</button>
+      <label for="admin-work-position">Puesto de trabajo:</label>
+      <select id="admin-work-position">
+        <option value="0">Pasante</option>
+        <option value="1">Empleado Junior</option>
+        <option value="2">Empleado Senior</option>
+        <option value="3">Supervisor</option>
+        <option value="4">Coordinador</option>
+        <option value="5">Gerente</option>
+        <option value="6">Director</option>
+        <option value="7">CEO</option>
+      </select>
+    </div>
+  </body>
+</html>
