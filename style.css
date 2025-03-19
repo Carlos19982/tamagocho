@@ -145,6 +145,11 @@
       .close-btn:hover {
         color: var(--color-accent); /* Cambia a tu color de acento o el que prefieras */
       }
+      @media (max-width: 600px) {
+        #work-menu .close-btn {
+          right: -90px; /* Ajusta este valor según lo que necesites para móviles */
+        }
+      }
       #game-menu button,
       #clean-menu button,
       #game-menu button {
