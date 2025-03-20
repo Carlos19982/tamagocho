@@ -28,7 +28,7 @@ const foodEffects = {
     
     // --- Configuración del ciclo ---
     const cicloMs = 280000; // Aproximadamente 4.67 minutos
-    const tiempoTotalSueñoPersonalizado =3000000; // 50 minutos
+    const tiempoTotalSueñoPersonalizado =5000; // 50 minutos
     let promotionCheckedThisCycle = false;
     
     // Parámetros de Flappy Bird
@@ -998,27 +998,31 @@ function disableControls() {
       actualizarInterfaz();
     }
     function iniciarCiclosSueño() {
-    sleepInterval = setInterval(() => {
-    if (tamagotchi.estado === "muerto") {
-    mostrarMensajeDeMuerte();
-    return;
-    }
-    actualizarEstadoDormido();
-    pagarSalario(); // Se paga salario durante el sueño
+      sleepInterval = setInterval(() => {
+        if (tamagotchi.estado === "muerto") {
+          mostrarMensajeDeMuerte();
+          return;
+        }
+        actualizarEstadoDormido();
+        pagarSalario(); // Se paga salario durante el sueño
     
-    // Cobro de impuestos
-    contadorCiclosImpuestos++;
-    if (contadorCiclosImpuestos >= ciclosParaImpuestos) {
-    const impuestoActual = impuestosPorNivel[tamagotchi.nivel] || 0;
-    tamagotchi.coins -= impuestoActual;
-    showPopup("Se te ha cobrado " + impuestoActual + " monedas por impuestos.", 3000);
-    contadorCiclosImpuestos = 0;
+        // Cobro de impuestos
+        contadorCiclosImpuestos++;
+        if (contadorCiclosImpuestos >= ciclosParaImpuestos) {
+          const impuestoActual = impuestosPorNivel[tamagotchi.nivel] || 0;
+          tamagotchi.coins -= impuestoActual;
+          showPopup("Se te ha cobrado " + impuestoActual + " monedas por impuestos.", 3000);
+          contadorCiclosImpuestos = 0;
+        }
+        
+        // Reiniciamos la verificación de promoción en cada ciclo de sueño
+        promotionCheckedThisCycle = false;
+        
+        // Verificar si se cumplen las condiciones para ascender
+        checkPromotion();
+      }, tiempoTotalSueñoPersonalizado);
     }
     
-    // Verificar si se cumplen las condiciones para ascender
-    checkPromotion();
-    }, tiempoTotalSueñoPersonalizado);
-    }
     
     
     
@@ -1212,11 +1216,8 @@ function disableControls() {
             let cyclesElapsed = Math.floor(elapsed / tiempoTotalSueñoPersonalizado);
             let remainder = elapsed % tiempoTotalSueñoPersonalizado;
             for (let i = 0; i < cyclesElapsed; i++) {
-              // Actualiza el estado en modo dormido
               tamagotchi.actualizarEstadoDormido();
-              // Cobro de salario durante el ciclo offline
-              pagarSalario();
-              // Cobro de impuestos
+              pagarSalario(); // Cobro de salario
               contadorCiclosImpuestos++;
               if (contadorCiclosImpuestos >= ciclosParaImpuestos) {
                 const impuestoActual = impuestosPorNivel[tamagotchi.nivel] || 0;
@@ -1224,9 +1225,17 @@ function disableControls() {
                 showPopup("Se te ha cobrado " + impuestoActual + " monedas por impuestos.", 3000);
                 contadorCiclosImpuestos = 0;
               }
-              // Verifica condiciones para ascenso
-              checkPromotion();
-              // Manejo de cumpleaños
+              checkPromotion(); // Verificar condiciones para ascender
+              ciclosDesdeCumple++;
+              if (ciclosDesdeCumple >= 3) {
+                tamagotchi.cumpleAnios();
+                ciclosDesdeCumple = 0;
+              }
+            
+              
+              // Reinicia la verificación para que en el siguiente ciclo se pueda evaluar de nuevo
+              promotionCheckedThisCycle = false;
+              
               ciclosDesdeCumple++;
               if (ciclosDesdeCumple >= 3) {
                 tamagotchi.cumpleAnios();
@@ -1253,7 +1262,6 @@ function disableControls() {
           disableControls();
           iniciarCiclosSueño();
           sleepUpdateInterval = setInterval(updateSleepProgress, 100);
-        
         
         } else if (cycleStart) {
           scheduleNextUpdate();
