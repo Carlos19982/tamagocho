@@ -1212,7 +1212,21 @@ function disableControls() {
             let cyclesElapsed = Math.floor(elapsed / tiempoTotalSueñoPersonalizado);
             let remainder = elapsed % tiempoTotalSueñoPersonalizado;
             for (let i = 0; i < cyclesElapsed; i++) {
+              // Actualiza el estado en modo dormido
               tamagotchi.actualizarEstadoDormido();
+              // Cobro de salario durante el ciclo offline
+              pagarSalario();
+              // Cobro de impuestos
+              contadorCiclosImpuestos++;
+              if (contadorCiclosImpuestos >= ciclosParaImpuestos) {
+                const impuestoActual = impuestosPorNivel[tamagotchi.nivel] || 0;
+                tamagotchi.coins -= impuestoActual;
+                showPopup("Se te ha cobrado " + impuestoActual + " monedas por impuestos.", 3000);
+                contadorCiclosImpuestos = 0;
+              }
+              // Verifica condiciones para ascenso
+              checkPromotion();
+              // Manejo de cumpleaños
               ciclosDesdeCumple++;
               if (ciclosDesdeCumple >= 3) {
                 tamagotchi.cumpleAnios();
@@ -1239,6 +1253,8 @@ function disableControls() {
           disableControls();
           iniciarCiclosSueño();
           sleepUpdateInterval = setInterval(updateSleepProgress, 100);
+        
+        
         } else if (cycleStart) {
           scheduleNextUpdate();
         }
@@ -1814,4 +1830,5 @@ function actualizarAdminVidaInterna() {
       alert("Por favor, ingresa un número válido.");
     }
   });
+  //skyJUM`P
   
