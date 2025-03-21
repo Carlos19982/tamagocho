@@ -28,7 +28,7 @@ const foodEffects = {
     
     // --- Configuración del ciclo ---
     const cicloMs = 280000; // Aproximadamente 4.67 minutos
-    const tiempoTotalSueñoPersonalizado =5000; // 50 minutos
+    const tiempoTotalSueñoPersonalizado =3000000; // 50 minutos
     let promotionCheckedThisCycle = false;
     
     // Parámetros de Flappy Bird
