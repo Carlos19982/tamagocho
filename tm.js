@@ -28,7 +28,7 @@ const foodEffects = {
     
     // --- Configuración del ciclo ---
     const cicloMs = 280000; // Aproximadamente 4.67 minutos
-    const tiempoTotalSueñoPersonalizado =3000000; // 50 minutos
+    const tiempoTotalSueñoPersonalizado =5000; // 50 minutos
     let promotionCheckedThisCycle = false;
     
     // Parámetros de Flappy Bird
@@ -1771,20 +1771,19 @@ function resetAdminTap() {
   clearTimeout(adminTapTimeout);
 }
 
-// Suponiendo que usas el contenedor del muñeco para activar el menú secreto:
+// Listener actualizado para activar el menú de admin
 document.getElementById("muñeco-container").addEventListener("click", () => {
   adminTapCount++;
-  // Si es la primera pulsación, iniciamos un timer para contar el lapso
   if (adminTapCount === 1) {
-    adminTapTimeout = setTimeout(resetAdminTap, 2000); // 2 segundos para hacer la secuencia
+    adminTapTimeout = setTimeout(resetAdminTap, 2000); // 2 segundos para la secuencia
   }
   
-  // Si llega a 5 pulsaciones dentro de ese lapso, activamos el menú secreto
+  // Si se detectan 10 pulsaciones en el lapso, se muestra el menú de admin
   if (adminTapCount === 10) {
     resetAdminTap();
-    // Aquí activamos el menú de administrador, por ejemplo, mostrando el div oculto
     const adminMenu = document.getElementById("admin-menu");
     if (adminMenu) {
+      actualizarAdminVidaInterna(); // Actualiza la vida interna antes de mostrar
       adminMenu.style.display = "block";
     }
   }
@@ -1811,28 +1810,70 @@ document.getElementById("reset-stats").addEventListener("click", () => {
     guardarTamagotchi();
     alert("Ascendido a " + puestos[nuevoNivel].nombre);
   });
-  // Función para actualizar el display de la vida interna en el menú admin
+// Función para actualizar el display de la vida interna en el menú admin
 function actualizarAdminVidaInterna() {
-    const span = document.getElementById("admin-vida-actual");
-    if (span && tamagotchi) {
-      span.textContent = tamagotchi.edadInterna;
+  const span = document.getElementById("admin-vida-actual");
+  if (span && tamagotchi) {
+    // Se muestra con un decimal, por ejemplo
+    span.textContent = tamagotchi.edadInterna.toFixed(1);
+  }
+}
+  
+document.getElementById("admin-edad-aceptar").addEventListener("click", (e) => {
+  e.stopPropagation();
+  const inputEdad = document.getElementById("admin-edad-interna");
+  const inputDinero = document.getElementById("admin-dinero");
+  const inputFlappy = document.getElementById("admin-flappy");
+  let message = "";
+  
+  // Actualización independiente de la vida interna
+  if (inputEdad.value.trim() !== "") {
+    const newEdadInterna = parseFloat(inputEdad.value);
+    if (!isNaN(newEdadInterna)) {
+      tamagotchi.edadInterna = newEdadInterna;
+      message += "Vida interna actualizada a " + newEdadInterna + ". ";
+    } else {
+      alert("Por favor, ingresa un número válido para la vida interna.");
+      return;
     }
   }
   
-  // Listener para el botón "Aceptar" que actualiza la vida interna
-  document.getElementById("admin-edad-aceptar").addEventListener("click", (e) => {
-    e.stopPropagation();
-    const input = document.getElementById("admin-edad-interna");
-    const newEdadInterna = parseFloat(input.value);
-    if (!isNaN(newEdadInterna)) {
-      tamagotchi.edadInterna = newEdadInterna;
-      actualizarInterfaz();
-      guardarTamagotchi();
-      actualizarAdminVidaInterna();
-      alert("Vida interna actualizada a " + newEdadInterna);
+  // Actualización independiente del dinero
+  if (inputDinero.value.trim() !== "") {
+    const newDinero = parseInt(inputDinero.value);
+    if (!isNaN(newDinero)) {
+      tamagotchi.coins = newDinero;
+      message += "Dinero actualizado a " + newDinero + ". ";
     } else {
-      alert("Por favor, ingresa un número válido.");
+      alert("Por favor, ingresa un número válido para el dinero.");
+      return;
     }
-  });
+  }
+  
+  // Actualización independiente del record de Flappy Bird
+  if (inputFlappy.value.trim() !== "") {
+    const newFlappyRecord = parseInt(inputFlappy.value);
+    if (!isNaN(newFlappyRecord)) {
+      tamagotchi.flappyHighScore = newFlappyRecord;
+      message += "Record de Flappy Bird actualizado a " + newFlappyRecord + ". ";
+    } else {
+      alert("Por favor, ingresa un número válido para el record de Flappy Bird.");
+      return;
+    }
+  }
+  
+  if (message === "") {
+    alert("No se ingresó ningún cambio.");
+    return;
+  }
+  
+  actualizarInterfaz();
+  guardarTamagotchi();
+  actualizarAdminVidaInterna();
+  alert(message);
+});
+
+
+  
   //skyJUM`P
   
