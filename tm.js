@@ -1771,23 +1771,27 @@ function resetAdminTap() {
   clearTimeout(adminTapTimeout);
 }
 
-// Listener actualizado para activar el menú de admin
 document.getElementById("muñeco-container").addEventListener("click", () => {
   adminTapCount++;
   if (adminTapCount === 1) {
     adminTapTimeout = setTimeout(resetAdminTap, 2000); // 2 segundos para la secuencia
   }
   
-  // Si se detectan 10 pulsaciones en el lapso, se muestra el menú de admin
+  // Si se detectan 10 pulsaciones en el lapso, se muestra el menú de admin solo si el nombre es "Carlos"
   if (adminTapCount === 10) {
     resetAdminTap();
-    const adminMenu = document.getElementById("admin-menu");
-    if (adminMenu) {
-      actualizarAdminVidaInterna(); // Actualiza la vida interna antes de mostrar
-      adminMenu.style.display = "block";
+    if (tamagotchi && tamagotchi.nombre === "Carlos") {
+      const adminMenu = document.getElementById("admin-menu");
+      if (adminMenu) {
+        actualizarAdminVidaInterna(); // Actualiza la vida interna antes de mostrar
+        adminMenu.style.display = "block";
+      }
+    } else {
+      alert("Solo el personaje 'Carlos' puede acceder al menú de administración.");
     }
   }
 });
+
 // Listener para resetear todas las stats a 0
 document.getElementById("reset-stats").addEventListener("click", () => {
     if (!tamagotchi) return;
