@@ -28,7 +28,7 @@ const foodEffects = {
     
     // --- Configuración del ciclo ---
     const cicloMs = 280000; // Aproximadamente 4.67 minutos
-    const tiempoTotalSueñoPersonalizado =5000; // 50 minutos
+    const tiempoTotalSueñoPersonalizado =3000000; // 50 minutos
     let promotionCheckedThisCycle = false;
     
     // Parámetros de Flappy Bird
@@ -1781,16 +1781,19 @@ document.getElementById("muñeco-container").addEventListener("click", () => {
   if (adminTapCount === 10) {
     resetAdminTap();
     if (tamagotchi && tamagotchi.nombre === "Carlos") {
-      const adminMenu = document.getElementById("admin-menu");
-      if (adminMenu) {
+      const adminOverlay = document.getElementById("admin-overlay");
+      if (adminOverlay) {
         actualizarAdminVidaInterna(); // Actualiza la vida interna antes de mostrar
-        adminMenu.style.display = "block";
+        adminOverlay.style.display = "block";
       }
-    } else {
-      alert("Solo el personaje 'Carlos' puede acceder al menú de administración.");
-    }
+    } 
   }
+  
 });
+document.getElementById("admin-close").addEventListener("click", () => {
+  document.getElementById("admin-overlay").style.display = "none";
+});
+
 
 // Listener para resetear todas las stats a 0
 document.getElementById("reset-stats").addEventListener("click", () => {
