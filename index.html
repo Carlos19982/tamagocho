@@ -244,11 +244,14 @@
       </div>
     </div>
 
-    <!-- Menú secreto de Administrador (oculto por defecto) -->
-    <div id="admin-menu" style="display: none; position: absolute; top: 10px; left: 10px; background: var(--color-input); padding: 10px; border: 1px solid var(--color-primary); border-radius: 8px; z-index: 50;">
+    <div id="admin-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #fff; z-index: 1000;">
+      <!-- Botón de cierre en la esquina superior izquierda -->
+      <button id="admin-close" style="position: absolute; top: 10px; left: 10px; background: none; border: none; font-size: 1.5rem; cursor: pointer;">×</button>
+      
+      <div id="admin-menu" style="max-width: 600px; margin: 100px auto; background: #fff; padding: 20px; border: 1px solid var(--color-primary); border-radius: 8px;">
         <h2>Admin Menu</h2>
+        <!-- Contenido del menú: reset, campos para vida interna, dinero y record -->
         <button id="reset-stats">Resetear Stats</button>
-        
         <label for="admin-work-position">Puesto de trabajo:</label>
         <select id="admin-work-position">
           <option value="0">Pasante</option>
@@ -260,23 +263,23 @@
           <option value="6">Director</option>
           <option value="7">CEO</option>
         </select>
-        
         <br><br>
-        
-        <!-- Se muestra la vida interna actual -->
         <label>Vida Interna actual: <span id="admin-vida-actual">0</span></label>
         <br>
         <label for="admin-edad-interna">Nueva Vida Interna:</label>
         <input type="number" id="admin-edad-interna" placeholder="Nueva vida interna" />
         <br>
-<label for="admin-dinero">Nuevo Dinero:</label>
-<input type="number" id="admin-dinero" placeholder="Nuevo dinero" />
-<br>
-<label for="admin-flappy">Nuevo record de Flappy Bird:</label>
-<input type="number" id="admin-flappy" placeholder="Nuevo record de Flappy Bird" />
-        
+        <label for="admin-dinero">Nuevo Dinero:</label>
+        <input type="number" id="admin-dinero" placeholder="Nuevo dinero" />
+        <br>
+        <label for="admin-flappy">Nuevo record de Flappy Bird:</label>
+        <input type="number" id="admin-flappy" placeholder="Nuevo record de Flappy Bird" />
+        <br><br>
         <button id="admin-edad-aceptar">Aceptar</button>
       </div>
+    </div>
+    
+
       
       
   </body>
