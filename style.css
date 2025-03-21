@@ -57,6 +57,53 @@
         box-shadow: 0 4px 10px var(--shadow);
         margin-bottom: 20px;
       }
+      .admin-overlay {
+        display: none; /* Se muestra solo cuando es necesario */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: #fff; /* Fondo opaco */
+        z-index: 1000;
+      }
+      
+      /* Botón de cierre similar a los de un navegador */
+      .admin-close {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+      }
+      
+      /* Estilos para el menú centralizado */
+      .admin-menu {
+        max-width: 600px;
+        margin: 100px auto;
+        background: #fff;
+        padding: 20px;
+        border: 1px solid var(--color-primary);
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      }
+      .admin-close {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: none;
+        border: none;
+        font-size: 2rem; /* Tamaño mayor para resaltar */
+        color: #333; /* Color por defecto */
+        cursor: pointer;
+        transition: color 0.3s ease;
+      }
+      
+      .admin-close:hover {
+        color: var(--color-primary); /* Cambia el color al pasar el mouse */
+      }
       .menu-container { text-align: center; }
       label { display: block; font-size: 1rem; margin: 10px 0 5px; }
       input[type="text"],
@@ -113,7 +160,8 @@
         background: rgba(0,0,0,0); /* invisible, pero bloquea clicks */
         z-index: 9;
       }
-      
+  
+        
       #clean-menu,
       #game-menu,
       #work-menu {
