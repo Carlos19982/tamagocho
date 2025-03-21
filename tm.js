@@ -28,7 +28,7 @@ const foodEffects = {
     
     // --- Configuración del ciclo ---
     const cicloMs = 280000; // Aproximadamente 4.67 minutos
-    const tiempoTotalSueñoPersonalizado =3000000; // 50 minutos
+    const tiempoTotalSueñoPersonalizado =5000; // 50 minutos
     let promotionCheckedThisCycle = false;
     
     // Parámetros de Flappy Bird
@@ -1225,22 +1225,19 @@ function disableControls() {
                 showPopup("Se te ha cobrado " + impuestoActual + " monedas por impuestos.", 3000);
                 contadorCiclosImpuestos = 0;
               }
-              checkPromotion(); // Verificar condiciones para ascender
+              // Sólo si se cumplen los requisitos, incrementamos el contador de buen desempeño y llamamos a checkPromotion
+              if (tamagotchi.hambre < 7 && tamagotchi.sueno < 7 && tamagotchi.higiene < 7 && !tamagotchi.enfermo) {
+                tamagotchi.consecutiveGoodCycles++;
+                checkPromotion();
+              } else {
+                tamagotchi.consecutiveGoodCycles = 0;
+              }
               ciclosDesdeCumple++;
               if (ciclosDesdeCumple >= 3) {
                 tamagotchi.cumpleAnios();
                 ciclosDesdeCumple = 0;
               }
-            
-              
-              // Reinicia la verificación para que en el siguiente ciclo se pueda evaluar de nuevo
               promotionCheckedThisCycle = false;
-              
-              ciclosDesdeCumple++;
-              if (ciclosDesdeCumple >= 3) {
-                tamagotchi.cumpleAnios();
-                ciclosDesdeCumple = 0;
-              }
             }
             localStorage.setItem("sleepCycleStart", Date.now() - remainder);
             const remainingMs = tiempoTotalSueñoPersonalizado - remainder;
@@ -1262,7 +1259,6 @@ function disableControls() {
           disableControls();
           iniciarCiclosSueño();
           sleepUpdateInterval = setInterval(updateSleepProgress, 100);
-        
         } else if (cycleStart) {
           scheduleNextUpdate();
         }
@@ -1270,7 +1266,7 @@ function disableControls() {
         gameContainer.style.display = "flex";
         actualizarInterfaz();
         if (tamagotchi.estado === "muerto") mostrarMensajeDeMuerte();
-      }
+      }      
       document.getElementById("close-work-menu").addEventListener("click", (e) => {
         e.stopPropagation();
         document.getElementById("work-menu").style.display = "none";
