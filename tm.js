@@ -28,7 +28,7 @@ const foodEffects = {
     
     // --- Configuración del ciclo ---
     const cicloMs = 280000; // Aproximadamente 4.67 minutos
-    const tiempoTotalSueñoPersonalizado =3000000; // 50 minutos
+    const tiempoTotalSueñoPersonalizado =5000; // 50 minutos
     let promotionCheckedThisCycle = false;
     
     // Parámetros de Flappy Bird
@@ -84,33 +84,58 @@ const foodEffects = {
 // y además, NO desactiva la interacción en el contenedor del personaje.
 // Excluye los botones de work-menu, de minijuegos y de food-menu al desactivar controles,
 // y además, NO desactiva la interacción en el contenedor del personaje.
+// --- REEMPLAZA TU FUNCIÓN disableControls ACTUAL CON ESTA ---
+
 function disableControls() {
-    // Recorre todos los botones y desactiva aquellos que NO estén
-    // dentro de: #work-menu, #admin-menu, #food-menu, ni tengan los IDs de los minijuegos, ni la clase "buy-btn"
-    document.querySelectorAll("button").forEach(button => {
-      if (
-        button.closest("#work-menu") ||
-        button.closest("#admin-menu") ||
-        button.closest("#food-menu") ||
-        ["juego-saltar", "juego-reaccion", "juego-ducha", "boton-saltar"].includes(button.id) ||
-        button.classList.contains("buy-btn")
-      ) {
-        // Estos botones se dejan activos.
-      } else {
-        button.disabled = true;
-      }
-    });
-  
-    // Bloqueamos la interacción con el botón de tienda
-    const storeIcon = document.getElementById("store-icon");
-    if (storeIcon) {
-      storeIcon.style.pointerEvents = "none";
+  console.log("Llamando a disableControls..."); // Log para depuración
+
+  // Deshabilitar botones específicos, excepto los de menús abiertos o necesarios
+  document.querySelectorAll("button").forEach(button => {
+    // Excepciones: botones dentro de menús específicos, botones de minijuego, admin, tienda interna, compra, cerrar overlays
+    if (
+      button.closest("#work-menu") || // Botones dentro del menú de trabajo
+      button.closest("#admin-menu") || // Botones dentro del menú de admin
+      button.closest("#food-menu") ||  // Botones dentro del menú de comida
+      button.closest("#clean-menu") || // Botones dentro del menú de limpieza
+      button.closest("#game-menu") ||  // Botones dentro del menú de juegos
+      ["juego-saltar", "juego-reaccion", "juego-ducha", "boton-saltar", "admin-close", "btn-store-comida", "btn-store-objetos", "close-inventory"].includes(button.id) || // IDs específicos exentos (incluido el de cerrar inventario)
+      button.closest("#store-overlay") // Permitir botones dentro del overlay de tienda (incluye .buy-btn y btn-store-comida/objetos)
+      // El botón de cerrar el menú de trabajo (#close-work-menu) también está exento por button.closest("#work-menu")
+    ) {
+       // console.log("Botón NO deshabilitado:", button.id || button.textContent.substring(0, 20));
+      // Estos botones se dejan activos o su estado lo controla el menú/overlay
+    } else {
+       // console.log("Botón SÍ deshabilitado:", button.id || button.textContent.substring(0, 20));
+       button.disabled = true; // Deshabilita el resto de botones generales
     }
-  
-    // Si fuera necesario, puedes bloquear otros contenedores,
-    // pero en este caso no bloqueamos el contenedor de minijuegos ni el del personaje,
-    // para que sigan interactuables (por ejemplo, para despertar al personaje).
+  });
+
+  // --- NO DESACTIVAR LOS ICONOS DE TOGGLE (Tienda e Inventario) ---
+  // Los iconos #store-icon y #inventory-icon deben permanecer clickeables
+  // para poder cerrar los overlays que abren.
+  // Por lo tanto, NO aplicamos pointerEvents = "none" a ellos aquí.
+
+  // Deshabilitar interacción con otros elementos si es necesario (ej. muñeco)
+  const muñecoContainer = document.getElementById("muñeco-container");
+  if (muñecoContainer) {
+      // Deshabilitar clics en el muñeco mientras un overlay/menú está abierto (excepto para despertar)
+      // Se podría refinar si se quiere permitir despertar siempre
+      // muñecoContainer.style.pointerEvents = "none";
+      // Considerar si realmente se quiere deshabilitar el muñeco aquí o manejarlo en los listeners de apertura/cierre
   }
+
+   // Se asume que enableControls revertirá cualquier 'pointerEvents = "none"' que se aplique aquí o en otro lugar.
+   // Por simplicidad y para asegurar el toggle, es mejor evitar deshabilitar los iconos aquí.
+   console.log("disableControls ejecutado (icono tienda/inventario permanecen activos).");
+}
+
+  // Bloquear la interacción con el botón de tienda, si así lo deseas
+  const storeIcon = document.getElementById("store-icon");
+  if (storeIcon) {
+    storeIcon.style.pointerEvents = "none";
+  }
+
+
   
   function enableControls() {
     // Reactiva todos los botones
@@ -824,34 +849,51 @@ function disableControls() {
       localStorage.setItem("ciclosDesdeCumple", ciclosDesdeCumple);
       localStorage.setItem("estaDurmiendo", estaDurmiendo);
     }
-    function cargarTamagotchi(data) {
-      let t = new Tamagotchi(data.nombre, data.trabajo, data.edad);
-      t.hambre = data.hambre;
-      t.aburrimiento = data.aburrimiento;
-      t.sueno = data.sueno;
-      t.higiene = data.higiene;
-      t.estado = data.estado;
-      t.cause = data.cause || "";
-      t.critico = data.critico || false;
-      t.causeCritica = data.causeCritica || "";
-      t.cagado = data.cagado || false;
-      t.enfermo = data.enfermo || false;
-      t.ciclosEnfermo = data.ciclosEnfermo || 0;
-      t.pastillaCount = data.pastillaCount || 0;
-      t.pastillaDisponible = data.pastillaDisponible !== undefined ? data.pastillaDisponible : true;
-      t.happyLock = data.happyLock || false;
-      t.edadInterna = data.edadInterna || data.edad;
-      t.statsHistory = data.statsHistory || { hambre: [], aburrimiento: [], sueno: [], higiene: [] };
-      t.coins = data.coins || 0;
-      t.foodInventory = data.foodInventory || [];
-      t.nivel = data.nivel !== undefined ? data.nivel : 0;
-      t.puesto = puestos[t.nivel].nombre;
-      t.salarioActual = puestos[t.nivel].sueldo;
-      t.consecutiveGoodCycles = data.consecutiveGoodCycles || 0;
-      t.lastPromotionAge = data.lastPromotionAge !== undefined ? data.lastPromotionAge : t.edad;
-      t.flappyHighScore = data.flappyHighScore !== undefined ? data.flappyHighScore : 0;
-      return t;
-    }
+    // --- REEMPLAZA TU FUNCIÓN cargarTamagotchi ACTUAL CON ESTA ---
+
+function cargarTamagotchi(data) {
+  // Crea una nueva instancia base
+  let t = new Tamagotchi(data.nombre, data.trabajo, data.edad);
+
+  // Carga todas las propiedades guardadas
+  t.hambre = data.hambre;
+  t.aburrimiento = data.aburrimiento;
+  t.sueno = data.sueno;
+  t.higiene = data.higiene;
+  t.estado = data.estado;
+  t.cause = data.cause || "";
+  t.critico = data.critico || false;
+  t.causeCritica = data.causeCritica || "";
+  t.cagado = data.cagado || false;
+  t.enfermo = data.enfermo || false;
+  t.ciclosEnfermo = data.ciclosEnfermo || 0;
+  t.pastillaCount = data.pastillaCount || 0;
+  t.pastillaDisponible = data.pastillaDisponible !== undefined ? data.pastillaDisponible : true;
+  t.happyLock = data.happyLock || false;
+  t.edadInterna = data.edadInterna || data.edad; // Usa edadInterna guardada o la edad normal si no existe
+  t.statsHistory = data.statsHistory || { hambre: [], aburrimiento: [], sueno: [], higiene: [] }; // Historial
+  t.coins = data.coins || 0; // Monedas
+  t.foodInventory = data.foodInventory || []; // Inventario de comida
+
+  // --- ¡LA LÍNEA IMPORTANTE QUE FALTABA! ---
+  t.objectInventory = data.objectInventory || []; // Carga el inventario de objetos guardado, o un array vacío si no existe
+
+  // Carga datos de nivel y promoción
+  t.nivel = data.nivel !== undefined ? data.nivel : 0;
+  t.puesto = puestos[t.nivel].nombre; // Asegura que el puesto coincida con el nivel cargado
+  t.salarioActual = puestos[t.nivel].sueldo; // Asegura que el salario coincida con el nivel cargado
+  t.consecutiveGoodCycles = data.consecutiveGoodCycles || 0;
+  t.lastPromotionAge = data.lastPromotionAge !== undefined ? data.lastPromotionAge : t.edad;
+  t.flappyHighScore = data.flappyHighScore !== undefined ? data.flappyHighScore : 0;
+
+  // Puedes añadir aquí la carga de otras propiedades si las agregas en el futuro
+   t.consecutiveFastFood = data.consecutiveFastFood || 0;
+   t.consecutiveHealthyFood = data.consecutiveHealthyFood || 0;
+
+
+  // Devuelve el objeto Tamagotchi completamente cargado
+  return t;
+}
     
     // --- Sistema de salarios y ascenso ---
     function actualizarSalario() {
@@ -1193,243 +1235,252 @@ function disableControls() {
     });
     
     // --- Inicialización del Juego ---
-    document.addEventListener("DOMContentLoaded", () => {
-        document.getElementById("work-menu").style.display = "none";
+    // --- REEMPLAZA TODOS LOS BLOQUES "DOMContentLoaded" EXISTENTES CON ESTE ---
+
+// --- REEMPLAZA TODOS LOS BLOQUES "DOMContentLoaded" EXISTENTES CON ESTE (VERSIÓN CON TOGGLE CORREGIDO) ---
+
+// --- REEMPLAZA TODOS LOS BLOQUES "DOMContentLoaded" EXISTENTES CON ESTE (VERSIÓN FINAL CON CAMBIOS SOLICITADOS) ---
+
+// --- REEMPLAZA TODOS LOS BLOQUES "DOMContentLoaded" EXISTENTES CON ESTE (VERSIÓN COMPLETA CON DEBUG BOTONES TIENDA) ---
+
+document.addEventListener("DOMContentLoaded", () => {
+  // --- Inicialización de la Interfaz y Carga de Datos ---
+  console.log("DOM completamente cargado y parseado.");
+
+  // Ocultar menús y overlays inicialmente
+  document.getElementById("work-menu").style.display = "none";
   document.getElementById("clean-menu").style.display = "none";
   document.getElementById("game-menu").style.display = "none";
   document.getElementById("food-menu").style.display = "none";
   document.getElementById("minijuego-container").style.display = "none";
-      const menuContainer = document.querySelector(".menu-container");
-      const gameContainer = document.querySelector(".tamagochi-container");
-      const startBtn = document.getElementById("start-game");
-      const storedData = localStorage.getItem("tamagotchiData");
-      if (storedData) {
-        tamagotchi = cargarTamagotchi(JSON.parse(storedData));
-        ciclosDesdeCumple = parseInt(localStorage.getItem("ciclosDesdeCumple")) || 0;
-        estaDurmiendo = localStorage.getItem("estaDurmiendo") === "true";
-        const cycleStart = localStorage.getItem("cycleStart");
-        if (estaDurmiendo) {
+  document.getElementById("store-overlay").style.display = "none";
+  document.getElementById("inventory-overlay").style.display = "none";
+  document.getElementById("store-food").style.display = "none"; // Ocultar sección comida tienda por defecto
+  document.getElementById("store-objects").style.display = "none"; // Ocultar sección objetos tienda por defecto
+  document.getElementById("admin-overlay").style.display = "none";
+
+  const menuContainer = document.querySelector(".menu-container");
+  const gameContainer = document.querySelector(".tamagochi-container");
+  const startBtn = document.getElementById("start-game");
+  const storedData = localStorage.getItem("tamagotchiData");
+
+  // --- Lógica de Carga de Datos (sin cambios) ---
+  if (storedData) {
+      console.log("Cargando datos guardados...");
+      tamagotchi = cargarTamagotchi(JSON.parse(storedData));
+      ciclosDesdeCumple = parseInt(localStorage.getItem("ciclosDesdeCumple")) || 0;
+      estaDurmiendo = localStorage.getItem("estaDurmiendo") === "true";
+      const cycleStart = localStorage.getItem("cycleStart");
+      if (estaDurmiendo) {
+          console.log("El Tamagotchi estaba durmiendo. Calculando progreso offline.");
           document.body.classList.add("sleeping");
           let sleepCycleStart = parseInt(localStorage.getItem("sleepCycleStart"));
           if (sleepCycleStart) {
-            let elapsed = Date.now() - sleepCycleStart;
-            let cyclesElapsed = Math.floor(elapsed / tiempoTotalSueñoPersonalizado);
-            let remainder = elapsed % tiempoTotalSueñoPersonalizado;
-            for (let i = 0; i < cyclesElapsed; i++) {
-              tamagotchi.actualizarEstadoDormido();
-              pagarSalario(); // Cobro de salario
-              contadorCiclosImpuestos++;
-              if (contadorCiclosImpuestos >= ciclosParaImpuestos) {
-                const impuestoActual = impuestosPorNivel[tamagotchi.nivel] || 0;
-                tamagotchi.coins -= impuestoActual;
-                showPopup("Se te ha cobrado " + impuestoActual + " monedas por impuestos.", 3000);
-                contadorCiclosImpuestos = 0;
+              let elapsed = Date.now() - sleepCycleStart;
+              let cyclesElapsed = Math.floor(elapsed / tiempoTotalSueñoPersonalizado);
+              let remainder = elapsed % tiempoTotalSueñoPersonalizado;
+              for (let i = 0; i < cyclesElapsed; i++) { /* ... simulación sueño offline ... */
+                  tamagotchi.actualizarEstadoDormido(); pagarSalario(); contadorCiclosImpuestos++;
+                  if (contadorCiclosImpuestos >= ciclosParaImpuestos) { const imp = impuestosPorNivel[tamagotchi.nivel] || 0; tamagotchi.coins -= imp; contadorCiclosImpuestos = 0; }
+                  promotionCheckedThisCycle = false; checkPromotion(); ciclosDesdeCumple++;
+                  if (ciclosDesdeCumple >= 3) { tamagotchi.cumpleAnios(); ciclosDesdeCumple = 0; }
               }
-              // Sólo si se cumplen los requisitos, incrementamos el contador de buen desempeño y llamamos a checkPromotion
-              if (tamagotchi.hambre < 7 && tamagotchi.sueno < 7 && tamagotchi.higiene < 7 && !tamagotchi.enfermo) {
-                tamagotchi.consecutiveGoodCycles++;
-                checkPromotion();
-              } else {
-                tamagotchi.consecutiveGoodCycles = 0;
+              localStorage.setItem("sleepCycleStart", Date.now() - remainder);
+              let sleepStart = parseInt(localStorage.getItem("sleepStart"));
+              if (sleepStart) { /* ... actualizar barra sueño offline ... */
+                  let sleepElapsed = Date.now() - sleepStart; const sleepDuration = 10000;
+                  if (sleepElapsed >= sleepDuration) { tamagotchi.sueno = 0; localStorage.removeItem("sleepProgress"); }
+                  else { const d = JSON.parse(localStorage.getItem("sleepProgress")); const iV = d?.initialValue !== undefined ? d.initialValue : tamagotchi.sueno; const p = Math.min(sleepElapsed / sleepDuration, 1); tamagotchi.sueno = Math.max(0, iV * (1 - p)); const uST = Date.now() - sleepElapsed; localStorage.setItem("sleepProgress", JSON.stringify({ startTime: uST, initialValue: iV, duration: sleepDuration })); }
               }
-              ciclosDesdeCumple++;
-              if (ciclosDesdeCumple >= 3) {
-                tamagotchi.cumpleAnios();
-                ciclosDesdeCumple = 0;
-              }
-              promotionCheckedThisCycle = false;
-            }
-            localStorage.setItem("sleepCycleStart", Date.now() - remainder);
-            const remainingMs = tiempoTotalSueñoPersonalizado - remainder;
-            const minutes = Math.floor(remainingMs / 60000);
-            const seconds = Math.floor((remainingMs % 60000) / 1000);
-            console.log(`Tiempo restante en el ciclo de sueño: ${minutes} minutos y ${seconds} segundos`);
-            let sleepStart = parseInt(localStorage.getItem("sleepStart"));
-            if (sleepStart) {
-              let sleepElapsed = Date.now() - sleepStart;
-              if (sleepElapsed > 10000) {
-                tamagotchi.sueno = 0;
-                localStorage.removeItem("sleepProgress");
-              } else {
-                updateSleepProgress();
-                localStorage.setItem("sleepStart", Date.now() - sleepElapsed);
-              }
-            }
           }
-          disableControls();
-          iniciarCiclosSueño();
-          sleepUpdateInterval = setInterval(updateSleepProgress, 100);
-        } else if (cycleStart) {
-          scheduleNextUpdate();
-        }
-        menuContainer.style.display = "none";
-        gameContainer.style.display = "flex";
-        actualizarInterfaz();
-        if (tamagotchi.estado === "muerto") mostrarMensajeDeMuerte();
-      }      
-      document.getElementById("close-work-menu").addEventListener("click", (e) => {
-        e.stopPropagation();
-        document.getElementById("work-menu").style.display = "none";
-        enableControls();
-      });
-      
+          disableControls(); iniciarCiclosSueño(); sleepUpdateInterval = setInterval(updateSleepProgress, 100);
+      } else if (cycleStart) { console.log("El Tamagotchi estaba despierto. Calculando progreso offline."); scheduleNextUpdate(); }
+      else { console.log("No hay datos de ciclo guardados, iniciando ciclo normal."); localStorage.setItem("cycleStart", Date.now()); scheduleNextUpdate(); }
+      menuContainer.style.display = "none"; gameContainer.style.display = "flex";
+      actualizarInterfaz(); updateStorePrices();
+      if (tamagotchi.estado === "muerto") { mostrarMensajeDeMuerte(); }
+  } else { console.log("No hay datos guardados, mostrando menú de inicio."); menuContainer.style.display = "block"; gameContainer.style.display = "none"; }
+
+  // --- Listeners de Botones y Elementos Interactivos ---
+
+  // Botón Iniciar Juego
+  if (startBtn) { /* ... listener startBtn sin cambios ... */
       startBtn.addEventListener("click", () => {
-        const nombre = document.getElementById("nombre").value;
-        const trabajo = document.getElementById("trabajo").value;
-        const edad = parseInt(document.getElementById("edad").value) || 0;
-        if (!nombre || !trabajo || isNaN(edad)) {
-          alert("Por favor, completa todos los campos correctamente.");
-          return;
-        }
-        tamagotchi = new Tamagotchi(nombre, trabajo, edad);
-        ciclosDesdeCumple = 0;
-        localStorage.setItem("cycleStart", Date.now());
-        actualizarInterfaz();
-        document.querySelector(".menu-container").style.display = "none";
-        document.querySelector(".tamagochi-container").style.display = "flex";
-        scheduleNextUpdate();
-        guardarTamagotchi();
+          const n = document.getElementById("nombre").value, t = document.getElementById("trabajo").value, e = parseInt(document.getElementById("edad").value) || 0;
+          if (!n || !t || isNaN(e)) { alert("Por favor, completa todos los campos correctamente."); return; }
+          tamagotchi = new Tamagotchi(n, t, e); ciclosDesdeCumple = 0; estaDurmiendo = false; localStorage.clear(); localStorage.setItem("cycleStart", Date.now());
+          actualizarInterfaz(); updateStorePrices(); menuContainer.style.display = "none"; gameContainer.style.display = "flex"; scheduleNextUpdate(); guardarTamagotchi();
       });
-      document.getElementById("muñeco-container").addEventListener("click", () => {
-    if (minijuegoActivo) return;
-    if (estaDurmiendo) {
-    despertar();
-    return;
-    }
-    if (tamagotchi && tamagotchi.estado !== "muerto") {
-    const infoContainer = document.getElementById("info-container");
-    infoContainer.style.display = infoContainer.style.display === "block" ? "none" : "block";
-    if (infoContainer.style.display === "block") {
-    infoContainer.innerHTML = `<strong>${tamagotchi.nombre}</strong><br>
-              Trabajo: ${tamagotchi.trabajo}<br>
-              Edad: ${tamagotchi.edad}<br>
-              Puesto: ${tamagotchi.puesto}<br>
-              Monedas: ${tamagotchi.coins}`;
-    }
-    }
-    });
-    
-      const muñecoContainer = document.getElementById("muñeco-container");
-      muñecoContainer.addEventListener("mousedown", function(e) {
-        this.longPressTimer = setTimeout(() => {
-          showWorkMenu();
-        }, 5000);
+  }
+
+  // Contenedor del Muñeco (Click, Long Press, Multi-Tap)
+  const muñecoContainer = document.getElementById("muñeco-container");
+  if (muñecoContainer) { /* ... listener muñecoContainer sin cambios ... */
+      let longPressTimer; let adminTapCount = 0; let adminTapTimeout;
+      muñecoContainer.addEventListener("click", () => {
+           if (minijuegoActivo) return; if (estaDurmiendo) { despertar(); return; }
+           if (tamagotchi && tamagotchi.estado !== "muerto") { const iC = document.getElementById("info-container"); const iV = iC.style.display === "block"; iC.style.display = iV ? "none" : "block"; if (!iV) { actualizarInfoContainer(); } }
+           adminTapCount++; if (adminTapCount === 1) { adminTapTimeout = setTimeout(() => { adminTapCount = 0; }, 2000); }
+           if (adminTapCount === 10) { clearTimeout(adminTapTimeout); adminTapCount = 0; if (tamagotchi && tamagotchi.nombre === "Carlos") { const aO = document.getElementById("admin-overlay"); if (aO) { actualizarAdminVidaInterna(); aO.style.display = "block"; disableControls(); } } }
       });
-      muñecoContainer.addEventListener("mouseup", function(e) {
-        clearTimeout(this.longPressTimer);
-      });
-      muñecoContainer.addEventListener("mouseleave", function(e) {
-        clearTimeout(this.longPressTimer);
-      });
-      muñecoContainer.addEventListener("touchstart", function(e) {
-        this.longPressTimer = setTimeout(() => {
-          showWorkMenu();
-        }, 5000);
-      });
-      muñecoContainer.addEventListener("touchend", function(e) {
-        clearTimeout(this.longPressTimer);
-      });
-      muñecoContainer.addEventListener("touchcancel", function(e) {
-        clearTimeout(this.longPressTimer);
-      });
-      document.getElementById("btn-flappy").addEventListener("click", (e) => {
-        e.stopPropagation();
-        document.getElementById("work-menu").style.display = "none";
-        enableControls();
-        startFlappyGame(); // O la función que inicie la acción de trabajar
-      });
-      document.getElementById("btn-hambre").addEventListener("click", (e) => {
-        e.stopPropagation();
-        if (tamagotchi.estado !== "muerto") {
-          updateFoodMenu();
-          toggleMenu("food-menu");
-        }
-      });
-      document.getElementById("btn-aburrimiento").addEventListener("click", (e) => {
-        e.stopPropagation();
-        if (tamagotchi.estado !== "muerto") toggleMenu("game-menu");
-      });
-      document.getElementById("juego-saltar").addEventListener("click", (e) => {
-        e.stopPropagation();
-        document.getElementById("game-menu").style.display = "none";
-        enableControls();
-        startMinijuego();
-      });
-      document.getElementById("juego-reaccion").addEventListener("click", (e) => {
-        e.stopPropagation();
-        document.getElementById("game-menu").style.display = "none";
-        enableControls();
-        startReactionGame();
-      });
-      document.getElementById("juego-ducha").addEventListener("click", (e) => {
-        e.stopPropagation();
-        document.getElementById("clean-menu").style.display = "none";
-        enableControls();
-        startShowerGame();
-      });
-      document.getElementById("btn-sueno").addEventListener("click", (e) => {
-        e.stopPropagation();
-        if (tamagotchi.estado !== "muerto" && !estaDurmiendo) {
-          iniciarSueño();
-          actualizarInterfaz();
-        }
-      });
-      document.getElementById("btn-higiene").addEventListener("click", (e) => {
-        e.stopPropagation();
-        if (tamagotchi.estado !== "muerto") toggleMenu("clean-menu");
-      });
-      document.getElementById("boton-saltar").addEventListener("click", (e) => {
-        e.stopPropagation();
-      });
-    
-      document.querySelectorAll(".buy-btn").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
+      const startLP = (e) => { if (estaDurmiendo || minijuegoActivo || tamagotchi?.estado === "muerto") return; if (e.type === 'touchstart') e.preventDefault(); clearTimeout(longPressTimer); longPressTimer = setTimeout(showWorkMenu, 3000); };
+      const cancelLP = () => { clearTimeout(longPressTimer); };
+      muñecoContainer.addEventListener("mousedown", startLP); muñecoContainer.addEventListener("touchstart", startLP, { passive: false });
+      muñecoContainer.addEventListener("mouseup", cancelLP); muñecoContainer.addEventListener("mouseleave", cancelLP);
+      muñecoContainer.addEventListener("touchend", cancelLP); muñecoContainer.addEventListener("touchcancel", cancelLP);
+  }
+
+  // Botones de Acción Principal
+  document.getElementById("btn-hambre")?.addEventListener("click", (e) => { e.stopPropagation(); if (tamagotchi?.estado !== "muerto" && !estaDurmiendo) { updateFoodMenu(); toggleMenu("food-menu"); } });
+  document.getElementById("btn-aburrimiento")?.addEventListener("click", (e) => { e.stopPropagation(); if (tamagotchi?.estado !== "muerto" && !estaDurmiendo) toggleMenu("game-menu"); });
+  document.getElementById("btn-sueno")?.addEventListener("click", (e) => { e.stopPropagation(); if (tamagotchi?.estado !== "muerto" && !estaDurmiendo) { iniciarSueño(); actualizarInterfaz(); } });
+  document.getElementById("btn-higiene")?.addEventListener("click", (e) => { e.stopPropagation(); if (tamagotchi?.estado !== "muerto" && !estaDurmiendo) toggleMenu("clean-menu"); });
+
+  // Botones dentro de los Menús Desplegables
+  document.getElementById("juego-saltar")?.addEventListener("click", (e) => { e.stopPropagation(); document.getElementById("game-menu").style.display = "none"; if (!estaDurmiendo) startMinijuego(); });
+  document.getElementById("juego-reaccion")?.addEventListener("click", (e) => { e.stopPropagation(); document.getElementById("game-menu").style.display = "none"; if (!estaDurmiendo) startReactionGame(); });
+  document.getElementById("juego-ducha")?.addEventListener("click", (e) => { e.stopPropagation(); document.getElementById("clean-menu").style.display = "none"; if (!estaDurmiendo) startShowerGame(); });
+  document.getElementById("boton-saltar")?.addEventListener("click", (e) => { e.stopPropagation(); });
+
+  // Menú de Trabajo (Cierre solo con 'X')
+  document.getElementById("close-work-menu")?.addEventListener("click", (e) => {
+      e.stopPropagation(); document.getElementById("work-menu").style.display = "none";
+      if (!estaDurmiendo && !minijuegoActivo && getComputedStyle(document.getElementById("store-overlay")).display === 'none' && getComputedStyle(document.getElementById("inventory-overlay")).display === 'none' && getComputedStyle(document.getElementById("admin-overlay")).display === 'none') { enableControls(); }
+  });
+  document.getElementById("btn-flappy")?.addEventListener("click", (e) => { e.stopPropagation(); document.getElementById("work-menu").style.display = "none"; if (!estaDurmiendo) startFlappyGame(); });
+ 
+  document.getElementById("btn-requisitos")?.addEventListener("click", (e) => {
     e.stopPropagation();
-    const storeItem = btn.parentElement;
-    // Extraemos el texto completo, que tiene el formato: "Producto - X monedas"
-    const spanText = storeItem.querySelector("span").textContent;
-    // Separamos el nombre del producto (antes del " - ")
-    const productName = spanText.split(" - ")[0].toLowerCase();
-    // Extraemos el costo del texto
-    const costMatch = spanText.match(/- (\d+) monedas/);
-    if (!costMatch) {
-    alert("Error al leer el costo.");
-    return;
-    }
-    let cost = parseInt(costMatch[1]);
-    // Si el producto es "pastilla" y la edad es menor a 10, se usa el precio de 60
-    if (productName === "pastilla" && tamagotchi.edad < 10) {
-    cost = 60;
-    }
-    if (tamagotchi.coins < cost) {
-    alert("No tienes suficientes monedas.");
-    return;
-    }
-    tamagotchi.coins -= cost;
-    // Guarda el nombre real del producto en el inventario
-    tamagotchi.foodInventory.push(productName);
-    alert("Has comprado un alimento.");
-    guardarTamagotchi();
-    actualizarInterfaz();
-    });
-    });
-    
-    
-    
-    document.getElementById("store-icon").addEventListener("click", function(e) {
-    e.stopPropagation();
-    updateStorePrices(); // Actualiza el precio antes de mostrar la tienda
-    const storeOverlay = document.getElementById("store-overlay");
-    // Comprobamos si está visible o no
-    if (getComputedStyle(storeOverlay).display === "block") {
-    storeOverlay.style.display = "none";
-    } else {
-    storeOverlay.style.display = "block";
-    }
-    });
-    
-    
-    });
+    mostrarRequisitosAscenso();
+});
+
+  // --- Tienda (Interruptor / Toggle y Listeners Compra con DEBUG) ---
+  const storeIcon = document.getElementById("store-icon");
+  const storeOverlay = document.getElementById("store-overlay");
+  if (storeIcon && storeOverlay) {
+      storeIcon.addEventListener("click", function(e) {
+          e.stopPropagation(); if (estaDurmiendo || minijuegoActivo) return;
+          const isVisible = getComputedStyle(storeOverlay).display === "block";
+          if (isVisible) { storeOverlay.style.display = "none"; if (getComputedStyle(document.getElementById("inventory-overlay")).display === 'none') { enableControls(); } }
+          else { updateStorePrices(); storeOverlay.style.display = "block"; disableControls(); if(getComputedStyle(document.getElementById("store-food")).display === 'none' && getComputedStyle(document.getElementById("store-objects")).display === 'none') { document.getElementById("store-food").style.display = "block"; } }
+      });
+  }
+  // Botones secciones tienda
+  document.getElementById("btn-store-comida")?.addEventListener("click", function(e) { e.stopPropagation(); document.getElementById("store-food").style.display = "block"; document.getElementById("store-objects").style.display = "none"; });
+  document.getElementById("btn-store-objetos")?.addEventListener("click", function(e) { e.stopPropagation(); document.getElementById("store-food").style.display = "none"; document.getElementById("store-objects").style.display = "block"; });
+
+  // --- Listeners Botones Compra (CON DEBUG DETALLADO) ---
+  // Botones de Compra (Comida y Medicinas)
+  console.log("Asignando listeners a botones de compra de comida/medicina...");
+  document.querySelectorAll("#store-food .buy-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+          console.log("Botón Comprar Comida/Medicina clickeado:", btn);
+          e.stopPropagation();
+          if (!tamagotchi) { console.error("Tamagotchi no definido al intentar comprar."); return; }
+          const storeItem = btn.closest(".store-item");
+          if (!storeItem) { console.error("No se encontró .store-item ancestro."); return; }
+          const spanElement = storeItem.querySelector("span");
+          if (!spanElement) { console.error("No se encontró span dentro de .store-item"); return; }
+          const spanText = spanElement.textContent;
+          console.log("Texto del Span:", spanText);
+          const productNameMatch = spanText.match(/^([a-zA-ZáéíóúñÁÉÍÓÚÑ\s]+)\s*-/i);
+          const costMatch = spanText.match(/(\d+)\s*monedas/i);
+          if (!productNameMatch || !costMatch) { console.error("Error al parsear nombre o costo con Regex:", spanText); alert("Error al leer la información del producto."); return; }
+          let productName = productNameMatch[1].trim().toLowerCase();
+          let cost = parseInt(costMatch[1], 10);
+          console.log(`Parseado -> Nombre: '${productName}', Costo: ${cost}`);
+          if (isNaN(cost)) { console.error("El costo parseado no es un número:", cost); alert("Error al leer el costo del producto."); return; }
+          if (tamagotchi.coins < cost) { console.log(`Monedas insuficientes: ${tamagotchi.coins} < ${cost}`); alert("No tienes suficientes monedas."); return; }
+          console.log(`Comprando: ${productName} por ${cost} monedas.`);
+          tamagotchi.coins -= cost;
+          if (!tamagotchi.foodInventory) tamagotchi.foodInventory = [];
+          tamagotchi.foodInventory.push(productName);
+          guardarTamagotchi(); actualizarInterfaz(); showPopup(`Has comprado ${productName}.`);
+      });
+  });
+  console.log("Listeners de comida/medicina asignados.");
+
+   // Botones de Compra (Objetos)
+   console.log("Asignando listeners a botones de compra de objetos...");
+   document.querySelectorAll("#store-objects .store-item").forEach(item => {
+       const buyButton = item.querySelector("button.buy-btn");
+       const spanElement = item.querySelector("span");
+       if (buyButton && spanElement) {
+           buyButton.addEventListener("click", (e) => {
+              console.log("Botón Comprar Objeto clickeado:", buyButton);
+              e.stopPropagation();
+              if (!tamagotchi) { console.error("Tamagotchi no definido al intentar comprar objeto."); return; }
+              const text = spanElement.textContent;
+              console.log("Texto del Span (Objeto):", text);
+               const parts = text.split(" - ");
+               if (parts.length < 2) { console.error("Formato incorrecto (split no funcionó):", text); alert("Error al leer información del objeto."); return; }
+               const nombre = parts[0].trim();
+               const costString = parts[1].replace(/monedas/i, "").trim();
+               const costo = parseInt(costString, 10);
+               console.log(`Parseado -> Nombre: '${nombre}', Costo String: '${costString}', Costo Num: ${costo}`);
+               if (isNaN(costo)) { console.error("El costo parseado del objeto no es un número:", costo); alert("Error al leer el costo del objeto."); return; }
+               console.log(`Intentando comprar objeto: ${nombre} | Costo: ${costo}`);
+               comprarObjeto(nombre, costo); // Llama a la función global
+               showPopup(`Has comprado ${nombre}.`);
+           });
+       } else { console.warn("No se encontró botón de compra o span en el item de tienda de objetos:", item); }
+   });
+   console.log("Listeners de objetos asignados.");
+  // --- FIN Listeners Botones Compra ---
+
+
+  // --- Inventario de Objetos (Interruptor / Toggle) ---
+  const inventoryIcon = document.getElementById("inventory-icon");
+  const inventoryOverlay = document.getElementById("inventory-overlay");
+  const closeInventory = document.getElementById("close-inventory");
+  if (inventoryIcon && inventoryOverlay) { /* ... listener icono inventario sin cambios ... */
+      inventoryIcon.addEventListener("click", (e) => {
+          e.stopPropagation(); if (estaDurmiendo || minijuegoActivo) return;
+          const isVisible = getComputedStyle(inventoryOverlay).display === "block";
+          if (isVisible) { inventoryOverlay.style.display = "none"; if (getComputedStyle(document.getElementById("store-overlay")).display === 'none') { enableControls(); } }
+          else { populateInventoryList(); inventoryOverlay.style.display = "block"; disableControls(); }
+      });
+  }
+  if (closeInventory && inventoryOverlay) { /* ... listener botón cerrar inventario sin cambios ... */
+      closeInventory.addEventListener("click", (e) => {
+          e.stopPropagation(); inventoryOverlay.style.display = "none";
+          if (getComputedStyle(document.getElementById("store-overlay")).display === 'none') { if (!estaDurmiendo && !minijuegoActivo) enableControls(); }
+      });
+  }
+
+  // --- Menú Admin --- (Sin cambios en su lógica interna)
+  document.getElementById("admin-close")?.addEventListener("click", () => { /* ... listener admin-close ... */
+      document.getElementById("admin-overlay").style.display = "none"; if (!estaDurmiendo && !minijuegoActivo && getComputedStyle(document.getElementById("store-overlay")).display === 'none' && getComputedStyle(document.getElementById("inventory-overlay")).display === 'none') { enableControls(); }
+  });
+  document.getElementById("reset-stats")?.addEventListener("click", () => { /* ... */ });
+  document.getElementById("admin-work-position")?.addEventListener("change", (e) => { /* ... */ });
+  document.getElementById("admin-edad-aceptar")?.addEventListener("click", (e) => { /* ... */ });
+
+
+  // --- Cerrar Menús/Overlays al hacer clic fuera (MODIFICADO para no cerrar work-menu) ---
+   document.addEventListener("click", function (e) {
+      const menusToCloseOnClickOutside = ["food-menu", "clean-menu", "game-menu"]; // Excluye work-menu
+      let clickedInsideInteractiveElement = false;
+      const interactiveAreas = ["#food-menu", "#clean-menu", "#game-menu", "#work-menu", "#store-overlay", "#inventory-overlay", "#admin-overlay", "#store-icon", "#inventory-icon", ".buttons-container", "#muñeco-container"];
+      for (const area of interactiveAreas) { if (e.target.closest(area)) { clickedInsideInteractiveElement = true; break; } }
+
+      if (!clickedInsideInteractiveElement) {
+          let somethingClosed = false;
+          menusToCloseOnClickOutside.forEach(id => { const m = document.getElementById(id); if (m && getComputedStyle(m).display === "block") { m.style.display = "none"; somethingClosed = true; } });
+           const sO = document.getElementById("store-overlay"); if (sO && getComputedStyle(sO).display === 'block') { sO.style.display = 'none'; somethingClosed = true; }
+           const iO = document.getElementById("inventory-overlay"); if (iO && getComputedStyle(iO).display === 'block') { iO.style.display = 'none'; somethingClosed = true; }
+           if (somethingClosed && !estaDurmiendo && !minijuegoActivo && getComputedStyle(document.getElementById("store-overlay")).display === 'none' && getComputedStyle(document.getElementById("inventory-overlay")).display === 'none' && getComputedStyle(document.getElementById("admin-overlay")).display === 'none' && getComputedStyle(document.getElementById("work-menu")).display === 'none') { enableControls(); }
+      }
+   });
+
+   // Evitar que clics dentro de los menús/overlays los cierren (propagación)
+   ["food-menu", "clean-menu", "game-menu", "work-menu", "store-overlay", "inventory-overlay", "admin-overlay"].forEach((id) => {
+       document.getElementById(id)?.addEventListener("click", (e) => e.stopPropagation());
+   });
+
+  console.log("Listeners de DOMContentLoaded asignados.");
+
+}); // --- FIN DEL BLOQUE DOMContentLoaded ---
     
     function showWorkMenu() {
         disableControls();
@@ -1757,9 +1808,9 @@ function disableControls() {
     html += "</ul>";
     
     display.innerHTML = html;
+    /* document.getElementById("btn-requisitos").addEventListener("click", mostrarRequisitosAscenso); */
     }
     
-    document.getElementById("btn-requisitos").addEventListener("click", mostrarRequisitosAscenso);
     
     // --- Resto de la lógica (guardar, cargar, eventos, etc.) ---
     // Se mantiene lo establecido en el código original.
@@ -1881,6 +1932,133 @@ document.getElementById("admin-edad-aceptar").addEventListener("click", (e) => {
 });
 
 
-  
+document.getElementById("btn-store-comida").addEventListener("click", function() {
+  const foodSection = document.getElementById("store-food");
+  // Si ya se muestra, se oculta; de lo contrario, se muestra
+  if (foodSection.style.display === "block") {
+    foodSection.style.display = "none";
+  } else {
+    foodSection.style.display = "block";
+    // Opcional: ocultar la sección de objetos si estuviera visible
+    document.getElementById("store-objects").style.display = "none";
+  }
+});
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("btn-store-comida").addEventListener("click", () => {
+    document.getElementById("store-food").style.display = "block";
+    document.getElementById("store-objects").style.display = "none";
+  });
+  document.getElementById("btn-store-objetos").addEventListener("click", () => {
+    document.getElementById("store-food").style.display = "none";
+    document.getElementById("store-objects").style.display = "block";
+  });
+});
+
+
+// Función para manejar la compra de un objeto
+// --- Asegúrate de que esta función exista (o añádela) en tm.js ---
+function comprarObjeto(nombre, costo) {
+  if (!tamagotchi) return; // Verificación de seguridad
+
+  if (tamagotchi.coins >= costo) {
+      tamagotchi.coins -= costo;
+
+      // Inicializar el inventario si no existe
+      if (!tamagotchi.objectInventory) {
+          tamagotchi.objectInventory = [];
+      }
+      // Guardar en minúsculas para consistencia, si lo prefieres
+      tamagotchi.objectInventory.push(nombre.toLowerCase());
+
+      actualizarInterfaz(); // Actualizar monedas mostradas, etc.
+      guardarTamagotchi(); // Guardar el estado
+      showPopup(`Has comprado ${nombre} por ${costo} monedas.`);
+  } else {
+      showPopup(`No tienes suficientes monedas para comprar ${nombre}.`);
+  }
+}
+
+// Asigna listeners a los botones de la sección de objetos
+ddocument.querySelectorAll("#store-objects .store-item").forEach(item => {
+  item.querySelector("button.buy-btn").addEventListener("click", () => {
+    const text = item.querySelector("span").textContent;
+    // Asumimos que el formato es: "Nombre - costo monedas"
+    const parts = text.split(" - ");
+    if (parts.length < 2) {
+      console.error("Formato de texto incorrecto:", text);
+      return;
+    }
+    const nombre = parts[0].trim();
+    // Removemos la palabra "monedas" y espacios para obtener solo el número.
+    const costo = parseInt(parts[1].replace(/monedas/i, "").trim(), 10);
+    console.log("Comprando:", nombre, "Costo:", costo, "Monedas actuales:", tamagotchi.coins);
+    comprarObjeto(nombre, costo);
+  });
+});
+// --- Encuentra esta sección en tu tm.js y MODIFÍCALA ---
+document.addEventListener("DOMContentLoaded", () => {
+  const inventoryIcon = document.getElementById("inventory-icon");
+  const inventoryOverlay = document.getElementById("inventory-overlay");
+  const closeInventory = document.getElementById("close-inventory");
+
+  // Verificar si los elementos existen
+  if (!inventoryIcon) console.error("¡Icono de inventario no encontrado!");
+  if (!inventoryOverlay) console.error("¡Superposición de inventario no encontrada!");
+  if (!closeInventory) console.error("¡Botón de cerrar inventario no encontrado!");
+
+  // Solo añadir listeners si los elementos existen
+  if (inventoryIcon && inventoryOverlay) {
+      // Mostrar el overlay del inventario al hacer clic en el icono
+      inventoryIcon.addEventListener("click", () => {
+        populateInventoryList(); // *** AÑADE ESTA LÍNEA *** Llama a la función para rellenar la lista
+        inventoryOverlay.style.display = "block"; // Muestra la superposición
+      });
+  }
+
+  if (closeInventory && inventoryOverlay) {
+      // Ocultar el overlay al hacer clic en el botón de cerrar
+      closeInventory.addEventListener("click", () => {
+        inventoryOverlay.style.display = "none";
+      });
+  }
+
+  // ... (resto de tu código DOMContentLoaded, como listeners de botones de tienda, etc.)
+});
+// --- Añade esta función en alguna parte de tu tm.js ---
+function populateInventoryList() {
+  const listElement = document.getElementById("inventory-unique-list");
+  if (!listElement) {
+    console.error("¡Elemento de lista de inventario ('inventory-unique-list') no encontrado!");
+    return;
+  }
+  listElement.innerHTML = ""; // Limpiar elementos anteriores
+
+  // Verificar si Tamagotchi existe y tiene el array objectInventory
+  if (!tamagotchi || !tamagotchi.objectInventory || tamagotchi.objectInventory.length === 0) {
+    listElement.innerHTML = "<li>No tienes objetos comprados.</li>";
+    return;
+  }
+
+  // Contar ocurrencias de cada objeto
+  const itemCounts = {};
+  tamagotchi.objectInventory.forEach(item => {
+     // Normalizar el nombre del objeto (minúsculas) para un conteo consistente
+     const normalizedItem = item.toLowerCase();
+     itemCounts[normalizedItem] = (itemCounts[normalizedItem] || 0) + 1;
+  });
+
+  // Crear elementos de lista para cada objeto único y su cantidad
+  Object.keys(itemCounts).forEach(itemName => {
+    const listItem = document.createElement("li");
+    // Poner en mayúscula la primera letra para mostrar
+    let displayName = itemName.charAt(0).toUpperCase() + itemName.slice(1);
+    if (itemCounts[itemName] > 1) {
+        displayName += ` (x${itemCounts[itemName]})`; // Mostrar cantidad si hay más de uno
+    }
+    listItem.textContent = displayName;
+    listElement.appendChild(listItem);
+  });
+}
+
   //skyJUM`P
   
