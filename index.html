@@ -179,70 +179,78 @@
       <div id="flappy-start-overlay">Click to start</div>
     </div>
 
-    <!-- Sección: Tienda -->
-    <div id="store-icon">🛒</div>
-    <div id="store-overlay">
-      <h2>Tienda</h2>
+<!-- Icono para abrir la tienda -->
+<div id="store-icon">🛒</div>
+
+<!-- Overlay de la tienda -->
+<div id="store-overlay">
+  <h2>Tienda</h2>
+
+  <!-- Botones para alternar -->
+  <div id="store-buttons">
+    <button id="btn-store-comida">Comida</button>
+    <button id="btn-store-objetos">Objetos</button>
+  </div>
+
+  <!-- Contenedor de contenido de la tienda -->
+  <div id="store-content">
+
+    <!-- SECCIÓN DE COMIDA -->
+    <div id="store-food" style="display: none;">
       <div class="store-menu">
         <div class="store-section healthy">
           <h3>Comida Sana</h3>
-          <div class="store-item">
-            <span>Ensalada - 120 monedas</span>
-            <button class="buy-btn">Comprar</button>
-          </div>
-          <div class="store-item">
-            <span>Manzana - 100 monedas</span>
-            <button class="buy-btn">Comprar</button>
-          </div>
-          <div class="store-item">
-            <span>Yogurt - 110 monedas</span>
-            <button class="buy-btn">Comprar</button>
-          </div>
-          <div class="store-item">
-            <span>Smoothie - 150 monedas</span>
-            <button class="buy-btn">Comprar</button>
-          </div>
-          <div class="store-item">
-            <span>Zanahoria - 80 monedas</span>
-            <button class="buy-btn">Comprar</button>
-          </div>
+          <div class="store-item"><span>Ensalada - 120 monedas</span><button class="buy-btn">Comprar</button></div>
+          <div class="store-item"><span>Manzana - 100 monedas</span><button class="buy-btn">Comprar</button></div>
+          <div class="store-item"><span>Yogurt - 110 monedas</span><button class="buy-btn">Comprar</button></div>
+          <div class="store-item"><span>Smoothie - 150 monedas</span><button class="buy-btn">Comprar</button></div>
+          <div class="store-item"><span>Zanahoria - 80 monedas</span><button class="buy-btn">Comprar</button></div>
         </div>
         <div class="store-section fast">
           <h3>Comida Rápida</h3>
-          <div class="store-item">
-            <span>Hamburguesa - 250 monedas</span>
-            <button class="buy-btn">Comprar</button>
-          </div>
-          <div class="store-item">
-            <span>Pizza - 500 monedas</span>
-            <button class="buy-btn">Comprar</button>
-          </div>
-          <div class="store-item">
-            <span>Papas Fritas - 160 monedas</span>
-            <button class="buy-btn">Comprar</button>
-          </div>
-          <div class="store-item">
-            <span>Refresco - 140 monedas</span>
-            <button class="buy-btn">Comprar</button>
-          </div>
-          <div class="store-item">
-            <span>Helado - 160 monedas</span>
-            <button class="buy-btn">Comprar</button>
-          </div>
+          <div class="store-item"><span>Hamburguesa - 250 monedas</span><button class="buy-btn">Comprar</button></div>
+          <div class="store-item"><span>Pizza - 500 monedas</span><button class="buy-btn">Comprar</button></div>
+          <div class="store-item"><span>Papas Fritas - 160 monedas</span><button class="buy-btn">Comprar</button></div>
+          <div class="store-item"><span>Refresco - 140 monedas</span><button class="buy-btn">Comprar</button></div>
+          <div class="store-item"><span>Helado - 160 monedas</span><button class="buy-btn">Comprar</button></div>
         </div>
         <div class="store-section medicines">
           <h3>Medicinas</h3>
-          <div class="store-item">
-            <span>Pastilla - 250 monedas</span>
-            <button class="buy-btn">Comprar</button>
-          </div>
-          <div class="store-item">
-            <span>Jeringuilla - 600 monedas</span>
-            <button class="buy-btn">Comprar</button>
-          </div>
+          <div class="store-item"><span>Pastilla - 250 monedas</span><button class="buy-btn">Comprar</button></div>
+          <div class="store-item"><span>Jeringuilla - 600 monedas</span><button class="buy-btn">Comprar</button></div>
         </div>
       </div>
     </div>
+
+    <!-- SECCIÓN DE OBJETOS -->
+    <div id="store-objects" style="display: none;">
+      <div class="store-section objects">
+        <h3>Objetos</h3>
+        <div class="store-item"><span>Movil Tomophone básico - 400 monedas</span><button class="buy-btn">Comprar</button></div>
+        <div class="store-item"><span>Habitación compartida - 1000 monedas</span><button class="buy-btn">Comprar</button></div>
+        <div class="store-item"><span>Bicicleta - 800 monedas</span><button class="buy-btn">Comprar</button></div>
+        <div class="store-item"><span>Portatil básico - 1500 monedas</span><button class="buy-btn">Comprar</button></div>
+        <div class="store-item"><span>Auriculares Xiaomi - 500 monedas</span><button class="buy-btn">Comprar</button></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="inventory-icon">📦</div>
+<!-- Overlay de Inventario en Full Screen -->
+<!-- Overlay de Inventario en Full Screen -->
+<div id="inventory-overlay" style="display: none;">
+  <div class="inventory-content">
+    <h2>Lista de propiedades</h2>
+    <ul id="inventory-unique-list"></ul>
+    <button id="close-inventory">Cerrar</button>
+  </div>
+</div>
+
+
+  
+
 
     <div id="admin-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #fff; z-index: 1000;">
       <!-- Botón de cierre en la esquina superior izquierda -->
