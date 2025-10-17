@@ -559,4 +559,37 @@
       .buy-btn:hover {
         background-color: #357abd;
       }
-    
+
+/* ==============================
+   PATCH: zona táctil cómoda del muñeco (móvil)
+   - No altera el look
+   - No toca la lógica JS ni el long-press
+   - No afecta a otros botones
+============================== */
+@media (max-width: 600px) {
+  /* Asegura que el contenedor puede albergar el halo táctil */
+  #muñeco-container {
+    position: relative;
+    /* Mejora respuesta táctil (evita delays y gestos no deseados) */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Halo táctil invisible que amplía la hitbox sin cambiar el layout */
+  #muñeco-container::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    /* Tamaño del área pulsable (ajusta si lo quieres mayor/menor) */
+    width: clamp(220px, 70vw, 360px);
+    height: clamp(220px, 70vw, 360px);
+
+    /* Invisible pero clicable */
+    background: transparent;
+    pointer-events: auto;
+    border-radius: 16px;   /* bordes suaves para la “burbuja” */
+    z-index: 0;            /* no tapa overlays ni botones que estén por encima */
+  }
+}
