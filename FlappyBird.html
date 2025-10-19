@@ -466,16 +466,24 @@
 
             if (startMessage && scoreMessage && flappyStartOverlay) {
                 startMessage.textContent = "¡Has perdido!";
+                // --- MODIFICADO: Mostrar solo la puntuación inicial, sin la opción de reiniciar ---
                 scoreMessage.innerHTML = `Puntuación: ${flappyScore}<br>
                                           Monedas Ganadas: ${coinsEarned}<br>
-                                          Mejor Puntuación: ${newHighScore}<br><br>
-                                          Toca para volver a jugar`;
+                                          Mejor Puntuación: ${newHighScore}`;
                 flappyStartOverlay.style.display = "flex";
 
+                // --- MODIFICADO: Desactivar la opción de reiniciar inmediatamente ---
                 flappyStartOverlay.removeEventListener("click", handleStartInput);
                 flappyStartOverlay.removeEventListener("touchstart", handleStartInput);
-                flappyStartOverlay.addEventListener("click", handleStartInput);
-                flappyStartOverlay.addEventListener("touchstart", handleStartInput);
+
+                // --- ¡NUEVO! Esperar 2 segundos antes de permitir reiniciar ---
+                setTimeout(() => {
+                    // Añadir el mensaje para volver a jugar
+                    scoreMessage.innerHTML += `<br><br>Toca para volver a jugar`;
+                    // Activar los listeners para reiniciar la partida
+                    flappyStartOverlay.addEventListener("click", handleStartInput);
+                    flappyStartOverlay.addEventListener("touchstart", handleStartInput);
+                }, 2000); // 2000 milisegundos = 2 segundos
             }
         }
 
