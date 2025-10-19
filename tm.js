@@ -57,7 +57,7 @@ const foodEffects = {
     
     // --- Configuración del ciclo ---
     const cicloMs = 280000; // Aproximadamente 4.67 minutos
-    const tiempoTotalSueñoPersonalizado =500; // 50 minutos
+    const tiempoTotalSueñoPersonalizado =3000000; // 50 minutos
     let promotionCheckedThisCycle = false;
     
     // Parámetros de Flappy Bird
@@ -1753,6 +1753,15 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("admin-close")?.addEventListener("click", () => { /* ... listener admin-close ... */
       document.getElementById("admin-overlay").style.display = "none"; if (!estaDurmiendo && !minijuegoActivo && getComputedStyle(document.getElementById("store-overlay")).display === 'none' && getComputedStyle(document.getElementById("inventory-overlay")).display === 'none') { enableControls(); }
   });
+  // --- ¡NUEVO! Listener para el botón de resetear personaje ---
+  document.getElementById("admin-reset-character")?.addEventListener("click", () => {
+      const confirmation = confirm("¿Estás seguro de que quieres borrar el personaje actual? Esta acción es irreversible y te llevará a la pantalla de creación.");
+      if (confirmation) {
+          localStorage.clear(); // Borra todos los datos guardados
+          window.location.reload(); // Recarga la página
+      }
+  });
+
   document.getElementById("reset-stats")?.addEventListener("click", () => { /* ... */ });
   document.getElementById("admin-work-position")?.addEventListener("change", (e) => { /* ... */ });
   document.getElementById("admin-edad-aceptar")?.addEventListener("click", (e) => { /* ... */ });
