@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minijuego de Ducha</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #e0f7fa; /* Un azul claro como fondo de baño */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #game-container {
+            text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 500px;
+        }
+
+        h1 {
+            color: #00796b;
+        }
+
+        #instructions {
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        #game-area {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            /* --- NUEVO: Usamos Flexbox para centrar al personaje --- */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- NUEVO: Estilos para el personaje ASCII --- */
+        #character-display {
+            font-family: monospace;
+            font-size: 2rem;
+            color: #bbb; /* Un color gris claro para que no distraiga */
+            text-align: center;
+            white-space: pre;
+            position: absolute; /* Lo posicionamos para que esté de fondo */
+            z-index: 0; /* Lo ponemos detrás de la esponja y las manchas */
+            /* Evita que el texto sea seleccionable por el usuario */
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        .dirt-spot {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-image: radial-gradient(circle, #5d4037 30%, #8d6e63 80%);
+            border-radius: 45% 55% 60% 40% / 50% 45% 55% 50%;
+            opacity: 0.8;
+            z-index: 10; /* Aseguramos que esté sobre el personaje */
+            transition: transform 0.2s, opacity 0.2s;
+            transform: rotate(calc(var(--r, 0) * 1deg)); /* Rotación aleatoria */
+        }
+
+        /* --- NUEVO: Estilo y animación para las burbujas --- */
+        .bubble {
+            position: absolute;
+            width: 25px; /* Más grandes */
+            height: 25px; /* Más grandes */
+            background: radial-gradient(circle at 30% 30%, rgba(255, 235, 255, 0.9), rgba(220, 230, 255, 0.7), rgba(255, 210, 240, 0.5)); /* Tono jabonoso iridiscente */
+            border: 1px solid rgba(255, 255, 255, 0.7); /* Borde más sutil */
+            border-radius: 50%;
+            pointer-events: none; /* Las burbujas no son interactivas */
+            z-index: 99; /* Debajo de la esponja */
+            animation: fadeAndShrink 2s forwards ease-out; /* Duran más tiempo */
+        }
+
+        @keyframes fadeAndShrink {
+            to { transform: scale(0); opacity: 0; }
+        }
+
+        #sponge {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path fill="%23FFEB3B" d="M85,20 C95,30 95,70 85,80 C75,90 25,90 15,80 C5,70 5,30 15,20 C25,10 75,10 85,20 Z" /><circle cx="30" cy="40" r="5" fill="%23FBC02D"/><circle cx="50" cy="60" r="7" fill="%23FBC02D"/><circle cx="70" cy="35" r="6" fill="%23FBC02D"/><circle cx="65" cy="70" r="4" fill="%23FBC02D"/></svg>');
+            background-size: contain;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+            cursor: grab;
+            top: 50%;
+            left: 50%;
+            pointer-events: auto; /* Por defecto, la esponja es clickeable */
+        }
+
+        #sponge:active {
+            cursor: grabbing;
+        }
+
+        #timer-container {
+            margin-top: 20px;
+        }
+
+        #timer-bar-background {
+            width: 100%;
+            height: 20px;
+            background-color: #cce7ff;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #timer-bar {
+            height: 100%;
+            width: 100%;
+            background-color: #00bcd4;
+            border-radius: 10px;
+            transition: width 0.1s linear;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        #result-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200;
+        }
+
+        #result-box {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        #result-title {
+            margin-top: 0;
+        }
+
+        #back-button {
+            padding: 10px 25px;
+            border: none;
+            background-color: #00796b;
+            color: white;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        #back-button:hover {
+            background-color: #004d40;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>¡A limpiar!</h1>
+        <p id="instructions">Haz clic y arrastra la esponja sobre las manchas para limpiarlas.</p>
+        
+        <div id="game-area">
+            <!-- --- NUEVO: Personaje ASCII añadido como fondo --- -->
+            <pre id="character-display">(\_/)
+( °_° )
+(>   <)</pre>
+
+            <div id="sponge"></div>
+        </div>
+
+        <div id="timer-container">
+            <span>Tiempo restante:</span>
+            <div id="timer-bar-background">
+                <div id="timer-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="result-overlay" class="hidden">
+        <div id="result-box">
+            <h2 id="result-title"></h2>
+            <p id="result-message"></p>
+            <button id="back-button">Volver</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const gameArea = document.getElementById("game-area");
+            const sponge = document.getElementById("sponge");
+            const timerBar = document.getElementById("timer-bar");
+            const resultOverlay = document.getElementById("result-overlay");
+            const resultTitle = document.getElementById("result-title");
+            const resultMessage = document.getElementById("result-message");
+            const characterDisplay = document.getElementById("character-display");
+            const backButton = document.getElementById("back-button");
+        
+            // --- NUEVA CONFIGURACIÓN DEL JUEGO ---
+            const GAME_DURATION = 25000; // Aumentamos la duración a 25 segundos
+            const SPOTS_TO_WIN = 18; // El jugador debe limpiar 18 manchas para ganar
+            const SPOTS_PER_WAVE = 3; // Aparecen 3 manchas a la vez
+            const SPAWN_INTERVAL_MS = 2000; // Cada 2 segundos
+
+            let spotsCleaned = 0; // Contador de manchas limpiadas
+            let totalSpotsSpawned = 0; // Contador de manchas generadas
+            let gameTimer;
+            let spawnInterval; // Intervalo para generar nuevas manchas
+            let animationInterval; // Intervalo para la animación del personaje
+            let gameFinished = false;
+            let isDragging = false;
+        
+            let lastBubbleTime = 0; // Para controlar la creación de burbujas
+            function initGame() {
+                // --- NUEVA LÓGICA DE APARICIÓN DE MANCHAS ---
+                
+                // Genera la primera oleada de manchas inmediatamente
+                const initialSpots = Math.min(SPOTS_PER_WAVE, SPOTS_TO_WIN);
+                for (let i = 0; i < initialSpots; i++) { createDirtSpot(); }
+                totalSpotsSpawned += initialSpots;
+
+                // Configura un intervalo para generar más manchas
+                spawnInterval = setInterval(() => {
+                    // Detiene la generación si el juego ha terminado o ya se generaron todas las manchas
+                    if (gameFinished || totalSpotsSpawned >= SPOTS_TO_WIN) {
+                        clearInterval(spawnInterval);
+                        return;
+                    }
+
+                    // Calcula cuántas manchas generar en esta oleada (para no pasarse de 18)
+                    const remainingToSpawn = SPOTS_TO_WIN - totalSpotsSpawned;
+                    const spotsInThisWave = Math.min(SPOTS_PER_WAVE, remainingToSpawn);
+
+                    for (let i = 0; i < spotsInThisWave; i++) {
+                        createDirtSpot();
+                    }
+                    totalSpotsSpawned += spotsInThisWave;
+
+                }, SPAWN_INTERVAL_MS);
+
+                // --- NUEVO: Animación del personaje ---
+                const animationFrames = [
+                    `(\\_/)\n( ^_^ )\n(>   <)`,
+                    `(\\_/)\n( u_u )\n(>   <)`,
+                    `(\\_/)\n( ^o^ )\n(>   <)`,
+                    `(\\_/)\n( u_u )\n(>   <)`
+                ];
+                let currentFrame = 0;
+                animationInterval = setInterval(() => {
+                    if (characterDisplay) {
+                        characterDisplay.textContent = animationFrames[currentFrame];
+                        currentFrame = (currentFrame + 1) % animationFrames.length;
+                    }
+                }, 500); // Cambia la expresión cada 500ms
+
+
+                // Inicia el temporizador general del juego
+                let startTime = Date.now();
+                gameTimer = setInterval(() => {
+                    const elapsedTime = Date.now() - startTime;
+                    const remainingTime = GAME_DURATION - elapsedTime;
+                    
+                    if (remainingTime <= 0) {
+                        endGame(false);
+                    } else {
+                        const barWidth = (remainingTime / GAME_DURATION) * 100;
+                        timerBar.style.width = `${barWidth}%`;
+                    }
+                }, 100);
+
+                // --- LÓGICA DE ARRASTRE CORREGIDA Y ADAPTADA PARA MÓVIL ---
+
+                function handleDragStart(e) {
+                    // Prevenir comportamiento por defecto en táctil (como scroll)
+                    if (e.type === 'touchstart') {
+                        e.preventDefault();
+                    }
+                    isDragging = true;
+                    sponge.style.cursor = 'grabbing';
+                    sponge.style.pointerEvents = 'none';
+                }
+
+                function handleDragEnd() {
+                    if (isDragging) {
+                        isDragging = false;
+                        sponge.style.cursor = 'grab';
+                        sponge.style.pointerEvents = 'auto';
+                    }
+                }
+
+                function handleDragMove(e) {
+                    if (isDragging) {
+                        // Prevenir scroll en móvil
+                        if (e.type === 'touchmove') {
+                            e.preventDefault();
+                        }
+
+                        // Obtener las coordenadas correctas para ratón o táctil
+                        const touch = e.touches ? e.touches[0] : null;
+                        const clientX = touch ? touch.clientX : e.clientX;
+                        const clientY = touch ? touch.clientY : e.clientY;
+
+                        const rect = gameArea.getBoundingClientRect();
+                        const x = clientX - rect.left;
+                        const y = clientY - rect.top;
+
+                        sponge.style.left = `${x}px`;
+                        sponge.style.top = `${y}px`;
+
+                        // --- NUEVO: Crear rastro de burbujas ---
+                        const now = Date.now();
+                        if (now - lastBubbleTime > 30) { // AJUSTE: Genera burbujas más frecuentemente
+                            lastBubbleTime = now;
+                            createBubble(x, y);
+                        }
+
+                        // --- NUEVA LÓGICA DE LIMPIEZA PARA MÓVIL Y ESCRITORIO ---
+                        // Comprobamos si la posición del cursor/dedo está sobre una mancha.
+                        const spots = document.querySelectorAll('.dirt-spot');
+                        spots.forEach(spot => {
+                            const spotRect = spot.getBoundingClientRect();
+                            if (
+                                clientX >= spotRect.left && clientX <= spotRect.right &&
+                                clientY >= spotRect.top && clientY <= spotRect.bottom
+                            ) {
+                                spot.remove();
+                                spotsCleaned++; // Incrementa el contador de limpiadas
+                                // Comprueba si se ha alcanzado el objetivo
+                                if (spotsCleaned >= SPOTS_TO_WIN) {
+                                    endGame(true);
+                                }
+                            }
+                        });
+                    }
+                }
+
+                // Asignar eventos de ratón
+                sponge.addEventListener("mousedown", handleDragStart);
+                document.addEventListener("mouseup", handleDragEnd);
+                gameArea.addEventListener("mousemove", handleDragMove);
+
+                // Asignar eventos táctiles
+                sponge.addEventListener("touchstart", handleDragStart, { passive: false });
+                document.addEventListener("touchend", handleDragEnd);
+                gameArea.addEventListener("touchmove", handleDragMove, { passive: false });
+            }
+        
+            function createDirtSpot() {
+                const spot = document.createElement("div");
+                spot.classList.add("dirt-spot");
+        
+                // --- CORRECCIÓN PARA VISIBILIDAD EN MÓVILES ---
+                // Usamos offsetWidth y offsetHeight que nos dan el tamaño real del área de juego.
+                const gameAreaWidth = gameArea.offsetWidth;
+                const gameAreaHeight = gameArea.offsetHeight;
+                const spotSize = 40; // El tamaño de la mancha (ancho y alto)
+
+                const x = Math.random() * (gameAreaWidth - spotSize);
+                const y = Math.random() * (gameAreaHeight - spotSize);
+        
+                spot.style.left = `${x}px`;
+                spot.style.top = `${y}px`;
+        
+                // El evento 'mouseover' se ha eliminado, la lógica de limpieza ahora está en handleDragMove.
+                gameArea.appendChild(spot);
+            }
+
+            // --- NUEVO: Función para crear una burbuja ---
+            function createBubble(x, y) {
+                const bubble = document.createElement('div');
+                bubble.classList.add('bubble');
+
+                // Posición con un poco de aleatoriedad para un efecto más natural
+                const offsetX = (Math.random() - 0.5) * 40;
+                const offsetY = (Math.random() - 0.5) * 40;
+                bubble.style.left = `${x + offsetX}px`;
+                bubble.style.top = `${y + offsetY}px`;
+
+                gameArea.appendChild(bubble);
+
+                // Eliminar la burbuja del DOM después de que termine su animación
+                setTimeout(() => {
+                    bubble.remove();
+                }, 2000); // AJUSTE: Coincide con la nueva duración de la animación
+            }
+        
+            function endGame(isWin) {
+                if (gameFinished) return;
+                gameFinished = true;
+                isDragging = false;
+                clearInterval(gameTimer);
+                clearInterval(spawnInterval); // Detiene la aparición de nuevas manchas
+                clearInterval(animationInterval); // Detiene la animación del personaje
+                
+                // Asegurarse de que la esponja vuelva a su estado normal
+                sponge.style.pointerEvents = 'auto';
+                sponge.style.cursor = 'grab';
+        
+                localStorage.setItem("showerGameResult", isWin ? "win" : "lose");
+        
+                if (isWin) {
+                    resultTitle.textContent = "¡Limpieza completada!";
+                    resultMessage.textContent = "¡Tu Tamagotchi está reluciente!";
+                    if (characterDisplay) characterDisplay.textContent = `(\\_/)\n( ^_^ )\n(>   <)`; // Cara feliz final
+                } else {
+                    resultTitle.textContent = "¡Oh, no!";
+                    resultMessage.textContent = "No lograste limpiarlo a tiempo.";
+                    if (characterDisplay) characterDisplay.textContent = `(\\_/)\n( ._. )\n(>   <)`; // Cara triste final
+                }
+                resultOverlay.classList.remove("hidden");
+            }
+        
+            backButton.addEventListener("click", () => {
+                window.location.href = "index.html";
+            });
+        
+            initGame();
+        });
+    </script>
+</body>
+</html>
