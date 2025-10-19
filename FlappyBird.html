@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Flappy Bird Standalone</title>
+    <style>
+        /* Estilos generales del cuerpo */
+        body {
+            margin: 0;
+            height: 100vh; /* Asegura que el body ocupe toda la altura */
+            display: flex; /* Centra el juego vertical y horizontalmente */
+            align-items: center;
+            justify-content: center;
+            background-color: #f0f0f0; /* Un color de fondo suave */
+            font-family: sans-serif;
+            overflow: hidden; /* Evita barras de scroll */
+            /* Evitar selección de texto en toda la página, útil en móviles */
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            /* Evitar el resaltado azul al tocar en iOS */
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Contenedor principal del juego */
+        #flappy-game {
+            position: relative; /* Necesario para posicionar elementos internos absolutamente */
+            width: 100vw; /* Ocupa todo el ancho de la ventana */
+            height: 100vh; /* Ocupa toda la altura de la ventana */
+            max-width: 600px; /* Ancho máximo para pantallas grandes */
+            max-height: 800px; /* Altura máxima para pantallas grandes */
+            background-color: #87CEEB; /* Color cielo */
+            overflow: hidden; /* Oculta lo que salga del área */
+            border: 2px solid #333; /* Borde opcional */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2); /* Sombra para darle profundidad */
+            cursor: pointer; /* Indica que se puede hacer clic */
+        }
+
+        /* Área donde se mueven los elementos del juego */
+        #flappy-game-area {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Estilo del pájaro */
+        #flappy-bird {
+            position: absolute;
+            left: 20%; /* Posición inicial horizontal */
+            top: 50%; /* Posición inicial vertical */
+            transform: translate(-50%, -50%); /* Centrado exacto */
+            font-size: 2rem; /* Tamaño del pájaro (emoji) */
+            user-select: none; /* Evita seleccionar el texto del pájaro */
+            z-index: 10; /* Asegura que esté por encima de los obstáculos */
+            transition: transform 0.1s ease-out; /* Suaviza la rotación al caer/subir */
+            /* Evitar que el pájaro capture eventos de puntero */
+            pointer-events: none;
+        }
+
+        /* Estilo de los obstáculos (tuberías) */
+        .obstacle-flappy {
+            position: absolute;
+            width: 60px; /* Ancho de las tuberías */
+            background-color: #2E8B57; /* Color verde oscuro */
+            border: 2px solid #000; /* Borde negro */
+            z-index: 5; /* Detrás del pájaro */
+            pointer-events: none; /* Evitar que capturen eventos */
+        }
+
+        /* Superposición de inicio/fin */
+        #flappy-start-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6); /* Fondo semitransparente */
+            display: flex;
+            flex-direction: column; /* Apila los mensajes */
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+            text-align: center;
+            z-index: 100; /* Por encima de todo */
+            cursor: pointer;
+            line-height: 1.6; /* Mejora el espaciado entre líneas */
+        }
+
+        /* Estilo para el mensaje de puntuación final */
+        #score-message {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        /* Ocultar mensaje de puntuación inicialmente */
+        #score-message:empty {
+            display: none;
+        }
+
+        /* Estilo para el contador de puntuación en vivo */
+        #live-score {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            color: white;
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7); /* Sombra para mejorar legibilidad */
+            z-index: 50; /* Encima del juego, debajo del overlay de inicio/fin */
+            user-select: none;
+            pointer-events: none; /* No interactuable */
+        }
+
+        /* Estilo para el botón de salir (añadido) */
+        #exit-button-flappy {
+            position: fixed; /* Cambiado a fixed para que no se mueva con el scroll si lo hubiera */
+            top: 15px;
+            left: 15px;
+            padding: 8px 12px;
+            background-color: rgba(50, 50, 50, 0.7); /* Fondo semitransparente oscuro */
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            z-index: 101; /* Encima del overlay */
+            transition: background-color 0.2s ease;
+            user-select: none; /* Evitar selección */
+        }
+        #exit-button-flappy:hover {
+            background-color: rgba(80, 80, 80, 0.8);
+        }
+
+    </style>
+</head>
+<body>
+    <div id="flappy-game">
+        <a href="index.html" id="exit-button-flappy">
+            ← Menú
+        </a>
+
+        <div id="flappy-game-area">
+            <div id="flappy-bird">(*_*)</div> </div>
+
+        <div id="live-score">Puntuación: 0</div>
+
+        <div id="flappy-start-overlay">
+            <div id="start-message">Toca para empezar</div> <div id="score-message"></div> </div>
+    </div>
+
+    <script>
+        // --- Variables Globales del Juego ---
+        let flappyGameRunning = false; // Indica si el juego está en curso
+        let flappyBird; // Elemento HTML del pájaro
+        let flappyGameArea; // Elemento HTML del área de juego
+        let flappyStartOverlay; // Elemento HTML de la superposición
+        let startMessage; // Mensaje en la superposición ("Toca para empezar")
+        let scoreMessage; // Mensaje de puntuación en la superposición
+        let liveScoreElement; // Elemento para mostrar la puntuación en vivo
+        let flappyObstacles = []; // Array para guardar los obstáculos activos
+        let flappyScore = 0; // Puntuación actual
+        let tamagotchiData = null; // Para almacenar los datos del tamagotchi
+        let flappyLastObstacleTime = 0; // Momento en que se creó el último obstáculo
+        let flappyGameRequest; // ID para requestAnimationFrame (para poder cancelarlo)
+        let birdY = 0; // Posición vertical del pájaro
+        let birdVelocity = 0; // Velocidad vertical del pájaro
+        let gravity; // Fuerza de gravedad (se define en init)
+        let jumpImpulse; // Fuerza del salto (se define en init)
+        let obstacleSpeed; // Velocidad horizontal de los obstáculos (se define en init)
+        let lastTimestamp = null; // Timestamp del último frame (para calcular delta time)
+        let flappyEnded = false; // Flag para evitar que endFlappyGame se llame múltiples veces
+
+        // --- Constantes de Configuración ---
+        const OBSTACLE_GENERATION_INTERVAL_BASE = 2200; // (ms) Intervalo base entre obstáculos
+        const VERTICAL_GAP = 200; // (px) Espacio vertical entre tuberías        
+        
+        // --- Inicialización del Juego (cuando el DOM está listo) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Seleccionar elementos del DOM una sola vez
+            flappyBird = document.getElementById("flappy-bird");
+            flappyGameArea = document.getElementById("flappy-game-area");
+            flappyStartOverlay = document.getElementById("flappy-start-overlay");
+            startMessage = document.getElementById("start-message");
+            scoreMessage = document.getElementById("score-message");
+            liveScoreElement = document.getElementById("live-score");
+            const flappyGame = document.getElementById("flappy-game");
+            const exitButton = document.getElementById('exit-button-flappy');
+
+            // Comprobar si todos los elementos esenciales existen
+            if (!flappyBird || !flappyGameArea || !flappyStartOverlay || !startMessage || !scoreMessage || !liveScoreElement || !flappyGame || !exitButton) {
+                console.error("Error: No se encontraron todos los elementos necesarios del DOM para Flappy Bird.");
+                return;
+            }
+
+            // Ajustar parámetros de física y velocidad según tamaño de pantalla
+            if (window.innerWidth < 600 || window.innerHeight < 600) {
+                gravity = 0.3;
+                jumpImpulse = -6; 
+                obstacleSpeed = 2.5;
+            } else {
+                gravity = 0.25; 
+                jumpImpulse = -7; 
+                obstacleSpeed = 3;
+            }
+
+            // Cargar datos del Tamagotchi desde localStorage
+            try {
+                const data = localStorage.getItem('tamagotchiData');
+                if (data) {
+                    tamagotchiData = JSON.parse(data);
+                } else {
+                    // Si no hay datos, mostramos un error y deshabilitamos el juego.
+                    showErrorState("No se encontraron datos del Tamagotchi. Vuelve al menú principal.");
+                    return;
+                }
+            } catch (e) {
+                showErrorState("Error al cargar los datos del Tamagotchi.");
+                return;
+            }
+            // --- Listeners de Eventos ---
+            flappyStartOverlay.addEventListener("click", handleStartInput);
+            flappyStartOverlay.addEventListener("touchstart", handleStartInput);
+            flappyGame.addEventListener("mousedown", handleFlapInput);
+            flappyGame.addEventListener("touchstart", handleFlapInput);
+            exitButton.addEventListener('mousedown', (e) => e.stopPropagation());
+            exitButton.addEventListener('touchstart', (e) => e.stopPropagation());
+            // Guardar resultado antes de salir
+            exitButton.addEventListener('click', (e) => {
+                e.preventDefault(); // Evita la navegación inmediata
+                saveAndExit();
+            });
+
+            // Configuración inicial
+            resetGameVariables();
+            positionBird();
+            updateLiveScore();
+        });
+
+        function showErrorState(message) {
+            if (startMessage) startMessage.textContent = message;
+            if (scoreMessage) scoreMessage.textContent = "Por favor, inicia el juego desde la pantalla principal.";
+            if (flappyStartOverlay) flappyStartOverlay.style.display = "flex";
+            // Desactivar la capacidad de iniciar el juego
+            flappyStartOverlay.removeEventListener("click", handleStartInput);
+            flappyStartOverlay.removeEventListener("touchstart", handleStartInput);
+            flappyGame.removeEventListener("mousedown", handleFlapInput);
+            flappyGame.removeEventListener("touchstart", handleFlapInput);
+        }
+        // --- Funciones Controladoras de Eventos ---
+        function handleStartInput(event) {
+            if (event.type === 'touchstart') event.preventDefault();
+            if (flappyGameRunning) return;
+            if (flappyStartOverlay) flappyStartOverlay.style.display = "none";
+            startFlappyGame();
+        }
+
+        function handleFlapInput(event) {
+             if (event.type === 'touchstart') event.preventDefault();
+            if (!flappyGameRunning) return;
+            flappyFlap();
+        }
+
+        // --- Funciones Principales del Juego ---
+        function startFlappyGame() {
+            if (flappyGameRunning) return;
+            console.log("Iniciando Flappy Bird...");
+
+            resetGameVariables();
+            updateLiveScore();
+            positionBird();
+            removeExistingObstacles();
+
+            flappyGameRunning = true;
+            flappyEnded = false;
+            lastTimestamp = null;
+
+            flappyGameRequest = requestAnimationFrame(flappyGameLoop);
+        }
+
+        function resetGameVariables() {
+            flappyScore = 0;
+            flappyObstacles = [];
+            flappyLastObstacleTime = Date.now();
+
+            if (flappyGameArea) birdY = flappyGameArea.offsetHeight / 2;
+            else birdY = window.innerHeight / 2;
+            
+            birdVelocity = 0;
+            flappyEnded = false;
+
+            if (flappyBird) flappyBird.style.transform = 'translate(-50%, -50%) rotate(0deg)';
+        }
+
+        function positionBird() {
+            if (flappyBird) flappyBird.style.top = birdY + "px";
+        }
+
+        function removeExistingObstacles() {
+            if (flappyGameArea) {
+                const existingObstacles = flappyGameArea.querySelectorAll(".obstacle-flappy");
+                existingObstacles.forEach(obs => obs.remove());
+            }
+            flappyObstacles = [];
+        }
+
+        function updateLiveScore() {
+            if (liveScoreElement) liveScoreElement.textContent = `Puntuación: ${flappyScore}`;
+        }
+
+        function flappyGameLoop(timestamp) {
+            if (!flappyGameRunning || !flappyBird || !flappyGameArea) {
+                 if (flappyGameRequest) cancelAnimationFrame(flappyGameRequest);
+                 return;
+            }
+
+            if (!lastTimestamp) lastTimestamp = timestamp;
+            const delta = timestamp - lastTimestamp;
+            lastTimestamp = timestamp;
+            const factor = delta / 9.67;
+
+            birdVelocity += gravity * factor;
+            birdY += birdVelocity * factor;
+            positionBird();
+
+            const rotation = Math.max(-30, Math.min(60, birdVelocity * 4));
+            flappyBird.style.transform = `translate(-50%, -50%) rotate(${rotation}deg)`;
+
+            if (birdY < 0 || birdY + flappyBird.offsetHeight > flappyGameArea.offsetHeight) {
+                endFlappyGame();
+                return;
+            }
+
+            const currentInterval = OBSTACLE_GENERATION_INTERVAL_BASE / (obstacleSpeed / 2);
+            if (Date.now() - flappyLastObstacleTime > currentInterval) {
+                createFlappyObstacles();
+                flappyLastObstacleTime = Date.now();
+            }
+
+            let shouldEndGame = false;
+            let scoreUpdatedThisFrame = false;
+
+            flappyObstacles = flappyObstacles.filter((obs) => {
+                if (!obs.element) return false;
+
+                obs.x -= obstacleSpeed * factor;
+                obs.element.style.left = obs.x + "px";
+
+                if (checkFlappyCollision(obs)) shouldEndGame = true;
+
+                if (obs.type === "top" && !obs.passed && obs.x + obs.element.offsetWidth < flappyBird.offsetLeft) {
+                    obs.passed = true;
+                    flappyScore++;
+                    scoreUpdatedThisFrame = true;
+                }
+
+                if (obs.x + obs.element.offsetWidth < 0) {
+                    obs.element.remove();
+                    return false;
+                }
+                return true;
+            });
+
+            if (scoreUpdatedThisFrame) updateLiveScore();
+            if (shouldEndGame) {
+                endFlappyGame();
+                return;
+            }
+
+            flappyGameRequest = requestAnimationFrame(flappyGameLoop);
+        }
+
+        function flappyFlap() {
+            if (!flappyGameRunning) return;
+            birdVelocity = jumpImpulse;
+        }
+
+        function createFlappyObstacles() {
+            if (!flappyGameArea) return;
+
+            const gap = VERTICAL_GAP;
+            const gameHeight = flappyGameArea.offsetHeight;
+            const gameWidth = flappyGameArea.offsetWidth;
+            const obstacleWidth = 60;
+            const minHeight = 50;
+            const maxTopHeight = gameHeight - gap - minHeight;
+
+            if (maxTopHeight < minHeight) return;
+
+            const topObstacleHeight = Math.floor(Math.random() * (maxTopHeight - minHeight + 1)) + minHeight;
+            const bottomObstacleHeight = gameHeight - gap - topObstacleHeight;
+
+            const topObstacle = document.createElement("div");
+            topObstacle.classList.add("obstacle-flappy");
+            topObstacle.style.height = topObstacleHeight + "px";
+            topObstacle.style.left = gameWidth + "px";
+            topObstacle.style.top = "0px";
+            flappyGameArea.appendChild(topObstacle);
+
+            const bottomObstacle = document.createElement("div");
+            bottomObstacle.classList.add("obstacle-flappy");
+            bottomObstacle.style.height = bottomObstacleHeight + "px";
+            bottomObstacle.style.left = gameWidth + "px";
+            bottomObstacle.style.bottom = "0px";
+            flappyGameArea.appendChild(bottomObstacle);
+
+            flappyObstacles.push({ element: topObstacle, x: gameWidth, width: obstacleWidth, type: "top", passed: false });
+            flappyObstacles.push({ element: bottomObstacle, x: gameWidth, width: obstacleWidth, type: "bottom", passed: false });
+        }
+
+        function checkFlappyCollision(obs) {
+            if (!flappyBird || !obs || !obs.element) return false;
+            const birdRect = flappyBird.getBoundingClientRect();
+            const obsRect = obs.element.getBoundingClientRect();
+            const collisionPadding = 8;
+            return (
+                birdRect.right - collisionPadding > obsRect.left &&
+                birdRect.left + collisionPadding < obsRect.right &&
+                birdRect.bottom - collisionPadding > obsRect.top &&
+                birdRect.top + collisionPadding < obsRect.bottom
+            );
+        }
+
+        // --- ¡NUEVO! Función para calcular monedas según el nivel del puesto ---
+        function getCoinsPerScore(level) {
+            if (level === undefined || level < 3) {
+                return 0; // No se ganan monedas antes de ser Supervisor
+            }
+            // A partir de Supervisor (nivel 3), se gana 1 moneda y se incrementa en 1 por cada nivel superior.
+            // Nivel 3 -> 1 moneda
+            // Nivel 4 -> 2 monedas
+            // Nivel 5 -> 3 monedas
+            // etc.
+            const coins = level - 2;
+            return coins;
+        }
+
+        function endFlappyGame() {
+            if (flappyEnded) return;
+            flappyEnded = true;
+            console.log("Fin del juego. Puntuación:", flappyScore);
+
+            flappyGameRunning = false;
+            if (flappyGameRequest) cancelAnimationFrame(flappyGameRequest);
+
+            // --- MODIFICADO: Cálculo de monedas ganadas según el puesto ---
+            const coinsPerPoint = getCoinsPerScore(tamagotchiData.nivel);
+            const coinsEarned = flappyScore * coinsPerPoint;
+            let newHighScore = tamagotchiData.flappyHighScore;
+
+            if (flappyScore > tamagotchiData.flappyHighScore) {
+                newHighScore = flappyScore;
+            }
+
+            // Guardar el resultado para que la página principal lo procese
+            localStorage.setItem('flappyGameResult', flappyScore.toString());
+
+            // Actualizar directamente los datos del tamagotchi en localStorage
+            tamagotchiData.coins += coinsEarned;
+            tamagotchiData.flappyHighScore = newHighScore;
+            localStorage.setItem('tamagotchiData', JSON.stringify(tamagotchiData));
+
+            if (startMessage && scoreMessage && flappyStartOverlay) {
+                startMessage.textContent = "¡Has perdido!";
+                scoreMessage.innerHTML = `Puntuación: ${flappyScore}<br>
+                                          Monedas Ganadas: ${coinsEarned}<br>
+                                          Mejor Puntuación: ${newHighScore}<br><br>
+                                          Toca para volver a jugar`;
+                flappyStartOverlay.style.display = "flex";
+
+                flappyStartOverlay.removeEventListener("click", handleStartInput);
+                flappyStartOverlay.removeEventListener("touchstart", handleStartInput);
+                flappyStartOverlay.addEventListener("click", handleStartInput);
+                flappyStartOverlay.addEventListener("touchstart", handleStartInput);
+            }
+        }
+
+        function saveAndExit() {
+            // Guardamos la puntuación actual como resultado final, incluso si el juego no ha terminado.
+            localStorage.setItem('flappyGameResult', flappyScore.toString());
+            // Redirigimos de vuelta
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>
