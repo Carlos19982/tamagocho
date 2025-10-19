@@ -1088,11 +1088,24 @@ function cargarTamagotchi(data) {
     function despertar() {
       if (estaDurmiendo) {
         estaDurmiendo = false;
-        if (sleepInterval) clearInterval(sleepInterval);
-        if (sleepUpdateInterval) clearInterval(sleepUpdateInterval);
+        if (sleepInterval) clearInterval(sleepInterval); // Detiene el ciclo de fondo del sueño
+        if (sleepUpdateInterval) clearInterval(sleepUpdateInterval); // Detiene la actualización de la barra de sueño
         localStorage.removeItem("sleepProgress");
         localStorage.removeItem("sleepCycleStart");
         document.body.classList.remove("sleeping");
+
+        // --- ¡NUEVA VERIFICACIÓN AL DESPERTAR! ---
+        // Comprueba si alguna necesidad llegó al máximo mientras dormía.
+        if (tamagotchi.hambre >= 10 || tamagotchi.aburrimiento >= 10 || tamagotchi.higiene >= 10) {
+          if (tamagotchi.hambre >= 10) tamagotchi.cause = "hambre mientras dormía";
+          else if (tamagotchi.aburrimiento >= 10) tamagotchi.cause = "aburrimiento extremo mientras dormía";
+          else if (tamagotchi.higiene >= 10) tamagotchi.cause = "falta de higiene mientras dormía";
+          
+          tamagotchi.estado = "muerto";
+          mostrarMensajeDeMuerte(); // Muestra el mensaje y finaliza el juego
+          return; // Detiene la ejecución para no continuar con el estado "despierto"
+        }
+
         localStorage.setItem("cycleStart", Date.now());
         scheduleNextUpdate();
         enableControls();
@@ -1316,18 +1329,56 @@ document.addEventListener("DOMContentLoaded", () => {
   // Contenedor del Muñeco (Click, Long Press, Multi-Tap)
   const muñecoContainer = document.getElementById("muñeco-container");
   if (muñecoContainer) { /* ... listener muñecoContainer sin cambios ... */
-      let longPressTimer; let adminTapCount = 0; let adminTapTimeout;
-      muñecoContainer.addEventListener("click", () => {
-           if (minijuegoActivo) return; if (estaDurmiendo) { despertar(); return; }
-           if (tamagotchi && tamagotchi.estado !== "muerto") { const iC = document.getElementById("info-container"); const iV = iC.style.display === "block"; iC.style.display = iV ? "none" : "block"; if (!iV) { actualizarInfoContainer(); } }
-           adminTapCount++; if (adminTapCount === 1) { adminTapTimeout = setTimeout(() => { adminTapCount = 0; }, 2000); }
-           if (adminTapCount === 10) { clearTimeout(adminTapTimeout); adminTapCount = 0; if (tamagotchi && tamagotchi.nombre === "Carlos") { const aO = document.getElementById("admin-overlay"); if (aO) { actualizarAdminVidaInterna(); aO.style.display = "block"; disableControls(); } } }
-      });
-      const startLP = (e) => { if (estaDurmiendo || minijuegoActivo || tamagotchi?.estado === "muerto") return; if (e.type === 'touchstart') e.preventDefault(); clearTimeout(longPressTimer); longPressTimer = setTimeout(showWorkMenu, 3000); };
-      const cancelLP = () => { clearTimeout(longPressTimer); };
-      muñecoContainer.addEventListener("mousedown", startLP); muñecoContainer.addEventListener("touchstart", startLP, { passive: false });
-      muñecoContainer.addEventListener("mouseup", cancelLP); muñecoContainer.addEventListener("mouseleave", cancelLP);
-      muñecoContainer.addEventListener("touchend", cancelLP); muñecoContainer.addEventListener("touchcancel", cancelLP);
+      let longPressTimer;
+      let isLongPress = false;
+      let adminTapCount = 0;
+      let adminTapTimeout;
+
+      const startPress = (e) => {
+          if (minijuegoActivo) return;
+          if (estaDurmiendo) { despertar(); return; }
+          if (tamagotchi?.estado === "muerto") return;
+
+          if (e.type === 'touchstart') e.preventDefault();
+          isLongPress = false;
+          clearTimeout(longPressTimer);
+
+          longPressTimer = setTimeout(() => {
+              isLongPress = true;
+              showWorkMenu();
+          }, 1000); // 1 segundo para considerar pulsación larga
+      };
+
+      const endPress = () => {
+          clearTimeout(longPressTimer);
+          if (!isLongPress && !estaDurmiendo && tamagotchi?.estado !== "muerto") {
+              // Acción para pulsación corta: muestra el menú de información
+              const iC = document.getElementById("info-container");
+              const iV = iC.style.display === "block";
+              iC.style.display = iV ? "none" : "block";
+              if (!iV) { actualizarInfoContainer(); }
+
+              // --- LÓGICA DEL MENÚ DE ADMINISTRACIÓN INTEGRADA ---
+              // Incrementa el contador de toques solo en pulsaciones cortas.
+              adminTapCount++;
+              if (adminTapCount === 1) {
+                  adminTapTimeout = setTimeout(() => { adminTapCount = 0; }, 2000); // Resetea tras 2 seg.
+              }
+              if (adminTapCount === 10) {
+                  clearTimeout(adminTapTimeout);
+                  adminTapCount = 0;
+                  if (tamagotchi && tamagotchi.nombre === "Carlos") {
+                      const aO = document.getElementById("admin-overlay");
+                      if (aO) { actualizarAdminVidaInterna(); aO.style.display = "block"; disableControls(); }
+                  }
+              }
+          }
+      };
+
+      muñecoContainer.addEventListener("mousedown", startPress);
+      muñecoContainer.addEventListener("touchstart", startPress, { passive: false });
+      muñecoContainer.addEventListener("mouseup", endPress);
+      muñecoContainer.addEventListener("touchend", endPress);
   }
 
   // Botones de Acción Principal
