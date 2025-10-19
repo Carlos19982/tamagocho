@@ -378,6 +378,7 @@
         flex: 1;
         text-align: center;
         min-height: 150px;
+        min-height: 220px; /* Aumentado de 150px a 220px para un área pulsable mayor */
         cursor: pointer;
       }
       #notification-container {
@@ -575,8 +576,8 @@
     align-items: center;   /* Centra el personaje (<pre>) verticalmente */
     
     /* 2. Define un tamaño mínimo cómodo para toda el área */
-    min-height: 200px;
-    padding: 20px; /* Añade espacio extra pulsable alrededor del muñeco */
+    min-height: 280px; /* Aumentamos drásticamente la altura mínima para un área táctil mucho más grande */
+    padding: 20px; /* Mantenemos un padding uniforme */
     
     /* 3. Mantiene las mejoras de experiencia táctil */
     -webkit-tap-highlight-color: transparent; /* Evita el destello azul al tocar */
