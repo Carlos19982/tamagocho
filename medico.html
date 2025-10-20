@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="style.css?v=1.1" />
+        <script defer src="tm.js?v=1.1"></script>
+    <title>Consulta del Médico</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #f0f8ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #consulta-container {
+            width: 95%;
+            max-width: 700px;
+            background: white;
+            border: 2px solid #888;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            border-bottom: 2px dashed #ccc;
+            padding-bottom: 10px;
+        }
+
+        #escena {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            margin: 20px 0;
+            min-height: 150px;
+        }
+
+        .personaje {
+            font-size: 1.5rem;
+            white-space: pre;
+            line-height: 1.2;
+        }
+
+        #dialogo-box {
+            border: 2px solid #333;
+            background-color: #fdfdfd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            min-height: 100px;
+            text-align: left;
+            font-size: 1.1rem;
+            color: #444;
+            position: relative;
+        }
+
+        #dialogo-texto::after {
+            content: '▋';
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        /* --- MODIFICADO: Estilo para el mensaje de continuar --- */
+        #continue-prompt {
+            margin-top: 20px;
+            padding: 12px 25px;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #555;
+            display: none; /* Oculto hasta que termine el diálogo */
+            background: none;
+            border: none;
+            animation: pulse-text 2s infinite;
+        }
+
+        /* --- ¡NUEVO! Animación para el texto de continuar --- */
+        @keyframes pulse-text {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+        }
+
+        /* --- ¡NUEVO! Media Query para adaptar a móviles --- */
+        @media (max-width: 600px) {
+            #consulta-container {
+                padding: 15px;
+                height: auto;
+                max-height: 95vh;
+                overflow-y: auto;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            #escena {
+                flex-direction: column; /* Apila los personajes verticalmente */
+                align-items: center;  /* Los centra */
+                gap: 20px; /* Añade espacio entre ellos */
+            }
+            .personaje {
+                font-size: 1.3rem; /* Reduce un poco el tamaño de los personajes */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="consulta-container">
+        <h1>Consulta del Dr. Huesos</h1>
+        <div id="escena">
+            <div id="doctor" class="personaje">
+<pre>
+   /´)
+  /  /
+ /  |
+´-´-|
+   / \
+  /   \
+ |     |
+ |     |
+</pre>
+            </div>
+            <div id="paciente" class="personaje">
+                <!-- El tamagotchi se cargará aquí -->
+            </div>
+        </div>
+        <div id="dialogo-box">
+            <p id="dialogo-texto"></p>
+        </div>
+        <p id="continue-prompt">Pulsa para continuar</p>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const pacienteDisplay = document.getElementById("paciente");
+            const dialogoTexto = document.getElementById("dialogo-texto");
+            const continuePrompt = document.getElementById("continue-prompt");
+
+            const tamagotchiData = JSON.parse(localStorage.getItem('tamagotchiData'));
+
+            if (!tamagotchiData) {
+                dialogoTexto.textContent = "Error: No se encontraron datos del paciente. Vuelva al juego principal.";
+                continuePrompt.style.display = 'block';
+                return;
+            }
+
+            // Función para obtener el peso ideal (simplificada de tm.js)
+            function getIdealWeight(age) {
+                if (age <= 10) return 5 + (age * 3);
+                if (age <= 20) return 35 + ((age - 10) * 3);
+                if (age <= 60) return 65 + ((age - 20) * 0.25);
+                return 75 - ((age - 60) * 0.2);
+            }
+
+            // Mostrar el tamagotchi
+            pacienteDisplay.innerHTML = `<pre>(\\_/)\n( o_o )\n(>   <)</pre>`;
+
+            // Lógica de diagnóstico
+            let diagnostico = `Dr. Huesos: "Veamos, ${tamagotchiData.nombre}... `;
+            const idealWeight = getIdealWeight(tamagotchiData.edad);
+            const weightDifference = tamagotchiData.peso - idealWeight;
+            let problemasEncontrados = false;
+
+            // --- ¡LÓGICA CORREGIDA! ---
+            // 1. Se revisa el peso y el hambre SIEMPRE, esté o no enfermo.
+            if (tamagotchiData.hambre > 8) {
+                diagnostico += `Tu principal problema es la falta de alimento. Estás muy débil. ¡Necesitas comer algo urgentemente! `;
+                problemasEncontrados = true;
+            } else if (weightDifference > 15) {
+                diagnostico += `Tu peso es considerablemente alto para tu edad (${tamagotchiData.peso.toFixed(1)}kg). El sobrepeso está afectando tu salud. Te recomiendo más ejercicio y una dieta equilibrada. `;
+                problemasEncontrados = true;
+            } else if (weightDifference < -10) {
+                diagnostico += `Estás muy por debajo de tu peso ideal (${tamagotchiData.peso.toFixed(1)}kg). La desnutrición te está haciendo enfermar. Necesitas alimentarte mejor. `;
+                problemasEncontrados = true;
+            }
+
+            // 2. Si está enfermo, se buscan otras causas si no se ha encontrado ya una obvia.
+            if (tamagotchiData.enfermo && !problemasEncontrados) {
+                diagnostico += `Parece que no te encuentras bien. `;
+                if (tamagotchiData.edad > 70 && Math.random() < 0.5) {
+                    diagnostico += `Son los achaques de la edad. A partir de cierta edad, es normal sentirse mal de vez en cuando. Descansa mucho.`;
+                } else if (tamagotchiData.vecesEnfermoPorComidaRapida > 0) {
+                    diagnostico += `Tu historial médico indica un consumo excesivo de comida rápida. Esa podría ser la causa de tu malestar actual.`;
+                } else {
+                    diagnostico += `No encuentro una causa clara, podría ser un malestar pasajero. Procura descansar y cuidar tus necesidades básicas.`;
+                }
+            } else if (!tamagotchiData.enfermo && !problemasEncontrados) {
+                diagnostico += `¡Estás en perfecta forma! Sigue así. No veo ningún problema de salud."`;
+            }
+
+            // Animación de escritura
+            let i = 0;
+            function escribirTexto() {
+                if (i < diagnostico.length) {
+                    dialogoTexto.innerHTML += diagnostico.charAt(i);
+                    i++;
+                    setTimeout(escribirTexto, 40); // Velocidad de escritura
+                } else {
+                    // --- ¡CORRECCIÓN! El pseudo-elemento ::after pertenece a dialogoTexto, no a su padre. ---
+                    // Al eliminar la clase o el estilo que lo crea, el cursor desaparece.
+                    dialogoTexto.style.animation = 'none'; // Detiene la animación de parpadeo
+                    dialogoTexto.style.borderRight = 'none'; // Oculta el cursor estático si lo hubiera
+                    continuePrompt.style.display = 'block';
+
+                    // --- MODIFICADO: Añadir listener a todo el body para continuar ---
+                    document.body.style.cursor = "pointer";
+                    document.body.addEventListener("click", () => {
+                        window.location.href = "index.html";
+                    }, { once: true }); // { once: true } para que el evento solo se dispare una vez
+                }
+            }
+
+            escribirTexto();
+        });
+    </script>
+
+</body>
+</html>
