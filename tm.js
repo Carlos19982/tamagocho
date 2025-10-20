@@ -865,10 +865,10 @@ function disableControls() {
       intentarEnfermarse() {
         if (this.enfermo) return; // Si ya está enfermo, no hacemos nada.
 
-        // 1. Probabilidad base por edad (lógica existente)
+        // 1. Probabilidad base por edad (combinando lógica antigua y nueva)
         let ageProb = 0;
-        if (this.edad < 5) ageProb = 0.04; // Reducido para dar más peso a la nueva mecánica
-        else if (this.edad < 10) ageProb = 0.02;
+        if (this.edad < 5) ageProb = 0.4;  // Probabilidad alta en la infancia (recuperado de tmm.js)
+        else if (this.edad < 10) ageProb = 0.2; // Probabilidad media en la infancia (recuperado de tmm.js)
         else if (this.edad < 45) ageProb = 0.01;
         else if (this.edad < 60) ageProb = 0.02;
         else if (this.edad < 70) ageProb = 0.04;
@@ -882,14 +882,16 @@ function disableControls() {
         const idealWeight = getIdealWeight(this.edad);
         const diff = this.peso - idealWeight;
         const safeRange = 12; // +/- 12kg se considera un rango seguro sin riesgo adicional.
-
-        if (Math.abs(diff) > safeRange) {
-            // La probabilidad aumenta linealmente fuera del rango seguro.
-            // El riesgo máximo se alcanza a una desviación de 25kg.
-            const deviation = Math.abs(diff) - safeRange;
-            const maxDeviation = 20; // A los 25kg de desviación (5+20), el riesgo es máximo.
-            const maxWeightRisk = 0.25; // Un 25% de probabilidad adicional como máximo.
-            weightProb = (deviation / maxDeviation) * maxWeightRisk;
+ 
+        // --- MODIFICACIÓN: El peso solo afecta a la salud a partir de los 13 años ---
+        if (this.edad > 12) {
+            if (Math.abs(diff) > safeRange) {
+                // La probabilidad aumenta linealmente fuera del rango seguro.
+                const deviation = Math.abs(diff) - safeRange;
+                const maxDeviation = 20; // A los 20kg de desviación sobre el rango seguro, el riesgo es máximo.
+                const maxWeightRisk = 0.25; // Un 25% de probabilidad adicional como máximo.
+                weightProb = (deviation / maxDeviation) * maxWeightRisk;
+            }
         }
 
         // 3. Probabilidad total
@@ -1018,6 +1020,13 @@ function disableControls() {
       cumpleAnios() {
         this.edad++;
         const avgHambre = this.statsHistory.hambre.reduce((a, b) => a + b, 0) / this.statsHistory.hambre.length;
+
+        // --- MODIFICACIÓN: Ajustar peso al ideal en la infancia (hasta los 12 años) ---
+        if (this.edad <= 12) {
+            this.peso = getIdealWeight(this.edad);
+            showPopup(`¡Feliz cumpleaños ${this.edad}! Tu peso se ha ajustado al ideal para tu edad.`, 5000);
+        }
+
         const avgAburrimiento = this.statsHistory.aburrimiento.reduce((a, b) => a + b, 0) / this.statsHistory.aburrimiento.length;
         const avgSueno = this.statsHistory.sueno.reduce((a, b) => a + b, 0) / this.statsHistory.sueno.length;
         const avgHigiene = this.statsHistory.higiene.reduce((a, b) => a + b, 0) / this.statsHistory.higiene.length;
@@ -1443,11 +1452,6 @@ function cargarTamagotchi(data) {
     });
     
     // --- Inicialización del Juego ---
-    // --- REEMPLAZA TODOS LOS BLOQUES "DOMContentLoaded" EXISTENTES CON ESTE ---
-
-// --- REEMPLAZA TODOS LOS BLOQUES "DOMContentLoaded" EXISTENTES CON ESTE (VERSIÓN CON TOGGLE CORREGIDO) ---
-
-// --- REEMPLAZA TODOS LOS BLOQUES "DOMContentLoaded" EXISTENTES CON ESTE (VERSIÓN FINAL CON CAMBIOS SOLICITADOS) ---
 
 // --- REEMPLAZA TODOS LOS BLOQUES "DOMContentLoaded" EXISTENTES CON ESTE (VERSIÓN COMPLETA CON DEBUG BOTONES TIENDA) ---
 
