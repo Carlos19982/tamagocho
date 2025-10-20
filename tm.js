@@ -267,7 +267,8 @@ function disableControls() {
     document.addEventListener("click", function (e) {
       ["food-menu", "clean-menu", "game-menu"].forEach((id) => {
         const menu = document.getElementById(id);
-        if (getComputedStyle(menu).display === "block" &&
+        // --- ¡CORRECCIÓN! Comprobar si el menú existe antes de acceder a sus estilos ---
+        if (menu && getComputedStyle(menu).display === "block" &&
             !e.target.closest("#" + id) &&
             !e.target.closest("button[id^='btn-']")) {
           menu.style.display = "none";
@@ -276,7 +277,11 @@ function disableControls() {
       });
     });
     ["food-menu", "clean-menu", "game-menu"].forEach((id) => {
-      document.getElementById(id).addEventListener("click", (e) => e.stopPropagation());
+      // --- ¡CORRECCIÓN! Comprobar si el elemento existe antes de añadir el listener ---
+      const element = document.getElementById(id);
+      if (element) {
+        element.addEventListener("click", (e) => e.stopPropagation());
+      }
     });
     function actualizarProgreso(id, valor) {
       const barra = document.getElementById(id);
@@ -1637,6 +1642,18 @@ document.addEventListener("DOMContentLoaded", () => {
       e.stopPropagation(); document.getElementById("work-menu").style.display = "none";
       if (!estaDurmiendo && !minijuegoActivo && getComputedStyle(document.getElementById("store-overlay")).display === 'none' && getComputedStyle(document.getElementById("inventory-overlay")).display === 'none' && getComputedStyle(document.getElementById("admin-overlay")).display === 'none') { enableControls(); }
   });
+  // --- ¡NUEVO! Listener para el botón de ir al médico ---
+  document.getElementById("btn-medico")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (tamagotchi.coins >= 350) {
+          tamagotchi.coins -= 350;
+          guardarTamagotchi();
+          window.location.href = "medico.html";
+      } else {
+          showPopup("No tienes suficientes monedas para ir al médico. La consulta cuesta 350 monedas.", 4000);
+      }
+  });
+
   document.getElementById("btn-flappy")?.addEventListener("click", (e) => { e.stopPropagation(); document.getElementById("work-menu").style.display = "none"; if (!estaDurmiendo) startFlappyGame(); });
  
   document.getElementById("btn-requisitos")?.addEventListener("click", (e) => {
