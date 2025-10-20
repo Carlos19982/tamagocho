@@ -270,6 +270,7 @@
         
       #clean-menu,
       #game-menu,
+      #sleep-menu,
       #work-menu {
         position: absolute;
         top: 50%;

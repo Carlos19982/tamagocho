@@ -144,6 +144,7 @@ function disableControls() {
       button.closest("#food-menu") ||  // Botones dentro del menú de comida
       button.closest("#clean-menu") || // Botones dentro del menú de limpieza
       button.closest("#game-menu") ||  // Botones dentro del menú de juegos
+      button.closest("#sleep-menu") || // Botones dentro del menú de sueño
       ["juego-saltar", "juego-reaccion", "juego-ducha", "boton-saltar", "admin-close", "btn-store-comida", "btn-store-objetos", "close-inventory"].includes(button.id) || // IDs específicos exentos (incluido el de cerrar inventario)
       button.closest("#store-overlay") // Permitir botones dentro del overlay de tienda (incluye .buy-btn y btn-store-comida/objetos)
       // El botón de cerrar el menú de trabajo (#close-work-menu) también está exento por button.closest("#work-menu")
@@ -1468,6 +1469,8 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("work-menu").style.display = "none";
   document.getElementById("clean-menu").style.display = "none";
   document.getElementById("game-menu").style.display = "none";
+  document.getElementById("sleep-menu").style.display = "none";
+  document.getElementById("sleep-menu").style.display = "none";
   document.getElementById("food-menu").style.display = "none";
   document.getElementById("minijuego-container").style.display = "none";
   document.getElementById("store-overlay").style.display = "none";
@@ -1627,9 +1630,45 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Botones de Acción Principal
   document.getElementById("btn-hambre")?.addEventListener("click", (e) => { e.stopPropagation(); if (tamagotchi?.estado !== "muerto" && !estaDurmiendo) { updateFoodMenu(); toggleMenu("food-menu"); } });
-  document.getElementById("btn-aburrimiento")?.addEventListener("click", (e) => { e.stopPropagation(); if (tamagotchi?.estado !== "muerto" && !estaDurmiendo) toggleMenu("game-menu"); });
-  document.getElementById("btn-sueno")?.addEventListener("click", (e) => { e.stopPropagation(); if (tamagotchi?.estado !== "muerto" && !estaDurmiendo) { iniciarSueño(); actualizarInterfaz(); } });
+  document.getElementById("btn-aburrimiento")?.addEventListener("click", (e) => { e.stopPropagation(); if (tamagotchi?.estado !== "muerto" && !estaDurmiendo) toggleMenu("game-menu"); }); 
+  document.getElementById("btn-sueno")?.addEventListener("click", (e) => { e.stopPropagation(); if (tamagotchi?.estado !== "muerto" && !estaDurmiendo) toggleMenu("sleep-menu"); });
   document.getElementById("btn-higiene")?.addEventListener("click", (e) => { e.stopPropagation(); if (tamagotchi?.estado !== "muerto" && !estaDurmiendo) toggleMenu("clean-menu"); });
+
+  // Botones dentro del nuevo menú de sueño
+  document.getElementById("btn-dormir-largo")?.addEventListener("click", (e) => { e.stopPropagation(); document.getElementById("sleep-menu").style.display = "none"; if (!estaDurmiendo) { iniciarSueño(); actualizarInterfaz(); } });
+  document.getElementById("btn-siesta")?.addEventListener("click", (e) => { 
+    e.stopPropagation(); 
+    document.getElementById("sleep-menu").style.display = "none";
+    if (!estaDurmiendo) {
+      iniciarSiesta();
+    }
+  });
+
+  function iniciarSiesta() {
+    if (estaDurmiendo || minijuegoActivo) return;
+
+    disableControls();
+    document.body.classList.add("sleeping");
+    showPopup("Tu Tamagotchi está echando una siesta...", 14500);
+
+    const duracionSiesta = 15000; // 15 segundos
+    const suenoInicial = tamagotchi.sueno;
+    const tiempoInicio = Date.now();
+
+    const siestaInterval = setInterval(() => {
+        const tiempoTranscurrido = Date.now() - tiempoInicio;
+        const progreso = Math.min(tiempoTranscurrido / duracionSiesta, 1);
+
+        tamagotchi.sueno = Math.max(0, suenoInicial * (1 - progreso));
+        actualizarInterfaz();
+
+        if (progreso >= 1) {
+            clearInterval(siestaInterval);
+            document.body.classList.remove("sleeping");
+            enableControls();
+        }
+    }, 50);
+  }
 
   // Botones dentro de los Menús Desplegables
   document.getElementById("juego-saltar")?.addEventListener("click", (e) => { e.stopPropagation(); document.getElementById("game-menu").style.display = "none"; if (!estaDurmiendo) startMinijuego(); });
@@ -1790,9 +1829,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Cerrar Menús/Overlays al hacer clic fuera (MODIFICADO para no cerrar work-menu) ---
    document.addEventListener("click", function (e) {
-      const menusToCloseOnClickOutside = ["food-menu", "clean-menu", "game-menu"]; // Excluye work-menu
+      const menusToCloseOnClickOutside = ["food-menu", "clean-menu", "game-menu", "sleep-menu"]; // Excluye work-menu
       let clickedInsideInteractiveElement = false;
-      const interactiveAreas = ["#food-menu", "#clean-menu", "#game-menu", "#work-menu", "#store-overlay", "#inventory-overlay", "#admin-overlay", "#store-icon", "#inventory-icon", ".buttons-container", "#muñeco-container"];
+      const interactiveAreas = ["#food-menu", "#clean-menu", "#game-menu", "#sleep-menu", "#work-menu", "#store-overlay", "#inventory-overlay", "#admin-overlay", "#store-icon", "#inventory-icon", ".buttons-container", "#muñeco-container"];
       for (const area of interactiveAreas) { if (e.target.closest(area)) { clickedInsideInteractiveElement = true; break; } }
 
       if (!clickedInsideInteractiveElement) {
@@ -1805,7 +1844,7 @@ document.addEventListener("DOMContentLoaded", () => {
    });
 
    // Evitar que clics dentro de los menús/overlays los cierren (propagación)
-   ["food-menu", "clean-menu", "game-menu", "work-menu", "store-overlay", "inventory-overlay", "admin-overlay"].forEach((id) => {
+   ["food-menu", "clean-menu", "game-menu", "sleep-menu", "work-menu", "store-overlay", "inventory-overlay", "admin-overlay"].forEach((id) => {
        document.getElementById(id)?.addEventListener("click", (e) => e.stopPropagation());
    });
 
