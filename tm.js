@@ -56,8 +56,8 @@ const foodEffects = {
     ];
     
     // --- Configuración del ciclo ---
-    const cicloMs = 280000; // Aproximadamente 4.67 minutos
-    const tiempoTotalSueñoPersonalizado =3000000; // 50 minutos
+    const cicloMs = 900000; // 15 minutos. Un ciclo más largo y relajado.
+    const tiempoTotalSueñoPersonalizado = 7200000; // 2 horas. Un ciclo de sueño largo para cubrir ausencias (trabajo, dormir).
     let promotionCheckedThisCycle = false;
     
     // Parámetros de Flappy Bird
