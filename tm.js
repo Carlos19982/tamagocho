@@ -2253,35 +2253,54 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ... (resto de tu código DOMContentLoaded, como listeners de botones de tienda, etc.)
 });
-// --- Añade esta función en alguna parte de tu tm.js ---
-function populateInventoryList() { 
+
+// --- FUNCIÓN MODIFICADA para mostrar solo el tier más alto de cada objeto ---
+function populateInventoryList() {
   const listElement = document.getElementById("inventory-unique-list");
   if (!listElement) {
     console.error("¡Elemento de lista de inventario ('inventory-unique-list') no encontrado!");
     return;
   }
   listElement.innerHTML = ""; // Limpiar elementos anteriores
- 
+
   if (!tamagotchi || !tamagotchi.objectInventory || tamagotchi.objectInventory.length === 0) {
     listElement.innerHTML = "<li>No tienes objetos comprados.</li>";
     return;
   }
- 
-  // Recorre el inventario de objetos del jugador
-  tamagotchi.objectInventory.forEach(itemId => {
-    let foundItemName = null;
-    // Busca en la estructura de tiers el nombre correspondiente al ID
-    for (const category in objectTiers) {
-      const tier = objectTiers[category].find(t => t.id === itemId);
-      if (tier) {
-        foundItemName = tier.name;
+
+  const highestTierItems = [];
+
+  // 1. Itera sobre cada categoría de objeto (movil, habitacion, etc.)
+  for (const category in objectTiers) {
+    const tiers = objectTiers[category]; // Array de tiers para la categoría actual
+    let highestOwnedTierForCategory = null;
+
+    // 2. Revisa los tiers de la categoría en orden inverso (del más alto al más bajo)
+    for (let i = tiers.length - 1; i >= 0; i--) {
+      const tier = tiers[i];
+      // 3. Si el jugador posee este tier, es el más alto de esa categoría. Guárdalo y sal del bucle.
+      if (tamagotchi.objectInventory.includes(tier.id)) {
+        highestOwnedTierForCategory = tier;
         break;
       }
     }
-    const li = document.createElement("li");
-    li.textContent = foundItemName || itemId; // Muestra el nombre completo o el ID si no se encuentra
-    listElement.appendChild(li);
-  });
+
+    // 4. Si se encontró un objeto para esta categoría, añádelo a la lista para mostrar
+    if (highestOwnedTierForCategory) {
+      highestTierItems.push(highestOwnedTierForCategory);
+    }
+  }
+
+  // 5. Muestra los objetos encontrados o el mensaje de inventario vacío
+  if (highestTierItems.length === 0) {
+    listElement.innerHTML = "<li>No tienes objetos comprados.</li>";
+  } else {
+    highestTierItems.forEach(item => {
+      const li = document.createElement("li");
+      li.textContent = item.name;
+      listElement.appendChild(li);
+    });
+  }
 }
 
   //skyJUM`P
