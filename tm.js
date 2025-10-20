@@ -1560,6 +1560,24 @@ document.addEventListener("DOMContentLoaded", () => {
       guardarTamagotchi();
   }
 
+  // --- ¡NUEVO! VERIFICAR RESULTADO DEL PASEO AL CARGAR ---
+  const walkResult = localStorage.getItem("walkGameResult");
+  if (walkResult) {
+      if (walkResult === 'finished_offline') {
+          const reason = localStorage.getItem('offlineWalkEndReason') || "un evento inesperado";
+          showPopup(`Tu Tamagotchi decidió volver a casa por ${reason}.`, 5000);
+      } else if (walkResult === 'abandoned') {
+          // --- ¡NUEVO! Caso para el paseo abandonado ---
+          const reason = localStorage.getItem('offlineWalkEndReason') || "Te echa de menos.";
+          showPopup(reason, 5000);
+      }
+      // Limpiar para no procesar de nuevo
+      localStorage.removeItem("walkGameResult");
+      localStorage.removeItem("offlineWalkEndReason");
+      localStorage.removeItem('walkInProgressState'); // Limpieza extra por si acaso
+      guardarTamagotchi();
+  }
+
 
   // --- Listeners de Botones y Elementos Interactivos ---
 
@@ -1691,6 +1709,14 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
           showPopup("No tienes suficientes monedas para ir al médico. La consulta cuesta 350 monedas.", 4000);
       }
+  });
+
+  // --- ¡NUEVO! Listener para el botón de salir de paseo ---
+  document.getElementById("btn-paseo")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      // Guardamos el estado actual antes de ir al paseo
+      guardarTamagotchi();
+      window.location.href = "paseo.html";
   });
 
   document.getElementById("btn-flappy")?.addEventListener("click", (e) => { e.stopPropagation(); document.getElementById("work-menu").style.display = "none"; if (!estaDurmiendo) startFlappyGame(); });
