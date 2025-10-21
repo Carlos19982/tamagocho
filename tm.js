@@ -1512,9 +1512,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (tamagotchi.estado === "muerto") { mostrarMensajeDeMuerte(); }
   } else { console.log("No hay datos guardados, mostrando menú de inicio."); menuContainer.style.display = "block"; gameContainer.style.display = "none"; }
 
-  // --- ¡NUEVO! Comprobar eventos remotos al cargar el juego ---
-  checkRemoteEvents();
-
   // --- ¡NUEVO! VERIFICAR RESULTADO DEL JUEGO FLAPPY BIRD AL CARGAR ---
   const flappyResult = localStorage.getItem("flappyGameResult");
   if (flappyResult) {
