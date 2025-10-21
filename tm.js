@@ -458,11 +458,23 @@ function disableControls() {
     function actualizarNotificaciones() {
       const container = document.getElementById("notification-container");
       let mensajes = [];
+      const idealWeight = getIdealWeight(tamagotchi.edad);
+
       if (tamagotchi.hambre >= 8.5) mensajes.push(`${tamagotchi.nombre} tiene hambre.`);
       if (tamagotchi.aburrimiento >= 8.5) mensajes.push(`${tamagotchi.nombre} está aburrido.`);
       // --- ¡NUEVO! Notificación para la insulina ---
       if (tamagotchi.esDiabetico && tamagotchi.necesitaInsulina) {
         mensajes.push(`${tamagotchi.nombre} necesita su dosis de insulina.`);
+      }
+      // --- ¡NUEVO! Notificación de caca ---
+      if (tamagotchi.cagado) {
+        mensajes.push(`${tamagotchi.nombre} se ha hecho caca. ¡Necesita una limpieza!`);
+      }
+      // --- ¡NUEVO! Notificaciones de peso ---
+      if (tamagotchi.peso > idealWeight + 18) {
+        mensajes.push(`${tamagotchi.nombre} tiene un sobrepeso peligroso.`);
+      } else if (tamagotchi.peso < idealWeight - 13) {
+        mensajes.push(`${tamagotchi.nombre} tiene un peso peligrosamente bajo.`);
       }
       if (tamagotchi.sueno >= 8.5) mensajes.push(`${tamagotchi.nombre} tiene sueño.`);
       if (tamagotchi.higiene >= 8.5) mensajes.push(`${tamagotchi.nombre} necesita higiene.`);
