@@ -183,20 +183,19 @@
             const weightDifference = tamagotchiData.peso - idealWeight;
             let problemasEncontrados = false;
 
-            // --- ¡LÓGICA CORREGIDA! ---
-            // 1. Se revisa el peso y el hambre SIEMPRE, esté o no enfermo.
-            if (tamagotchiData.hambre > 8) {
-                diagnostico += `Tu principal problema es la falta de alimento. Estás muy débil. ¡Necesitas comer algo urgentemente! `;
-                problemasEncontrados = true;
-            } else if (weightDifference > 15) {
+            // --- LÓGICA DE DIAGNÓSTICO MEJORADA ---
+            // 1. Se revisa el peso como una de las primeras causas.
+            if (weightDifference > 15) {
                 diagnostico += `Tu peso es considerablemente alto para tu edad (${tamagotchiData.peso.toFixed(1)}kg). El sobrepeso está afectando tu salud. Te recomiendo más ejercicio y una dieta equilibrada. `;
                 problemasEncontrados = true;
             } else if (weightDifference < -10) {
                 diagnostico += `Estás muy por debajo de tu peso ideal (${tamagotchiData.peso.toFixed(1)}kg). La desnutrición te está haciendo enfermar. Necesitas alimentarte mejor. `;
                 problemasEncontrados = true;
+            } else if (tamagotchiData.hambre > 8) {
+                diagnostico += `Tu principal problema es la falta de alimento. Estás muy débil. ¡Necesitas comer algo urgentemente! `;
+                problemasEncontrados = true;
             }
 
-            // 2. Si está enfermo, se buscan otras causas si no se ha encontrado ya una obvia.
             if (tamagotchiData.enfermo && !problemasEncontrados) {
                 diagnostico += `Parece que no te encuentras bien. `;
                 if (tamagotchiData.edad > 70 && Math.random() < 0.5) {

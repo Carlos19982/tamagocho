@@ -273,6 +273,7 @@
             let eventTimeout = null; // Para controlar el temporizador de eventos
             let currentEvent = null; // Para guardar el evento activo
             let walkCoins = 0;
+            let walkMercadilloInventory = []; // <-- ¡NUEVO! Inventario temporal para el paseo
 
             const mercadilloObjects = {
               common: [
@@ -804,7 +805,7 @@
 
               const randomItem = itemPool[Math.floor(Math.random() * itemPool.length)];
 
-              tamagotchiData.mercadilloInventory.push(randomItem);
+              walkMercadilloInventory.push(randomItem); // Añade al inventario temporal del paseo
               return randomItem;
             }
 
@@ -849,6 +850,7 @@
                 walkInProgress = true;
 
                 walkCoins = 0;
+                walkMercadilloInventory = []; // Resetea el inventario temporal
                 updateWalkCoins(0);
                 walkCoinDisplay.classList.remove('hidden');
 
@@ -1050,24 +1052,41 @@
                 clearTimeout(eventTimeout);
 
                 choicesContainer.innerHTML = '';
-                exitBtn.classList.add('hidden');
                 walkCoinDisplay.classList.add('hidden');
 
-                if (tamagotchiData) {
-                    /*
-                     * El tamagotchiData.coins ya fue modificado durante los eventos
-                     */
-                    localStorage.setItem('tamagotchiData', JSON.stringify(tamagotchiData));
-                }
-                localStorage.removeItem('walkInProgressState');
-                localStorage.setItem('walkGameResult', 'finished');
-
                 if (forced) {
+                    localStorage.setItem('tamagotchiData', JSON.stringify(tamagotchiData));
+                    localStorage.setItem('walkGameResult', 'finished');
                     window.location.href = "index.html";
+                    return;
+                }
+
+                // --- ¡NUEVA LÓGICA DE KARMA AL FINALIZAR! ---
+                if (tamagotchiData && tamagotchiData.karma < 0) {
+                    // Evento de ladrón por karma negativo
+                    exitBtn.classList.add('hidden');
+                    eventDescription.textContent = "De camino a casa, por una calle poco iluminada, un extraño te detiene...";
+                    characterDialog.textContent = '"¡Esto es un atraco! ¡Dame todo lo que tienes!"';
+                    
+                    tamagotchiData.coins = 0; // El ladrón te roba TODO el dinero
+                    // Los objetos del mercadillo (walkMercadilloInventory) simplemente no se añaden.
+
+                    setTimeout(() => {
+                        localStorage.setItem('tamagotchiData', JSON.stringify(tamagotchiData));
+                        localStorage.setItem('walkGameResult', 'finished');
+                        window.location.href = "index.html";
+                    }, 4000);
+
                 } else {
+                    // Final normal, con karma bueno o neutral
+                    exitBtn.classList.add('hidden');
                     eventDescription.textContent = "Decides que es hora de volver. El camino de vuelta a casa es tranquilo.";
                     characterDialog.textContent = "¡Qué buen paseo! Ya tengo ganas de descansar en casa.";
-                    setTimeout(() => { window.location.href = "index.html"; }, 3000);
+                    // Añadir los objetos del mercadillo al inventario principal
+                    tamagotchiData.mercadilloInventory.push(...walkMercadilloInventory);
+                    localStorage.setItem('tamagotchiData', JSON.stringify(tamagotchiData));
+                    localStorage.setItem('walkGameResult', 'finished');
+                    setTimeout(() => { window.location.href = "index.html"; }, 4000);
                 }
             }
 

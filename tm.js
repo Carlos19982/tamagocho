@@ -89,18 +89,7 @@ const foodEffects = {
     const tiempoTotalSueñoPersonalizado = 7200000; // 2 horas. Un ciclo de sueño largo para cubrir ausencias (trabajo, dormir).
     let promotionCheckedThisCycle = false;
     
-    // Parámetros de Flappy Bird
-    let birdY = 0, birdVelocity = 0, gravity, jumpImpulse, obstacleSpeed = 2;
-    
-    if (window.innerWidth < 600) {
-    // Configuración para móvil
-    gravity = 0.3;
-    jumpImpulse = -6;
-    } else {
-    // Configuración para ordenador
-    gravity = 0.2;
-    jumpImpulse = -7;
-    }
+   
     let intervaloGlobal, sleepInterval, sleepUpdateInterval;
 
     // --- ¡NUEVO! Función para calcular el peso ideal según la edad ---
@@ -140,7 +129,7 @@ const foodEffects = {
     function backgroundUpdateDuringSleep() {
     // Actualiza el estado en modo dormido (puedes usar la función que ya tienes en la clase)
     tamagotchi.actualizarEstadoDormido();
-    console.log("Actualización en background durante el sueño.");
+    console.log("Ciclo de sueño: Actualización de estado en background.");
     // Aquí puedes agregar cualquier otra actualización que quieras ejecutar mientras duerme
     }
     
@@ -470,12 +459,14 @@ function disableControls() {
       if (tamagotchi.cagado) {
         mensajes.push(`${tamagotchi.nombre} se ha hecho caca. ¡Necesita una limpieza!`);
       }
-      // --- ¡NUEVO! Notificaciones de peso ---
+      /* --- ELIMINADO: Las notificaciones de peso ahora las da el médico ---
       if (tamagotchi.peso > idealWeight + 18) {
         mensajes.push(`${tamagotchi.nombre} tiene un sobrepeso peligroso.`);
       } else if (tamagotchi.peso < idealWeight - 13) {
         mensajes.push(`${tamagotchi.nombre} tiene un peso peligrosamente bajo.`);
       }
+      */
+
       if (tamagotchi.sueno >= 8.5) mensajes.push(`${tamagotchi.nombre} tiene sueño.`);
       if (tamagotchi.higiene >= 8.5) mensajes.push(`${tamagotchi.nombre} necesita higiene.`);
       if (tamagotchi.enfermo) mensajes.push(`${tamagotchi.nombre} está enfermo.`);
@@ -1405,6 +1396,7 @@ function cargarTamagotchi(data) {
     
     intervaloGlobal = setTimeout(() => {
     if (tamagotchi.estado === "muerto") {
+    console.log("Ciclo normal: Detectada muerte. Mostrando mensaje.");
     mostrarMensajeDeMuerte();
     return;
     }
@@ -1443,6 +1435,7 @@ function cargarTamagotchi(data) {
     
     
     document.addEventListener("visibilitychange", function () {
+      console.log("Visibilidad de la página cambió a:", document.visibilityState);
       if (document.visibilityState === "hidden") {
       } else if (document.visibilityState === "visible") {
         scheduleNextUpdate();
