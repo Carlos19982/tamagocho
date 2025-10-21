@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <link rel="stylesheet" type="text/css" href="style.css?v=1.2" />
+    <link rel="stylesheet" type="text/css" href="style.css?v=1.8" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Paseo con Tamagotchi</title>
@@ -839,8 +839,8 @@
 
             function updateWalkCoins(amount) {
                 walkCoins += amount;
-                let sign = walkCoins >= 0 ? '+' : '';
-                walkCoinDisplay.textContent = `Paseo: ${sign}${walkCoins} 🪙`;
+                const totalSign = walkCoins >= 0 ? '+' : '';
+                walkCoinDisplay.textContent = `Paseo: ${totalSign}${walkCoins} 🪙`;
             }
 
             function startWalk() {
@@ -995,7 +995,8 @@
                     aburrimiento: newData.aburrimiento - oldData.aburrimiento,
                     higiene: newData.higiene - oldData.higiene,
                     sueno: newData.sueno - oldData.sueno,
-                    karma: (newData.karma || 0) - (oldData.karma || 0)
+                    karma: (newData.karma || 0) - (oldData.karma || 0),
+                    coins: newData.coins - oldData.coins
                 };
 
                 // Mapeo de nombres para mostrar
@@ -1004,7 +1005,8 @@
                     aburrimiento: "Aburrimiento",
                     higiene: "Higiene",
                     sueno: "Sueño",
-                    karma: "Karma"
+                    karma: "Karma",
+                    coins: "Monedas"
                 };
 
                 for (const stat in changes) {
@@ -1012,9 +1014,13 @@
                     if (Math.abs(diff) > 0.01) { // Usamos un umbral pequeño para evitar errores de flotantes
                         const sign = diff > 0 ? '+' : '';
                         const type = (stat === 'hambre' || stat === 'aburrimiento' || stat === 'higiene' || stat === 'sueno') 
-                                     ? (diff > 0 ? 'negative' : 'positive') 
+                                     ? (diff > 0 ? 'negative' : 'positive')
+                                     : (stat === 'coins')
+                                     ? 'neutral'
                                      : (diff > 0 ? 'positive' : 'negative');
-                        showStatChange(`${sign}${diff.toFixed(1)} ${statNames[stat]}`, type);
+                        // Para monedas, no mostramos decimales
+                        const valueString = (stat === 'coins') ? diff.toFixed(0) : diff.toFixed(1);
+                        showStatChange(`${sign}${valueString} ${statNames[stat]}`, type);
                     }
                 }
             }
@@ -1068,8 +1074,10 @@
                     eventDescription.textContent = "De camino a casa, por una calle poco iluminada, un extraño te detiene...";
                     characterDialog.textContent = '"¡Esto es un atraco! ¡Dame todo lo que tienes!"';
                     
-                    tamagotchiData.coins = 0; // El ladrón te roba TODO el dinero
-                    // Los objetos del mercadillo (walkMercadilloInventory) simplemente no se añaden.
+                    // El ladrón te roba las monedas que has conseguido durante el paseo.
+                    // Simplemente revertimos las ganancias/pérdidas del paseo.
+                    tamagotchiData.coins -= walkCoins;
+                    // Los objetos del mercadillo (walkMercadilloInventory) no se añaden, así que se pierden.
 
                     setTimeout(() => {
                         localStorage.setItem('tamagotchiData', JSON.stringify(tamagotchiData));
