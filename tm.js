@@ -1696,12 +1696,12 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- ¡NUEVO! Listener para el botón de ir al médico ---
   document.getElementById("btn-medico")?.addEventListener("click", (e) => {
       e.stopPropagation();
-      if (tamagotchi.coins >= 350) {
-          tamagotchi.coins -= 350;
+      if (tamagotchi.coins >= 170) {
+          tamagotchi.coins -= 170;
           guardarTamagotchi();
           window.location.href = "medico.html";
       } else {
-          showPopup("No tienes suficientes monedas para ir al médico. La consulta cuesta 350 monedas.", 4000);
+          showPopup("No tienes suficientes monedas para ir al médico. La consulta cuesta 170 monedas.", 4000);
       }
   });
 
