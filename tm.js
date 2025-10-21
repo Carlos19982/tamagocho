@@ -1,4 +1,3 @@
-
 //niveles de comida
 const foodEffects = {
     "ensalada": 3.6,
@@ -41,6 +40,36 @@ const foodEffects = {
         { id: 'auriculares_t3', name: 'Auriculares de estudio', cost: 12000 }
       ]
     };
+
+    const mercadilloObjects = {
+      common: [
+        { id: 'reloj_casio', name: 'Reloj Casio', value: [100, 200] },
+        { id: 'taza_cafe', name: 'Taza de café', value: [100, 200] },
+        { id: 'libro_viejo', name: 'Libro viejo', value: [100, 200] },
+        { id: 'poster_pelicula', name: 'Póster de película', value: [100, 200] },
+        { id: 'planta_plastico', name: 'Planta de plástico', value: [100, 200] },
+        { id: 'figura_accion', name: 'Figura de acción', value: [100, 200] },
+        { id: 'gorra', name: 'Gorra', value: [100, 200] },
+        { id: 'gafas_sol', name: 'Gafas de sol', value: [100, 200] },
+        { id: 'llavero', name: 'Llavero', value: [100, 200] },
+        { id: 'comic', name: 'Cómic', value: [100, 200] }
+      ],
+      uncommon: [
+        { id: 'vinilo_antiguo', name: 'Vinilo antiguo', value: [300, 700] },
+        { id: 'camara_fotos', name: 'Cámara de fotos', value: [300, 700] },
+        { id: 'walkman', name: 'Walkman', value: [300, 700] },
+        { id: 'consola_retro', name: 'Consola retro', value: [300, 700] },
+        { id: 'maquina_escribir', name: 'Máquina de escribir', value: [300, 700] },
+        { id: 'telefono_antiguo', name: 'Teléfono antiguo', value: [300, 700] },
+        { id: 'mapa_antiguo', name: 'Mapa antiguo', value: [300, 700] },
+        { id: 'joya_plata', name: 'Joya de plata', value: [300, 700] }
+      ],
+      rare: [
+        { id: 'pepita_oro', name: 'Pepita de oro', value: [5000, 6000] },
+        { id: 'diamante', name: 'Diamante', value: [5000, 6000] }
+      ]
+    };
+
     
     
     // --- Escala de puestos y salarios ---
@@ -133,69 +162,46 @@ const foodEffects = {
 // --- REEMPLAZA TU FUNCIÓN disableControls ACTUAL CON ESTA ---
 
 function disableControls() {
-  console.log("Llamando a disableControls..."); // Log para depuración
-
-  // Deshabilitar botones específicos, excepto los de menús abiertos o necesarios
-  document.querySelectorAll("button").forEach(button => {
-    // Excepciones: botones dentro de menús específicos, botones de minijuego, admin, tienda interna, compra, cerrar overlays
-    if (
-      button.closest("#work-menu") || // Botones dentro del menú de trabajo
-      button.closest("#admin-menu") || // Botones dentro del menú de admin
-      button.closest("#food-menu") ||  // Botones dentro del menú de comida
-      button.closest("#clean-menu") || // Botones dentro del menú de limpieza
-      button.closest("#game-menu") ||  // Botones dentro del menú de juegos
-      button.closest("#sleep-menu") || // Botones dentro del menú de sueño
-      ["juego-saltar", "juego-reaccion", "juego-ducha", "boton-saltar", "admin-close", "btn-store-comida", "btn-store-objetos", "close-inventory"].includes(button.id) || // IDs específicos exentos (incluido el de cerrar inventario)
-      button.closest("#store-overlay") // Permitir botones dentro del overlay de tienda (incluye .buy-btn y btn-store-comida/objetos)
-      // El botón de cerrar el menú de trabajo (#close-work-menu) también está exento por button.closest("#work-menu")
-    ) {
-       // console.log("Botón NO deshabilitado:", button.id || button.textContent.substring(0, 20));
-      // Estos botones se dejan activos o su estado lo controla el menú/overlay
-    } else {
-       // console.log("Botón SÍ deshabilitado:", button.id || button.textContent.substring(0, 20));
-       button.disabled = true; // Deshabilita el resto de botones generales
+    console.log("Llamando a disableControls..."); // Log para depuración
+  
+    // Deshabilitar botones específicos, excepto los de menús abiertos o necesarios
+    document.querySelectorAll("button").forEach(button => {
+      // Excepciones: botones dentro de menús específicos, botones de minijuego, admin, tienda interna, compra, cerrar overlays
+      const parentMenu = button.closest("#work-menu, #admin-menu, #food-menu, #clean-menu, #game-menu, #sleep-menu, #store-overlay, #inventory-overlay");
+      const isExemptId = ["juego-saltar", "juego-reaccion", "juego-ducha", "boton-saltar", "admin-close", "btn-store-comida", "btn-store-objetos", "close-inventory"].includes(button.id);
+      
+      if (parentMenu || isExemptId) {
+         // console.log("Botón NO deshabilitado:", button.id || button.textContent.substring(0, 20));
+        // Estos botones se dejan activos o su estado lo controla el menú/overlay
+      } else {
+         // console.log("Botón SÍ deshabilitado:", button.id || button.textContent.substring(0, 20));
+         button.disabled = true; // Deshabilita el resto de botones generales
+      }
+    });
+  
+    // --- NO DESACTIVAR LOS ICONOS DE TOGGLE (Tienda e Inventario) ---
+    // Los iconos #store-icon y #inventory-icon deben permanecer clickeables
+    // para poder cerrar los overlays que abren.
+    // Por lo tanto, NO aplicamos pointerEvents = "none" a ellos aquí.
+  
+    // Deshabilitar interacción con otros elementos si es necesario (ej. muñeco)
+    const muñecoContainer = document.getElementById("muñeco-container");
+    if (muñecoContainer) {
+        // Deshabilitar clics en el muñeco mientras un overlay/menú está abierto (excepto para despertar)
+        // Se podría refinar si se quiere permitir despertar siempre
+        // muñecoContainer.style.pointerEvents = "none";
+        // Considerar si realmente se quiere deshabilitar el muñeco aquí o manejarlo en los listeners de apertura/cierre
     }
-  });
-
-  // --- NO DESACTIVAR LOS ICONOS DE TOGGLE (Tienda e Inventario) ---
-  // Los iconos #store-icon y #inventory-icon deben permanecer clickeables
-  // para poder cerrar los overlays que abren.
-  // Por lo tanto, NO aplicamos pointerEvents = "none" a ellos aquí.
-
-  // Deshabilitar interacción con otros elementos si es necesario (ej. muñeco)
-  const muñecoContainer = document.getElementById("muñeco-container");
-  if (muñecoContainer) {
-      // Deshabilitar clics en el muñeco mientras un overlay/menú está abierto (excepto para despertar)
-      // Se podría refinar si se quiere permitir despertar siempre
-      // muñecoContainer.style.pointerEvents = "none";
-      // Considerar si realmente se quiere deshabilitar el muñeco aquí o manejarlo en los listeners de apertura/cierre
+  
+     // Se asume que enableControls revertirá cualquier 'pointerEvents = "none"' que se aplique aquí o en otro lugar.
+     // Por simplicidad y para asegurar el toggle, es mejor evitar deshabilitar los iconos aquí.
+     console.log("disableControls ejecutado (icono tienda/inventario permanecen activos).");
   }
-
-   // Se asume que enableControls revertirá cualquier 'pointerEvents = "none"' que se aplique aquí o en otro lugar.
-   // Por simplicidad y para asegurar el toggle, es mejor evitar deshabilitar los iconos aquí.
-   console.log("disableControls ejecutado (icono tienda/inventario permanecen activos).");
-}
 
 
   
   function enableControls() {
     // Reactiva todos los botones
-    document.querySelectorAll("button").forEach(button => {
-      button.disabled = false;
-    });
-    // Reactiva la interacción en los contenedores clave
-    ["store-icon", "minijuego-container", "muñeco-container"].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) {
-        el.style.pointerEvents = "auto";
-      }
-    });
-  }
-  
-  
-  
-  // Reactiva todos los botones y la interacción en los contenedores
-  function enableControls() {
     document.querySelectorAll("button").forEach(button => {
       button.disabled = false;
     });
@@ -208,38 +214,6 @@ function disableControls() {
     });
   }
   
-      
-      function enableControls() {
-        // Lista de IDs de los botones de acción que queremos reactivar
-        const botonesAccion = [
-          "btn-hambre",
-          "btn-aburrimiento",
-          "btn-sueno",
-          "btn-higiene",
-          "juego-saltar",
-          "juego-reaccion",
-          "juego-ducha",
-          "boton-saltar"
-        ];
-        botonesAccion.forEach(id => {
-          const btn = document.getElementById(id);
-          if (btn) {
-            btn.disabled = false;
-          }
-        });
-      
-        // Reactiva la interacción en los contenedores: personaje, tienda y área de minijuegos
-        const contenedores = ["muñeco-container", "store-icon", "minijuego-container"];
-        contenedores.forEach(id => {
-          const el = document.getElementById(id);
-          if (el) {
-            el.style.pointerEvents = "auto";
-          }
-        });
-      }
-      
-      
-      
       
 
     function toggleWorkMenu() {
@@ -287,7 +261,7 @@ function disableControls() {
     function actualizarProgreso(id, valor) {
       const barra = document.getElementById(id);
       let porcentaje = (valor / 10) * 100;
-      barra.style.width = porcentaje + "%";
+      barra.style.width = porcentaje + "%" ;
       if (valor < 3) barra.className = "progress-bar verde";
       else if (valor < 7) barra.className = "progress-bar naranja";
       else barra.className = "progress-bar rojo";
@@ -756,9 +730,11 @@ function disableControls() {
         this.statsHistory = { hambre: [], aburrimiento: [], sueno: [], higiene: [] };
         this.coins = 0;
         this.objectInventory = []; // <-- CORRECCIÓN: Inicializar el inventario de objetos
+        this.mercadilloInventory = [];
         this.foodInventory = [];
         this.nivel = 0;
         this.puesto = puestos[this.nivel].nombre;
+        this.karma = 0; // <-- ¡NUEVO! El karma empieza en neutral.
         this.salarioActual = puestos[this.nivel].sueldo;
         this.consecutiveGoodCycles = 0;
         this.consecutiveFastFood = 0;
@@ -887,7 +863,7 @@ function disableControls() {
         let weightProb = 0;
         const idealWeight = getIdealWeight(this.edad);
         const diff = this.peso - idealWeight;
-        const safeRange = 12; // +/- 12kg se considera un rango seguro sin riesgo adicional.
+        const safeRange = 12; // +/- 12kg se considera un rango seguro sin riesgo adicional. 
  
         // --- MODIFICACIÓN: El peso solo afecta a la salud a partir de los 13 años ---
         if (this.edad > 12) {
@@ -1084,9 +1060,13 @@ function cargarTamagotchi(data) {
   t.statsHistory = data.statsHistory || { hambre: [], aburrimiento: [], sueno: [], higiene: [] }; // Historial
   t.coins = data.coins || 0; // Monedas
   t.foodInventory = data.foodInventory || []; // Inventario de comida
+  t.mercadilloInventory = data.mercadilloInventory || [];
 
   // --- ¡LA LÍNEA IMPORTANTE QUE FALTABA! ---
   t.objectInventory = data.objectInventory || []; // CORRECCIÓN: Carga el inventario de objetos o crea uno vacío si no existe
+
+  // --- ¡NUEVO! Cargar el karma ---
+  t.karma = data.karma || 0;
 
   // Carga datos de nivel y promoción
   t.nivel = data.nivel !== undefined ? data.nivel : 0;
@@ -1470,7 +1450,6 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("clean-menu").style.display = "none";
   document.getElementById("game-menu").style.display = "none";
   document.getElementById("sleep-menu").style.display = "none";
-  document.getElementById("sleep-menu").style.display = "none";
   document.getElementById("food-menu").style.display = "none";
   document.getElementById("minijuego-container").style.display = "none";
   document.getElementById("store-overlay").style.display = "none";
@@ -1514,7 +1493,7 @@ document.addEventListener("DOMContentLoaded", () => {
               }
           }
           disableControls(); iniciarCiclosSueño(); sleepUpdateInterval = setInterval(updateSleepProgress, 100);
-      } else if (cycleStart) { console.log("El Tamagotchi estaba despierto. Calculando progreso offline."); scheduleNextUpdate(); }
+      } else if (cycleStart) { console.log("El Tamagotchi estaba despierto. Calculando progreso offline."); scheduleNextUpdate(); } 
       else { console.log("No hay datos de ciclo guardados, iniciando ciclo normal."); localStorage.setItem("cycleStart", Date.now()); scheduleNextUpdate(); }
       menuContainer.style.display = "none"; gameContainer.style.display = "flex";
       actualizarInterfaz(); updateStorePrices();
@@ -1598,6 +1577,9 @@ document.addEventListener("DOMContentLoaded", () => {
       let isLongPress = false;
       let adminTapCount = 0;
       let adminTapTimeout;
+      // --- ¡NUEVO! Lógica para el truco secreto del mercadillo ---
+      let secretCheatTapCount = 0;
+      let secretCheatTimeout;
 
       const startPress = (e) => {
           if (minijuegoActivo) return;
@@ -1636,6 +1618,18 @@ document.addEventListener("DOMContentLoaded", () => {
                       const aO = document.getElementById("admin-overlay");
                       if (aO) { actualizarAdminMenu(); aO.style.display = "block"; disableControls(); }
                   }
+              }
+
+              // --- ¡NUEVO! Lógica para el truco secreto del mercadillo ---
+              secretCheatTapCount++;
+              if (secretCheatTapCount === 1) {
+                  secretCheatTimeout = setTimeout(() => { secretCheatTapCount = 0; }, 1500); // 1.5 segundos para la secuencia
+              }
+              if (secretCheatTapCount === 5) {
+                  clearTimeout(secretCheatTimeout);
+                  secretCheatTapCount = 0;
+                  sessionStorage.setItem('secretMercadilloCheat', 'true');
+                  console.log("Truco del mercadillo activado para esta sesión."); // Mensaje secreto en consola
               }
           }
       };
@@ -1734,7 +1728,7 @@ document.addEventListener("DOMContentLoaded", () => {
           e.stopPropagation(); if (estaDurmiendo || minijuegoActivo) return;
           const isVisible = getComputedStyle(storeOverlay).display === "block";
           if (isVisible) { storeOverlay.style.display = "none"; if (getComputedStyle(document.getElementById("inventory-overlay")).display === 'none') { enableControls(); } } 
-          else { updateStorePrices(); updateObjectStore(); storeOverlay.style.display = "block"; disableControls(); if(getComputedStyle(document.getElementById("store-food")).display === 'none' && getComputedStyle(document.getElementById("store-objects")).display === 'none') { document.getElementById("store-food").style.display = "block"; } }
+          else { updateStorePrices(); updateObjectStore(); storeOverlay.style.display = "block"; disableControls(); if(getComputedStyle(document.getElementById("store-food")).display === 'none' && getComputedStyle(document.getElementById("store-objects")).display === 'none') { document.getElementById("store-food").style.display = "block"; } } // Asegura que la sección de comida se muestre por defecto
       });
   }
   // Botones secciones tienda
@@ -1813,6 +1807,7 @@ document.addEventListener("DOMContentLoaded", () => {
        } else { console.warn("No se encontró botón de compra o span en el item de tienda de objetos:", item); }
    });
    console.log("Listeners de objetos asignados.");
+
   // --- FIN Listeners Botones Compra ---
 
 
@@ -1824,7 +1819,7 @@ document.addEventListener("DOMContentLoaded", () => {
       inventoryIcon.addEventListener("click", (e) => {
           e.stopPropagation(); if (estaDurmiendo || minijuegoActivo) return;
           const isVisible = getComputedStyle(inventoryOverlay).display === "block";
-          if (isVisible) { inventoryOverlay.style.display = "none"; if (getComputedStyle(document.getElementById("store-overlay")).display === 'none') { enableControls(); } }
+          if (isVisible) { inventoryOverlay.style.display = "none"; if (getComputedStyle(document.getElementById("store-overlay")).display === 'none') { enableControls(); } } 
           else { populateInventoryList(); inventoryOverlay.style.display = "block"; disableControls(); }
       });
   }
@@ -2233,23 +2228,21 @@ function comprarObjeto(itemId, costo, itemName) {
   }
 }
 
-// Asigna listeners a los botones de la sección de objetos
-ddocument.querySelectorAll("#store-objects .store-item").forEach(item => {
-  item.querySelector("button.buy-btn").addEventListener("click", () => {
-    const text = item.querySelector("span").textContent;
-    // Asumimos que el formato es: "Nombre - costo monedas"
-    const parts = text.split(" - ");
-    if (parts.length < 2) {
-      console.error("Formato de texto incorrecto:", text);
-      return;
-    }
-    const nombre = parts[0].trim();
-    // Removemos la palabra "monedas" y espacios para obtener solo el número.
-    const costo = parseInt(parts[1].replace(/monedas/i, "").trim(), 10);
-    console.log("Comprando:", nombre, "Costo:", costo, "Monedas actuales:", tamagotchi.coins);
-    comprarObjeto(nombre, costo);
-  });
-});
+function sellMercadilloObject(item) {
+  if (!tamagotchi) return;
+
+  const index = tamagotchi.mercadilloInventory.findIndex(i => i.id === item.id);
+  if (index > -1) {
+    const soldItem = tamagotchi.mercadilloInventory.splice(index, 1)[0];
+    const sellPrice = Math.floor(Math.random() * (soldItem.value[1] - soldItem.value[0] + 1)) + soldItem.value[0];
+    tamagotchi.coins += sellPrice;
+    guardarTamagotchi();
+    actualizarInterfaz();
+    populateInventoryList();
+    showPopup(`Has vendido ${soldItem.name} por ${sellPrice} monedas.`);
+  }
+}
+
 // --- Encuentra esta sección en tu tm.js y MODIFÍCALA ---
 document.addEventListener("DOMContentLoaded", () => {
   const inventoryIcon = document.getElementById("inventory-icon");
@@ -2289,7 +2282,7 @@ function populateInventoryList() {
   }
   listElement.innerHTML = ""; // Limpiar elementos anteriores
 
-  if (!tamagotchi || !tamagotchi.objectInventory || tamagotchi.objectInventory.length === 0) {
+  if ((!tamagotchi || !tamagotchi.objectInventory || tamagotchi.objectInventory.length === 0) && (!tamagotchi.mercadilloInventory || tamagotchi.mercadilloInventory.length === 0)) {
     listElement.innerHTML = "<li>No tienes objetos comprados.</li>";
     return;
   }
@@ -2318,7 +2311,7 @@ function populateInventoryList() {
   }
 
   // 5. Muestra los objetos encontrados o el mensaje de inventario vacío
-  if (highestTierItems.length === 0) {
+  if (highestTierItems.length === 0 && tamagotchi.mercadilloInventory.length === 0) {
     listElement.innerHTML = "<li>No tienes objetos comprados.</li>";
   } else {
     highestTierItems.forEach(item => {
@@ -2326,8 +2319,17 @@ function populateInventoryList() {
       li.textContent = item.name;
       listElement.appendChild(li);
     });
+
+    tamagotchi.mercadilloInventory.forEach(item => {
+      const li = document.createElement("li");
+      li.textContent = item.name;
+      const sellButton = document.createElement("button");
+      sellButton.textContent = "Vender";
+      sellButton.onclick = () => sellMercadilloObject(item);
+      li.appendChild(sellButton);
+      listElement.appendChild(li);
+    });
   }
 }
 
   //skyJUM`P
-  

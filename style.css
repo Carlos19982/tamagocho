@@ -1,4 +1,4 @@
-      @keyframes moveObstacle {
+@keyframes moveObstacle {
   from { left: 100%; }
   to { left: -60px; }
 }
@@ -603,4 +603,23 @@
   #muñeco-container pre {
     margin: 0;
   }
+}
+
+#inventory-unique-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#inventory-unique-list button {
+    padding: 5px 10px;
+    font-size: 0.9rem;
+    background-color: #e53e3e;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    width: auto;
+    margin: 0;
 }
