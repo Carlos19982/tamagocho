@@ -623,3 +623,43 @@
     width: auto;
     margin: 0;
 }
+
+/* ===================================================================
+   NUEVO: Estilos para el Overlay de Eventos en index.html
+=================================================================== */
+
+#event-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #111;
+    color: white;
+    display: none; /* Oculto por defecto, se activa con JS */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    z-index: 11000; /* Prioridad máxima */
+    padding: 20px;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+#event-character {
+    font-size: 3rem;
+    white-space: pre;
+    margin-bottom: 20px;
+}
+
+#event-dialog {
+    font-size: 1.5rem;
+    min-height: 100px;
+    max-width: 80%;
+}
+
+#event-dialog::after {
+    content: '▋';
+    animation: blink 1s step-end infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }

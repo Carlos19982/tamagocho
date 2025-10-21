@@ -1544,21 +1544,58 @@ document.addEventListener("DOMContentLoaded", () => {
       guardarTamagotchi();
   }
 
+  // --- ¡NUEVO! VERIFICAR SI SE ABANDONÓ UN PASEO ---
+  if (localStorage.getItem('walkInProgress') === 'true') {
+    // Si se detecta un paseo abandonado, se resuelve aquí con una escena.
+    localStorage.removeItem('walkInProgress'); // Limpiar la marca
+
+    // Replicamos la lógica de abandono de paseo.html
+    if (Math.random() < 0.60) { // 60% de probabilidad de ser atracado
+        const muggerChar = '>:(';
+        const muggerDialog = "¡Quieto ahí! Al volver solo a casa, te han atracado. Has perdido todo lo del paseo.";
+        showEventScene(muggerChar, muggerDialog, 4000, () => {
+            // No se suman monedas ni objetos.
+            // Limpiamos los items del paseo para no procesarlos después
+            localStorage.removeItem('walkCoins');
+            localStorage.removeItem('walkMercadilloInventory');
+        });
+    } else { // 40% de volver a salvo
+        const safeChar = '^_^';
+        const safeDialog = "¡Qué suerte! Has conseguido volver a casa sano y salvo con todo lo que conseguiste.";
+        showEventScene(safeChar, safeDialog, 4000, () => {
+            const walkCoins = parseInt(localStorage.getItem('walkCoins'), 10) || 0;
+            const walkItems = JSON.parse(localStorage.getItem('walkMercadilloInventory')) || [];
+            tamagotchi.coins += walkCoins;
+            tamagotchi.mercadilloInventory.push(...walkItems);
+        });
+    }
+  }
+
   // --- ¡NUEVO! VERIFICAR RESULTADO DEL PASEO AL CARGAR ---
   const walkResult = localStorage.getItem("walkGameResult");
   if (walkResult) {
       if (walkResult === 'finished_offline') {
           const reason = localStorage.getItem('offlineWalkEndReason') || "un evento inesperado";
           showPopup(`Tu Tamagotchi decidió volver a casa por ${reason}.`, 5000);
-      } else if (walkResult === 'abandoned') {
-          // --- ¡NUEVO! Caso para el paseo abandonado ---
-          const reason = localStorage.getItem('offlineWalkEndReason') || "Te echa de menos.";
-          showPopup(reason, 5000);
+          tamagotchi.mercadilloInventory.push(...(JSON.parse(localStorage.getItem('walkMercadilloInventory')) || []));
+      } else if (walkResult === 'abandoned_mugged') {
+          // --- ¡NUEVO! Caso de abandono con atraco ---
+          showPopup(`¡Qué mala suerte! Al volver a casa solo, a ${tamagotchi.nombre} le han atracado. Ha perdido todo lo que consiguió en el paseo.`, 6000);
+          // No se suman monedas ni objetos.
+      } else if (walkResult === 'abandoned_safe') {
+          // --- ¡NUEVO! Caso de abandono con vuelta segura ---
+          const walkCoins = parseInt(localStorage.getItem('walkCoins'), 10) || 0;
+          const walkItems = JSON.parse(localStorage.getItem('walkMercadilloInventory')) || [];
+          showPopup(`¡Uf, qué suerte! ${tamagotchi.nombre} ha vuelto a casa sano y salvo con todo lo que consiguió.`, 6000);
+          tamagotchi.coins += walkCoins;
+          tamagotchi.mercadilloInventory.push(...walkItems);
       }
       // Limpiar para no procesar de nuevo
       localStorage.removeItem("walkGameResult");
       localStorage.removeItem("offlineWalkEndReason");
-      localStorage.removeItem('walkInProgressState'); // Limpieza extra por si acaso
+      localStorage.removeItem('walkInProgress'); // Asegurarse de limpiar esta marca también
+      localStorage.removeItem('walkCoins');
+      localStorage.removeItem('walkMercadilloInventory');
       guardarTamagotchi();
   }
 
@@ -1878,6 +1915,53 @@ document.addEventListener("DOMContentLoaded", () => {
 
 }); // --- FIN DEL BLOQUE DOMContentLoaded ---
     
+    // --- ¡NUEVO! Funciones para mostrar la escena de evento de abandono ---
+    function typeWriter(element, text, onComplete) {
+        let i = 0;
+        element.innerHTML = ''; // Limpiar el contenido anterior
+        function type() {
+            if (i < text.length) {
+                element.innerHTML += text.charAt(i);
+                i++;
+                setTimeout(type, 80); // Velocidad de escritura
+            } else {
+                // Ocultar el cursor parpadeante al final
+                if (element.id === 'event-dialog') {
+                    element.style.borderRight = 'none';
+                    const existingStyle = document.getElementById('event-dialog-style');
+                    if(existingStyle) existingStyle.remove();
+                }
+                if (onComplete) onComplete();
+            }
+        }
+        // Añadir estilo para el cursor parpadeante
+        const style = document.createElement('style');
+        style.id = 'event-dialog-style';
+        style.innerHTML = `#event-dialog::after { content: '▋'; animation: blink 1s step-end infinite; } @keyframes blink { 50% { opacity: 0; } }`;
+        document.head.appendChild(style);
+        type();
+    }
+
+    function showEventScene(character, dialog, duration, onEnd) {
+        const overlay = document.getElementById('event-overlay');
+        const charDisplay = document.getElementById('event-character');
+        const dialogDisplay = document.getElementById('event-dialog');
+
+        if (!overlay || !charDisplay || !dialogDisplay) return;
+
+        // Ocultar el juego principal y mostrar la escena
+        document.querySelector('.tamagochi-container').style.display = 'none';
+        overlay.style.display = 'flex';
+        charDisplay.innerHTML = `<pre>${character}</pre>`;
+
+        typeWriter(dialogDisplay, dialog, () => {
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                document.querySelector('.tamagochi-container').style.display = 'flex';
+                if (onEnd) onEnd();
+            }, duration);
+        });
+    }
     function showWorkMenu() {
         disableControls();
         document.getElementById("work-menu").style.display = "block";
