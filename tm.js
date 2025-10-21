@@ -1446,6 +1446,18 @@ function cargarTamagotchi(data) {
 
 // --- REEMPLAZA TODOS LOS BLOQUES "DOMContentLoaded" EXISTENTES CON ESTE (VERSIÓN COMPLETA CON DEBUG BOTONES TIENDA) ---
 
+// --- ¡NUEVO! Forzar recarga al volver desde la caché (solución para móviles) ---
+window.addEventListener('pageshow', function(event) {
+    // La propiedad 'persisted' es true si la página se restaura desde la caché (bfcache).
+    // Esto es común en móviles al usar el botón "atrás" para volver a index.html.
+    if (event.persisted) {
+        console.log("Página restaurada desde caché. Forzando recarga para procesar eventos...");
+        // Forzamos una recarga completa de la página.
+        window.location.reload();
+    }
+});
+
+
 document.addEventListener("DOMContentLoaded", () => {
   // --- Inicialización de la Interfaz y Carga de Datos ---
   console.log("DOM completamente cargado y parseado.");
