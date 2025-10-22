@@ -1293,6 +1293,9 @@ function cargarTamagotchi(data) {
         const cycleDuration = estaDurmiendo ? tiempoTotalSueñoPersonalizado : cicloMs;
         const elapsed = now - lastCycleTimestamp;
 
+        // --- ¡CORRECCIÓN! Actualizar el timestamp en memoria en cada tick ---
+        // Esto asegura que si el reloj del sistema cambia, el próximo tick lo reflejará correctamente.
+        localStorage.setItem("lastCycleTimestamp", now);
         // --- ¡NUEVO! Log de estado constante en cada tick del motor ---
         const remainingMs = cycleDuration - elapsed;
         const state = estaDurmiendo ? 'Dormido' : 'Despierto';
