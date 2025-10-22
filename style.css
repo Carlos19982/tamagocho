@@ -40,7 +40,7 @@
         --color-secondary: #50e3c2;
         --color-accent: #e94e77;
         --color-text: #333;
-        --color-input: rgba(255, 255, 255, 0.5);
+        --color-input: rgba(255, 255, 255, 0.15);
         --shadow: rgba(0, 0, 0, 0.1);
       }
 
