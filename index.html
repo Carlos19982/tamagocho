@@ -11,11 +11,14 @@
         <meta http-equiv="Expires" content="0" />
       
         <!-- Agregar un query string a los recursos para forzar que se recarguen -->
-        <link rel="stylesheet" type="text/css" href="style.css?v=1.5" />
-        <script defer src="tm.js?v=1.5"></script>
+        <link rel="stylesheet" type="text/css" href="style.css?v=1.0" />
+        <script defer src="tm.js?v=1.0"></script>
       </head>
       
   <body>
+    <!-- ¡NUEVO! Lienzo dedicado para el fondo dinámico -->
+    <canvas id="background-canvas"></canvas>
+
     <div
       id="popup-message"
       style="position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 10px 15px; border-radius: 5px; display: none; z-index: 10000; font-family: sans-serif; font-size: 0.9rem;"

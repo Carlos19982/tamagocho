@@ -1280,6 +1280,294 @@ function cargarTamagotchi(data) {
         const seconds = date.getSeconds().toString().padStart(2, '0');
         return `${hours}:${minutes}:${seconds}`;
     }
+
+    // --- ¡NUEVO! Motor de renderizado de fondo con Canvas ---
+    let canvas, ctx, stars, clouds, fireflies, shootingStars;
+    let sunMoonPos = { x: 0, y: 0 };
+    let animationFrameId;
+
+    function initBackgroundCanvas() {
+        canvas = document.getElementById('background-canvas');
+        if (!canvas) return;
+        ctx = canvas.getContext('2d');
+
+        // Desactiva el suavizado para un look pixel-perfect
+        ctx.imageSmoothingEnabled = false;
+
+        // Inicializar elementos del escenario
+        stars = [];
+        for (let i = 0; i < 250; i++) {
+            stars.push({
+                x: Math.random(), // Posición relativa (0 a 1)
+                y: Math.random(),
+                radius: Math.random() * 1.5,
+                alpha: Math.random() * 0.5 + 0.5
+            });
+        }
+
+        // --- ¡NUEVO! Inicializar luciérnagas y estrellas fugaces ---
+        fireflies = [];
+        for (let i = 0; i < 20; i++) {
+            fireflies.push({
+                x: Math.random(),
+                y: Math.random() * 0.2 + 0.75, // En la zona de las colinas
+                radius: Math.random() * 1.5 + 0.5,
+                alpha: 0,
+                alphaSpeed: Math.random() * 0.02 + 0.01,
+                vx: (Math.random() - 0.5) * 0.0001,
+                vy: (Math.random() - 0.5) * 0.0001
+            });
+        }
+
+        shootingStars = [];
+        // Las estrellas fugaces se crearán dinámicamente
+        // --- Fin de inicialización de nuevos elementos ---
+
+        clouds = [];
+        for (let i = 0; i < 10; i++) {
+            clouds.push({
+                x: Math.random(),
+                y: Math.random() * 0.4 + 0.1, // Nubes en la parte superior
+                speed: Math.random() * 0.0001 + 0.00005, // Velocidad de movimiento
+                width: Math.random() * 100 + 50
+            });
+        }
+
+        // Iniciar el bucle de animación
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        animateBackground();
+    }
+
+    function animateBackground() {
+        if (!ctx || estaDurmiendo || juegoTerminado) {
+            if (estaDurmiendo || juegoTerminado) {
+                // Si está durmiendo o el juego terminó, pinta un fondo negro y para.
+                if (ctx) {
+                    ctx.fillStyle = 'black';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+            // Vuelve a intentar en 1 segundo si el canvas no está listo
+            animationFrameId = requestAnimationFrame(animateBackground);
+            return;
+        }
+        
+        // Actualizar y dibujar el fondo
+        actualizarFondoDinamico();
+        animationFrameId = requestAnimationFrame(animateBackground);
+    }
+
+    function drawPixelatedCircle(x, y, radius, color) {
+        for (let i = -radius; i <= radius; i++) {
+            for (let j = -radius; j <= radius; j++) {
+                if (i * i + j * j <= radius * radius) {
+                    ctx.fillStyle = color;
+                    ctx.fillRect(Math.floor(x + i), Math.floor(y + j), 1, 1);
+                }
+            }
+        }
+    }
+
+    // --- ¡NUEVO! Función para dibujar la luna con cráteres ---
+    function drawMoon(x, y, radius, color) {
+        // Dibuja el cuerpo principal de la luna
+        drawPixelatedCircle(x, y, radius, color);
+
+        // Dibuja algunos cráteres más oscuros
+        const craterColor = 'rgba(200, 200, 200, 0.7)';
+        drawPixelatedCircle(x - radius * 0.4, y - radius * 0.3, radius * 0.2, craterColor);
+        drawPixelatedCircle(x + radius * 0.5, y + radius * 0.1, radius * 0.3, craterColor);
+        drawPixelatedCircle(x + radius * 0.1, y + radius * 0.5, radius * 0.15, craterColor);
+    }
+
+
+    function drawCloud(cloud) {
+        const cloudColor = 'rgba(255, 255, 255, 0.8)';
+        const baseRadius = cloud.width / 4;
+        
+        // Dibuja un grupo de círculos para formar una nube pixelada
+        drawPixelatedCircle(cloud.x * canvas.width, cloud.y * canvas.height, baseRadius, cloudColor);
+        drawPixelatedCircle(cloud.x * canvas.width + baseRadius, cloud.y * canvas.height + baseRadius / 2, baseRadius * 0.8, cloudColor);
+        drawPixelatedCircle(cloud.x * canvas.width - baseRadius, cloud.y * canvas.height + baseRadius / 3, baseRadius * 0.9, cloudColor);
+        drawPixelatedCircle(cloud.x * canvas.width, cloud.y * canvas.height + baseRadius / 2, baseRadius * 0.7, cloudColor);
+    }
+
+    // --- ¡NUEVO! Función para dibujar el sol con rayos y halo ---
+    function drawSun(x, y, radius, color) {
+        const glowColor = 'rgba(255, 255, 224, 0.15)';
+        const rayColor = 'rgba(255, 255, 200, 0.4)';
+
+        // 1. Dibuja un halo de luz suave
+        drawPixelatedCircle(x, y, radius * 1.8, glowColor);
+
+        // 2. Dibuja los rayos del sol
+        ctx.strokeStyle = rayColor;
+        ctx.lineWidth = 2; // Grosor de los rayos
+        for (let i = 0; i < 8; i++) { // Dibuja 8 rayos
+            const angle = (i / 8) * (2 * Math.PI);
+            const startX = x + Math.cos(angle) * (radius * 1.2);
+            const startY = y + Math.sin(angle) * (radius * 1.2);
+            const endX = x + Math.cos(angle) * (radius * 2.2);
+            const endY = y + Math.sin(angle) * (radius * 2.2);
+            
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+        }
+
+        // 3. Dibuja el cuerpo principal del sol encima de todo
+        drawPixelatedCircle(x, y, radius, color);
+    }
+
+
+    // --- ¡NUEVO! Función para dibujar el paisaje ---
+    function drawLandscape(width, height, groundColor, hillColor1, hillColor2) {
+        // Colinas lejanas (más oscuras)
+        ctx.fillStyle = hillColor1;
+        ctx.beginPath();
+        ctx.moveTo(0, height * 0.8);
+        ctx.bezierCurveTo(width * 0.2, height * 0.7, width * 0.3, height * 0.75, width * 0.5, height * 0.8);
+        ctx.bezierCurveTo(width * 0.7, height * 0.85, width * 0.8, height * 0.7, width, height * 0.75);
+        ctx.lineTo(width, height);
+        ctx.lineTo(0, height);
+        ctx.closePath();
+        ctx.fill();
+
+        // Colinas cercanas (un poco más claras)
+        ctx.fillStyle = hillColor2;
+        ctx.beginPath();
+        ctx.moveTo(0, height * 0.85);
+        ctx.bezierCurveTo(width * 0.3, height * 0.8, width * 0.4, height * 0.9, width * 0.7, height * 0.85);
+        ctx.bezierCurveTo(width * 0.9, height * 0.8, width, height * 0.9, width, height * 0.9);
+        ctx.lineTo(width, height);
+        ctx.lineTo(0, height);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+
+    function actualizarFondoDinamico() {
+        if (!ctx) return;
+
+        // Ajustar tamaño del canvas al de la ventana
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        if (canvas.width !== rect.width * dpr || canvas.height !== rect.height * dpr) {
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+        }
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+
+        const hora = new Date().getHours();
+        let skyGradient, sunColor, isNight, groundColor, hillColor1, hillColor2;
+
+        // Definir colores y si es de noche
+        if (hora >= 5 && hora < 7) { // Amanecer
+            skyGradient = ctx.createLinearGradient(0, 0, 0, height);
+            skyGradient.addColorStop(0, '#2c3e50'); skyGradient.addColorStop(0.6, '#e74c3c'); skyGradient.addColorStop(1, '#f1c40f');
+            sunColor = '#ffd700'; isNight = false;
+            groundColor = '#38302b'; hillColor1 = '#4a3f37'; hillColor2 = '#5c4e44';
+        } else if (hora >= 7 && hora < 12) { // Mañana
+            skyGradient = ctx.createLinearGradient(0, 0, 0, height);
+            skyGradient.addColorStop(0, '#87CEEB'); skyGradient.addColorStop(1, '#a9dff3');
+            sunColor = '#FFDE00'; isNight = false;
+            groundColor = '#5d7a3c'; hillColor1 = '#4b6330'; hillColor2 = '#526e33';
+        } else if (hora >= 12 && hora < 17) { // Tarde
+            skyGradient = ctx.createLinearGradient(0, 0, 0, height);
+            skyGradient.addColorStop(0, '#63a4ff'); skyGradient.addColorStop(1, '#89bfff');
+            sunColor = '#FFEE88'; isNight = false;
+            groundColor = '#6b8c43'; hillColor1 = '#546e35'; hillColor2 = '#5b7a39';
+        } else if (hora >= 17 && hora < 21) { // Atardecer
+            skyGradient = ctx.createLinearGradient(0, 0, 0, height);
+            skyGradient.addColorStop(0, '#34495e'); skyGradient.addColorStop(0.5, '#e67e22'); skyGradient.addColorStop(1, '#d35400');
+            sunColor = '#ff6347'; isNight = false;
+            groundColor = '#4a403a'; hillColor1 = '#3b332e'; hillColor2 = '#453a34';
+        } else { // Noche
+            skyGradient = ctx.createLinearGradient(0, 0, 0, height);
+            skyGradient.addColorStop(0, '#0c0a18'); skyGradient.addColorStop(1, '#2c3e50');
+            sunColor = '#f4f4f4'; isNight = true;
+            groundColor = '#2b2f31'; hillColor1 = '#1c1e22'; hillColor2 = '#222629';
+        }
+
+        // Dibujar el cielo
+        ctx.fillStyle = skyGradient;
+        ctx.fillRect(0, 0, width, height);
+
+        // Calcular posición del sol/luna (arco en el cielo)
+        const cyclePercent = ((hora - 5 + 24) % 24) / 18; // Ciclo de 18h de luz (5am a 11pm)
+        sunMoonPos.x = width * cyclePercent;
+        // Ajustamos la altura para que el sol/luna se ponga detrás de las colinas
+        sunMoonPos.y = height * 0.7 - Math.sin(cyclePercent * Math.PI) * height * 0.6;
+
+        // Dibujar estrellas si es de noche
+        if (isNight) {
+            stars.forEach(star => {
+                ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha * (Math.sin(Date.now() * 0.001 + star.x) * 0.2 + 0.8)})`; // Parpadeo
+                ctx.fillRect(star.x * width, star.y * height, star.radius, star.radius);
+            });
+        }
+        
+        // Dibujar el paisaje (colinas y suelo)
+        drawLandscape(width, height, groundColor, hillColor1, hillColor2);
+
+        // --- ¡NUEVO! Lógica mejorada para la noche ---
+        if (isNight) {
+            // Dibujar la luna con cráteres
+            drawMoon(sunMoonPos.x, sunMoonPos.y, 25, sunColor);
+
+            // Dibujar y mover luciérnagas
+            fireflies.forEach(fly => {
+                fly.alpha += fly.alphaSpeed;
+                if (fly.alpha > 1 || fly.alpha < 0) fly.alphaSpeed *= -1;
+
+                fly.x += fly.vx;
+                fly.y += fly.vy;
+                if (fly.x > 1 || fly.x < 0) fly.vx *= -1;
+                if (fly.y > 0.95 || fly.y < 0.75) fly.vy *= -1;
+
+                ctx.fillStyle = `rgba(255, 255, 100, ${Math.max(0, fly.alpha)})`;
+                ctx.fillRect(fly.x * width, fly.y * height, fly.radius, fly.radius);
+            });
+
+            // Crear y dibujar estrellas fugaces
+            if (Math.random() < 0.002 && shootingStars.length < 2) { // Probabilidad baja de crear una
+                shootingStars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height * 0.3,
+                    len: Math.random() * 80 + 50,
+                    speed: Math.random() * 2 + 3,
+                    life: 1
+                });
+            }
+
+            shootingStars.forEach((star, index) => {
+                star.x -= star.speed;
+                star.y += star.speed / 3;
+                star.life -= 0.015;
+                if (star.life <= 0) shootingStars.splice(index, 1);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${star.life})`;
+                ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(star.x, star.y); ctx.lineTo(star.x + star.len, star.y - star.len / 3); ctx.stroke();
+            });
+        } else {
+            // Dibujar el sol si es de día
+            drawSun(sunMoonPos.x, sunMoonPos.y, 25, sunColor);
+        }
+
+        // Mover y dibujar nubes
+        clouds.forEach(cloud => {
+            cloud.x += cloud.speed;
+            if (cloud.x * width > width + cloud.width) {
+                cloud.x = -cloud.width / width; // Reposicionar a la izquierda
+            }
+            drawCloud(cloud);
+        });
+
+        // Ya no necesitamos la imagen de fondo del body
+        document.body.style.backgroundImage = 'none';
+    }
     // --- ¡NUEVO! Motor de juego unificado ---
     function gameEngine() {
         if (juegoTerminado) {
@@ -1391,6 +1679,7 @@ window.addEventListener('pageshow', function(event) {
 
 
 document.addEventListener("DOMContentLoaded", () => {
+  initBackgroundCanvas(); // Inicia el canvas en lugar de la función antigua
   // --- Inicialización de la Interfaz y Carga de Datos ---
   console.log("DOM completamente cargado y parseado.");
 
@@ -1427,7 +1716,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // --- ¡NUEVO! El motor de juego se inicia siempre ---
       // Ejecuta una vez inmediatamente para la simulación offline
       gameEngine(); 
-      // Y luego se establece el intervalo para las actualizaciones en tiempo real
+      // Y luego se establece el intervalo para las actualizaciones en tiempo real y el fondo
       gameEngineInterval = setInterval(gameEngine, 1000); // Se ejecuta cada segundo
 
       menuContainer.style.display = "none"; gameContainer.style.display = "flex";
@@ -1454,7 +1743,7 @@ document.addEventListener("DOMContentLoaded", () => {
       localStorage.removeItem("flappyGameResult"); // Limpiar para no procesar de nuevo
       guardarTamagotchi();
   }
-  // --- ¡NUEVO! VERIFICAR RESULTADO DEL MINIJUEGO DE DUCHA AL CARGAR ---
+  // --- VERIFICAR RESULTADO DEL MINIJUEGO DE DUCHA AL CARGAR ---
   const showerResult = localStorage.getItem("showerGameResult");
   if (showerResult) {
       if (showerResult === "win") {
@@ -1828,7 +2117,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // --- Cerrar Menús/Overlays al hacer clic fuera (MODIFICADO para no cerrar work-menu) ---
-   document.addEventListener("click", function (e) {
+  document.addEventListener("click", function (e) {
       const menusToCloseOnClickOutside = ["food-menu", "clean-menu", "game-menu", "sleep-menu"]; // Excluye work-menu
       let clickedInsideInteractiveElement = false;
       const interactiveAreas = ["#food-menu", "#clean-menu", "#game-menu", "#sleep-menu", "#work-menu", "#store-overlay", "#inventory-overlay", "#admin-overlay", "#store-icon", "#inventory-icon", ".buttons-container", "#muñeco-container"];
@@ -1841,7 +2130,7 @@ document.addEventListener("DOMContentLoaded", () => {
            const iO = document.getElementById("inventory-overlay"); if (iO && getComputedStyle(iO).display === 'block') { iO.style.display = 'none'; somethingClosed = true; }
            if (somethingClosed && !estaDurmiendo && !minijuegoActivo && getComputedStyle(document.getElementById("store-overlay")).display === 'none' && getComputedStyle(document.getElementById("inventory-overlay")).display === 'none' && getComputedStyle(document.getElementById("admin-overlay")).display === 'none' && getComputedStyle(document.getElementById("work-menu")).display === 'none') { enableControls(); }
       }
-   });
+  });
 
    // Evitar que clics dentro de los menús/overlays los cierren (propagación)
    ["food-menu", "clean-menu", "game-menu", "sleep-menu", "work-menu", "store-overlay", "inventory-overlay", "admin-overlay"].forEach((id) => {
