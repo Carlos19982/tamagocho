@@ -1492,6 +1492,13 @@ function cargarTamagotchi(data) {
             groundColor = '#2b2f31'; hillColor1 = '#1c1e22'; hillColor2 = '#222629';
         }
 
+        // --- ¡NUEVO! Añadir/quitar clase para modo noche ---
+        if (isNight) {
+            document.body.classList.add('night-mode');
+        } else {
+            document.body.classList.remove('night-mode');
+        }
+
         // Dibujar el cielo
         ctx.fillStyle = skyGradient;
         ctx.fillRect(0, 0, width, height);

@@ -40,7 +40,7 @@
         --color-secondary: #50e3c2;
         --color-accent: #e94e77;
         --color-text: #333;
-        --color-input: rgba(255, 255, 255, 0.15);
+        --color-input: rgba(255, 255, 255, 0.5);
         --shadow: rgba(0, 0, 0, 0.1);
       }
 
@@ -62,11 +62,11 @@
       .tamagochi-container {
         width: 100%;
         max-width: 600px;
-        background-color: var(--color-input);
+        background-color: transparent; /* Eliminado el fondo blanco semitransparente */
         border-radius: 12px;
         padding: 20px;
-        box-shadow: 0 4px 10px var(--shadow);
         margin-bottom: 20px;
+        border: none; /* Eliminado el borde para una integración más limpia */
       }
       .admin-overlay {
         display: none; /* Se muestra solo cuando es necesario */
@@ -675,3 +675,21 @@
     animation: blink 1s step-end infinite;
 }
 @keyframes blink { 50% { opacity: 0; } }
+
+/* ===================================================================
+   NUEVO: Estilos para el Modo Noche (texto y personaje en blanco)
+=================================================================== */
+
+/* Se aplica solo si el body tiene 'night-mode' pero NO 'sleeping' */
+body.night-mode:not(.sleeping) #muñeco-container pre,
+body.night-mode:not(.sleeping) .stat,
+body.night-mode:not(.sleeping) #store-icon,
+body.night-mode:not(.sleeping) #inventory-icon {
+    color: rgba(255, 255, 255, 0.60); /* Blanco con ligera transparencia */
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7); /* Sombra para mejorar legibilidad */
+}
+
+/* Los botones de acción también cambian, pero sin sombra para no sobrecargar */
+body.night-mode:not(.sleeping) .buttons-container button {
+    color: rgba(255, 255, 255, 0.85); /* Blanco con ligera transparencia */
+}
