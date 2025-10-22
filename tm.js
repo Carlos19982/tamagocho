@@ -86,7 +86,7 @@ const foodEffects = {
     
     // --- Configuración del ciclo ---
     const cicloMs = 900000; // 15 minutos. Un ciclo más largo y relajado. (15 * 60 * 1000)
-    const tiempoTotalSueñoPersonalizado = 10000; // 2 horas. (2 * 60 * 60 * 1000)
+    const tiempoTotalSueñoPersonalizado = 7000000; // 2 horas. (2 * 60 * 60 * 1000)
     let promotionCheckedThisCycle = false;
     
    
