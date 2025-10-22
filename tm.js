@@ -1293,9 +1293,6 @@ function cargarTamagotchi(data) {
         const cycleDuration = estaDurmiendo ? tiempoTotalSueñoPersonalizado : cicloMs;
         const elapsed = now - lastCycleTimestamp;
 
-        // --- ¡CORRECCIÓN! Actualizar el timestamp en memoria en cada tick ---
-        // Esto asegura que si el reloj del sistema cambia, el próximo tick lo reflejará correctamente.
-        localStorage.setItem("lastCycleTimestamp", now);
         // --- ¡NUEVO! Log de estado constante en cada tick del motor ---
         const remainingMs = cycleDuration - elapsed;
         const state = estaDurmiendo ? 'Dormido' : 'Despierto';
@@ -1370,6 +1367,11 @@ function cargarTamagotchi(data) {
     
     
     document.addEventListener("visibilitychange", function () {
+        // --- ¡NUEVO! Lógica para sincronizar el juego al volver a la pestaña ---
+        if (document.visibilityState === 'visible') {
+            console.log("Pestaña visible de nuevo. Forzando actualización del motor.");
+            gameEngine(); // Ejecuta el motor inmediatamente para simular el tiempo en segundo plano.
+        }
     });
     
     // --- Inicialización del Juego ---
