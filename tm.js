@@ -85,12 +85,13 @@ const foodEffects = {
     ];
     
     // --- Configuración del ciclo ---
-    const cicloMs = 900000; // 15 minutos. Un ciclo más largo y relajado.
-    const tiempoTotalSueñoPersonalizado = 7200000; // 2 horas. Un ciclo de sueño largo para cubrir ausencias (trabajo, dormir).
+    const cicloMs = 900000; // 15 minutos. Un ciclo más largo y relajado. (15 * 60 * 1000)
+    const tiempoTotalSueñoPersonalizado = 10000; // 2 horas. (2 * 60 * 60 * 1000)
     let promotionCheckedThisCycle = false;
     
    
-    let intervaloGlobal, sleepInterval, sleepUpdateInterval;
+    // --- ¡NUEVO! Motor de juego unificado ---
+    let gameEngineInterval = null;
 
     // --- ¡NUEVO! Función para calcular el peso ideal según la edad ---
     function getIdealWeight(age) {
@@ -115,7 +116,7 @@ const foodEffects = {
     // --- Funciones de actualización y utilidades ---
     function updateSleepProgress() {
       const sleepProgress = JSON.parse(localStorage.getItem("sleepProgress"));
-      if (!sleepProgress || !estaDurmiendo) return;
+      if (!sleepProgress) return; // Ya no depende de estaDurmiendo global
       const { startTime, initialValue, duration } = sleepProgress;
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
@@ -125,12 +126,6 @@ const foodEffects = {
         localStorage.removeItem("sleepProgress");
       }
       actualizarInterfaz();
-    }
-    function backgroundUpdateDuringSleep() {
-    // Actualiza el estado en modo dormido (puedes usar la función que ya tienes en la clase)
-    tamagotchi.actualizarEstadoDormido();
-    console.log("Ciclo de sueño: Actualización de estado en background.");
-    // Aquí puedes agregar cualquier otra actualización que quieras ejecutar mientras duerme
     }
     
     function showPopup(message, duration = 10000) {
@@ -483,21 +478,24 @@ function disableControls() {
       }
     }
     function mostrarMensajeDeMuerte() {
-      // --- ¡CORRECCIÓN! ---
-      // Actualizamos la interfaz una última vez para mostrar las barras llenas que causaron la muerte.
-      actualizarInterfaz();
-
-      clearTimeout(intervaloGlobal);
-      if (sleepInterval) clearInterval(sleepInterval);
-      if (sleepUpdateInterval) clearInterval(sleepUpdateInterval);
-      document.body.classList.remove("sleeping");
+      // --- ¡CORRECCIÓN! Evita que la función se ejecute múltiples veces ---
+      if (juegoTerminado) return;
       juegoTerminado = true;
+
+      // Detener el motor principal del juego
+      clearInterval(gameEngineInterval);
+
+      // Actualizar la interfaz una última vez para mostrar el estado final
+      actualizarInterfaz();
+      document.body.classList.remove("sleeping");
+
+      // Deshabilitar toda interacción
       document.getElementById("muñeco-container").style.pointerEvents = "none";
       document.querySelectorAll("button").forEach((btn) => btn.disabled = true);
+
+      // Mostrar el personaje y el mensaje de muerte
       actualizarMuñeco();
-      const mensaje = `Tu Tamagotchi ha muerto por ${tamagotchi.cause}.<br><br>
-                       Información:<br>Nombre: ${tamagotchi.nombre}<br>
-                       Puesto: ${tamagotchi.puesto}<br>Edad: ${tamagotchi.edad}`;
+      const mensaje = `Tu Tamagotchi ha muerto por ${tamagotchi.cause}.<br><br>Información:<br>Nombre: ${tamagotchi.nombre}<br>Puesto: ${tamagotchi.puesto}<br>Edad: ${tamagotchi.edad}`;
       const infoContainer = document.getElementById("info-container");
       infoContainer.innerHTML = `<strong>FIN DE JUEGO</strong><br>${mensaje}`;
       infoContainer.style.display = "block";
@@ -1214,83 +1212,36 @@ function cargarTamagotchi(data) {
     }
     
     
-    // --- Ciclo de Sueño ---
-    function actualizarEstadoDormido() {
-      // Se actualizan las stats, pero se elimina la comprobación de muerte.
-      tamagotchi.actualizarEstadoDormido();
-      ciclosDesdeCumple++;
-      if (ciclosDesdeCumple >= 3) {
-        tamagotchi.cumpleAnios();
-        ciclosDesdeCumple = 0;
-      }
-      actualizarInterfaz();
-    }
-    function iniciarCiclosSueño() {
-      sleepInterval = setInterval(() => {
-        if (tamagotchi.estado === "muerto") {
-          mostrarMensajeDeMuerte();
-          return;
-        }
-        actualizarEstadoDormido();
-        pagarSalario(); // Se paga salario durante el sueño
-    
-        // Cobro de impuestos
-        contadorCiclosImpuestos++;
-        if (contadorCiclosImpuestos >= ciclosParaImpuestos) {
-          const impuestoActual = impuestosPorNivel[tamagotchi.nivel] || 0;
-          tamagotchi.coins -= impuestoActual;
-          showPopup("Se te ha cobrado " + impuestoActual + " monedas por impuestos.", 3000);
-          contadorCiclosImpuestos = 0;
-        }
-        
-        // Reiniciamos la verificación de promoción en cada ciclo de sueño
-        promotionCheckedThisCycle = false;
-        
-        // Verificar si se cumplen las condiciones para ascender
-        checkPromotion();
-      }, tiempoTotalSueñoPersonalizado);
-    }
-    
-    
-    
-    
     function iniciarSueño() {
       disableControls();
       estaDurmiendo = true;
       document.body.classList.add("sleeping");
-      clearTimeout(intervaloGlobal);
-      localStorage.removeItem("cycleStart");
-      localStorage.setItem("sleepCycleStart", Date.now());
+      localStorage.setItem("lastCycleTimestamp", Date.now()); // Guardamos el momento exacto en que se duerme
       const startTime = Date.now();
       localStorage.setItem("sleepStart", startTime);
       const initialValue = tamagotchi.sueno;
       const duration = 10000;
       localStorage.setItem("sleepProgress", JSON.stringify({ startTime, initialValue, duration }));
-      sleepUpdateInterval = setInterval(updateSleepProgress, 100);
-      updateSleepProgress();
-      iniciarCiclosSueño();
+      // El gameEngine se encargará del resto
       guardarTamagotchi();
     }
     function despertar() {
       if (!estaDurmiendo) return;
 
       estaDurmiendo = false;
-      if (sleepInterval) clearInterval(sleepInterval);
-      if (sleepUpdateInterval) clearInterval(sleepUpdateInterval);
       localStorage.removeItem("sleepProgress");
-      localStorage.removeItem("sleepCycleStart");
       document.body.classList.remove("sleeping");
 
       // --- ¡CORRECCIÓN! La comprobación de muerte se hace aquí ---
       // Al despertar, se comprueba si alguna necesidad llegó al máximo mientras dormía.
-      if (tamagotchi.hambre >= 10 || tamagotchi.higiene >= 10 || (tamagotchi.enfermo && tamagotchi.ciclosEnfermo >= 5)) {
+      if (tamagotchi.hambre >= 10 || tamagotchi.higiene >= 10 || (tamagotchi.enfermo && tamagotchi.ciclosEnfermo >= 5) || (tamagotchi.esDiabetico && tamagotchi.ciclosSinInsulina >= 3)) {
           if (tamagotchi.hambre >= 10) {
               tamagotchi.cause = "hambre mientras dormía";
           } else if (tamagotchi.higiene >= 10) {
               tamagotchi.cause = "falta de higiene mientras dormía";
           } else if (tamagotchi.enfermo && tamagotchi.ciclosEnfermo >= 5) {
               tamagotchi.cause = "enfermedad no tratada mientras dormía";
-          } else if (tamagotchi.esDiabetico && tamagotchi.ciclosSinInsulina >= 3) {
+          } else if (tamagotchi.esDiabetico && tamagotchi.ciclosSinInsulina >= 3) { // --- ¡CORRECCIÓN! ---
               // --- ¡NUEVO! Comprobación de muerte por diabetes al despertar ---
               tamagotchi.cause = "diabetes no tratada";
           }
@@ -1300,8 +1251,7 @@ function cargarTamagotchi(data) {
           return; // Detiene la ejecución para no continuar con el estado "despierto"
         }
 
-        localStorage.setItem("cycleStart", Date.now());
-        scheduleNextUpdate();
+        localStorage.setItem("lastCycleTimestamp", Date.now()); // Reseteamos el reloj del ciclo
         enableControls();
         actualizarInterfaz();
         guardarTamagotchi();
@@ -1322,124 +1272,101 @@ function cargarTamagotchi(data) {
     let contadorCiclosImpuestos = 0;
     const ciclosParaImpuestos = 5; // Cada 5 ciclos se aplican impuestos
     
-    function scheduleNextUpdate() {
-    clearTimeout(intervaloGlobal);
-    
-    if (estaDurmiendo) {
-    console.log("El personaje está durmiendo, no se programa el ciclo normal.");
-    return;
+    // --- ¡NUEVO! Función para formatear la hora para los logs ---
+    function formatTime(timestamp) {
+        const date = new Date(timestamp);
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        const seconds = date.getSeconds().toString().padStart(2, '0');
+        return `${hours}:${minutes}:${seconds}`;
     }
-    if (tamagotchi.estado === "muerto") {
-    mostrarMensajeDeMuerte();
-    return;
-    }
-    promotionCheckedThisCycle = false;
-    let cycleStart = parseInt(localStorage.getItem("cycleStart"));
-    if (!cycleStart) {
-    cycleStart = Date.now();
-    localStorage.setItem("cycleStart", cycleStart);
-    }
-    const now = Date.now();
-    const elapsed = now - cycleStart;
-    
-    // Calculamos cuántos ciclos completos han pasado mientras estabas desconectado
-    const fullCyclesPassed = Math.floor(elapsed / cicloMs);
-    if (fullCyclesPassed > 0) {
-        console.log("Simulando " + fullCyclesPassed + " ciclos offline.");
-        for (let i = 0; i < fullCyclesPassed; i++) {
-            console.log("Nuevo ciclo offline iniciado. Reiniciando promotionCheckedThisCycle.");
-            promotionCheckedThisCycle = false;
-          tamagotchi.actualizarEstado();
-          if (tamagotchi.hambre === 10 || tamagotchi.aburrimiento === 10 ||
-              tamagotchi.sueno === 10 || tamagotchi.higiene === 10) {
-            if (tamagotchi.hambre === 10) tamagotchi.cause = "hambre";
-            else if (tamagotchi.aburrimiento === 10) tamagotchi.cause = "insomnio";
-            else if (tamagotchi.sueno === 10) tamagotchi.cause = "insomnio";
-            else if (tamagotchi.higiene === 10) tamagotchi.cause = "falta de higiene";
-            tamagotchi.estado = "muerto";
-            mostrarMensajeDeMuerte();
+    // --- ¡NUEVO! Motor de juego unificado ---
+    function gameEngine() {
+        if (juegoTerminado) {
+            clearInterval(gameEngineInterval);
             return;
-          }
-          contadorCiclosImpuestos++;
-          if (contadorCiclosImpuestos >= ciclosParaImpuestos) {
-            const impuestoActual = impuestosPorNivel[tamagotchi.nivel] || 0;
-            tamagotchi.coins -= impuestoActual;
-            showPopup("Se te ha cobrado " + impuestoActual + " monedas por impuestos.", 3000);
-            contadorCiclosImpuestos = 0;
-          }
-          ciclosDesdeCumple++;
-          if (ciclosDesdeCumple >= 4) {
-            tamagotchi.cumpleAnios();
-            ciclosDesdeCumple = 0;
-          }
-          pagarSalario();
-          checkPromotion();
-      
-          // Al finalizar este ciclo, reiniciamos la verificación para el próximo
-          console.log("Nuevo ciclo iniciado. Reiniciando promotionCheckedThisCycle.");
-          promotionCheckedThisCycle = false;
         }
-        actualizarInterfaz();
-        // Reajustamos cycleStart para conservar el tiempo sobrante del ciclo actual
-        cycleStart = now - (elapsed % cicloMs);
-        localStorage.setItem("cycleStart", cycleStart);
-      
-        // También, antes de salir del bloque offline, reiniciamos la variable
-        promotionCheckedThisCycle = false;
-      }
-      
-    
-    const updatedElapsed = now - cycleStart;
-    let remainingMs = cicloMs - (updatedElapsed % cicloMs);
-    
-    console.log("scheduleNextUpdate -> cycleStart:", cycleStart, "now:", now, "updatedElapsed:", updatedElapsed, "remainingMs:", remainingMs);
-    
-    intervaloGlobal = setTimeout(() => {
-    if (tamagotchi.estado === "muerto") {
-    console.log("Ciclo normal: Detectada muerte. Mostrando mensaje.");
-    mostrarMensajeDeMuerte();
-    return;
-    }
-    tamagotchi.actualizarEstado();
-    if (tamagotchi.hambre === 10 || tamagotchi.aburrimiento === 10 ||
-      tamagotchi.sueno === 10 || tamagotchi.higiene === 10) {
-    if (tamagotchi.hambre === 10) tamagotchi.cause = "hambre";
-    else if (tamagotchi.aburrimiento === 10) tamagotchi.cause = "insomnio";
-    else if (tamagotchi.sueno === 10) tamagotchi.cause = "insomnio";
-    else if (tamagotchi.higiene === 10) tamagotchi.cause = "falta de higiene";
-    tamagotchi.estado = "muerto";
-    mostrarMensajeDeMuerte();
-    return;
-    }
-    ciclosDesdeCumple++;
-    if (ciclosDesdeCumple >= 4) {
-    tamagotchi.cumpleAnios();
-    ciclosDesdeCumple = 0;
-    }
-    contadorCiclosImpuestos++;
-    if (contadorCiclosImpuestos >= ciclosParaImpuestos) {
-    const impuestoActual = impuestosPorNivel[tamagotchi.nivel] || 0;
-    tamagotchi.coins -= impuestoActual;
-    showPopup("Se te ha cobrado " + impuestoActual + " monedas por impuestos.", 3000);
-    contadorCiclosImpuestos = 0;
-    }
-    pagarSalario();
-    checkPromotion();
-    actualizarInterfaz();
-    localStorage.setItem("cycleStart", Date.now());
-    scheduleNextUpdate();
-    }, remainingMs);
+
+        const now = Date.now();
+        let lastCycleTimestamp = parseInt(localStorage.getItem("lastCycleTimestamp")) || now;
+
+        const cycleDuration = estaDurmiendo ? tiempoTotalSueñoPersonalizado : cicloMs;
+        const elapsed = now - lastCycleTimestamp;
+
+        // --- ¡NUEVO! Log de estado constante en cada tick del motor ---
+        const remainingMs = cycleDuration - elapsed;
+        const state = estaDurmiendo ? 'Dormido' : 'Despierto';
+        console.log(`EngineTick -> cycleStart: ${formatTime(lastCycleTimestamp)}, now: ${formatTime(now)}, elapsed: ${Math.floor(elapsed/1000)}s, next in: ${Math.floor(remainingMs/1000)}s. State: ${state}`);
+
+
+        if (elapsed >= cycleDuration) {
+            const cyclesPassed = Math.floor(elapsed / cycleDuration);
+
+            for (let i = 0; i < cyclesPassed; i++) {
+                if (tamagotchi.estado === "muerto") {
+                    mostrarMensajeDeMuerte();
+                    return;
+                }
+                // --- ¡NUEVO! Log de tiempo detallado por ciclo ---
+                const cycleStartTime = lastCycleTimestamp + i * cycleDuration;
+                const cycleEndTime = cycleStartTime + cycleDuration;
+                console.log(`Motor: Ciclo completado. Inició: ${formatTime(cycleStartTime)}, Finalizó: ${formatTime(cycleEndTime)}. (Estado: ${estaDurmiendo ? 'Dormido' : 'Despierto'})`);
+
+                // Lógica de actualización de estado
+                if (estaDurmiendo) {
+                    tamagotchi.actualizarEstadoDormido();
+                } else {
+                    tamagotchi.actualizarEstado();
+                }
+
+                // Comprobación de muerte (solo si está despierto)
+                if (!estaDurmiendo && (tamagotchi.hambre >= 10 || tamagotchi.aburrimiento >= 10 || tamagotchi.sueno >= 10 || tamagotchi.higiene >= 10)) {
+                    if (tamagotchi.hambre >= 10) tamagotchi.cause = "hambre";
+                    else if (tamagotchi.aburrimiento >= 10) tamagotchi.cause = "aburrimiento extremo";
+                    else if (tamagotchi.sueno >= 10) tamagotchi.cause = "insomnio";
+                    else if (tamagotchi.higiene >= 10) tamagotchi.cause = "falta de higiene";
+                    tamagotchi.estado = "muerto";
+                    mostrarMensajeDeMuerte();
+                    return;
+                }
+
+                // Lógica común a ambos estados (salario, cumpleaños, impuestos, etc.)
+                pagarSalario();
+                contadorCiclosImpuestos++;
+                if (contadorCiclosImpuestos >= ciclosParaImpuestos) {
+                    const impuestoActual = impuestosPorNivel[tamagotchi.nivel] || 0;
+                    tamagotchi.coins -= impuestoActual;
+                    showPopup("Se te ha cobrado " + impuestoActual + " monedas por impuestos.", 3000);
+                    contadorCiclosImpuestos = 0;
+                }
+
+                promotionCheckedThisCycle = false;
+                checkPromotion();
+
+                ciclosDesdeCumple++;
+                const ciclosParaCumple = estaDurmiendo ? 3 : 4;
+                if (ciclosDesdeCumple >= ciclosParaCumple) {
+                    tamagotchi.cumpleAnios();
+                    ciclosDesdeCumple = 0;
+                }
+            }
+
+            // Actualizar el timestamp del último ciclo procesado
+            localStorage.setItem("lastCycleTimestamp", lastCycleTimestamp + cyclesPassed * cycleDuration);
+            actualizarInterfaz();
+            guardarTamagotchi();
+        }
+
+        // Si está durmiendo, también actualizamos la barra de progreso del sueño
+        if (estaDurmiendo) {
+            updateSleepProgress();
+        }
     }
     
     
     
     
     document.addEventListener("visibilitychange", function () {
-      console.log("Visibilidad de la página cambió a:", document.visibilityState);
-      if (document.visibilityState === "hidden") {
-      } else if (document.visibilityState === "visible") {
-        scheduleNextUpdate();
-      }
     });
     
     // --- Inicialización del Juego ---
@@ -1486,36 +1413,26 @@ document.addEventListener("DOMContentLoaded", () => {
       tamagotchi = cargarTamagotchi(JSON.parse(storedData));
       ciclosDesdeCumple = parseInt(localStorage.getItem("ciclosDesdeCumple")) || 0;
       estaDurmiendo = localStorage.getItem("estaDurmiendo") === "true";
-      const cycleStart = localStorage.getItem("cycleStart");
+
       if (estaDurmiendo) {
-          console.log("El Tamagotchi estaba durmiendo. Calculando progreso offline.");
           document.body.classList.add("sleeping");
-          let sleepCycleStart = parseInt(localStorage.getItem("sleepCycleStart"));
-          if (sleepCycleStart) {
-              let elapsed = Date.now() - sleepCycleStart;
-              let cyclesElapsed = Math.floor(elapsed / tiempoTotalSueñoPersonalizado);
-              let remainder = elapsed % tiempoTotalSueñoPersonalizado;
-              for (let i = 0; i < cyclesElapsed; i++) { /* ... simulación sueño offline ... */
-                  tamagotchi.actualizarEstadoDormido(); pagarSalario(); contadorCiclosImpuestos++;
-                  if (contadorCiclosImpuestos >= ciclosParaImpuestos) { const imp = impuestosPorNivel[tamagotchi.nivel] || 0; tamagotchi.coins -= imp; contadorCiclosImpuestos = 0; }
-                  promotionCheckedThisCycle = false; checkPromotion(); ciclosDesdeCumple++;
-                  if (ciclosDesdeCumple >= 3) { tamagotchi.cumpleAnios(); ciclosDesdeCumple = 0; }
-              }
-              localStorage.setItem("sleepCycleStart", Date.now() - remainder);
-              let sleepStart = parseInt(localStorage.getItem("sleepStart"));
-              if (sleepStart) { /* ... actualizar barra sueño offline ... */
-                  let sleepElapsed = Date.now() - sleepStart; const sleepDuration = 10000;
-                  if (sleepElapsed >= sleepDuration) { tamagotchi.sueno = 0; localStorage.removeItem("sleepProgress"); }
-                  else { const d = JSON.parse(localStorage.getItem("sleepProgress")); const iV = d?.initialValue !== undefined ? d.initialValue : tamagotchi.sueno; const p = Math.min(sleepElapsed / sleepDuration, 1); tamagotchi.sueno = Math.max(0, iV * (1 - p)); const uST = Date.now() - sleepElapsed; localStorage.setItem("sleepProgress", JSON.stringify({ startTime: uST, initialValue: iV, duration: sleepDuration })); }
-              }
-          }
-          disableControls(); iniciarCiclosSueño(); sleepUpdateInterval = setInterval(updateSleepProgress, 100);
-      } else if (cycleStart) { console.log("El Tamagotchi estaba despierto. Calculando progreso offline."); scheduleNextUpdate(); } 
-      else { console.log("No hay datos de ciclo guardados, iniciando ciclo normal."); localStorage.setItem("cycleStart", Date.now()); scheduleNextUpdate(); }
+          disableControls();
+      }
+
+      // --- ¡NUEVO! El motor de juego se inicia siempre ---
+      // Ejecuta una vez inmediatamente para la simulación offline
+      gameEngine(); 
+      // Y luego se establece el intervalo para las actualizaciones en tiempo real
+      gameEngineInterval = setInterval(gameEngine, 1000); // Se ejecuta cada segundo
+
       menuContainer.style.display = "none"; gameContainer.style.display = "flex";
       actualizarInterfaz(); updateStorePrices();
       if (tamagotchi.estado === "muerto") { mostrarMensajeDeMuerte(); }
-  } else { console.log("No hay datos guardados, mostrando menú de inicio."); menuContainer.style.display = "block"; gameContainer.style.display = "none"; }
+  } else { 
+      console.log("No hay datos guardados, mostrando menú de inicio."); 
+      menuContainer.style.display = "block"; 
+      gameContainer.style.display = "none"; 
+  }
 
   // --- ¡NUEVO! VERIFICAR RESULTADO DEL JUEGO FLAPPY BIRD AL CARGAR ---
   const flappyResult = localStorage.getItem("flappyGameResult");
@@ -1617,10 +1534,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // Botón Iniciar Juego
   if (startBtn) { /* ... listener startBtn sin cambios ... */
       startBtn.addEventListener("click", () => {
-          const n = document.getElementById("nombre").value, t = document.getElementById("trabajo").value, e = parseInt(document.getElementById("edad").value) || 0;
+          const n = document.getElementById("nombre").value, t = document.getElementById("trabajo").value, e = parseInt(document.getElementById("edad").value, 10) || 0;
           if (!n || !t || isNaN(e)) { alert("Por favor, completa todos los campos correctamente."); return; }
-          tamagotchi = new Tamagotchi(n, t, e); ciclosDesdeCumple = 0; estaDurmiendo = false; localStorage.clear(); localStorage.setItem("cycleStart", Date.now());
-          actualizarInterfaz(); updateStorePrices(); menuContainer.style.display = "none"; gameContainer.style.display = "flex"; scheduleNextUpdate(); guardarTamagotchi();
+          tamagotchi = new Tamagotchi(n, t, e); ciclosDesdeCumple = 0; estaDurmiendo = false; localStorage.clear(); 
+          localStorage.setItem("lastCycleTimestamp", Date.now()); // Inicia el reloj del motor
+          actualizarInterfaz(); updateStorePrices(); menuContainer.style.display = "none"; gameContainer.style.display = "flex"; 
+          gameEngineInterval = setInterval(gameEngine, 1000); // Inicia el motor de juego
+          guardarTamagotchi();
       });
   }
 
