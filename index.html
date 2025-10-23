@@ -11,9 +11,9 @@
         <meta http-equiv="Expires" content="0" />
       
         <!-- Agregar un query string a los recursos para forzar que se recarguen -->
-        <link rel="stylesheet" type="text/css" href="style.css?v=1.5" />
-        <script defer src="background.js?v=1.5"></script>
-        <script defer src="tm.js?v=1.5"></script>
+        <link rel="stylesheet" type="text/css" href="style.css?v=1.8" />
+        <script defer src="background.js?v=1.8"></script>
+        <script defer src="tm.js?v=1.8"></script>
       </head>
       
   <body>
@@ -310,46 +310,38 @@
   </div>
 </div>
 
-
-    <div id="admin-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #fff; z-index: 1000;">
-      <!-- Botón de cierre en la esquina superior izquierda -->
-      <button id="admin-close" style="position: absolute; top: 10px; left: 10px; background: none; border: none; font-size: 1.5rem; cursor: pointer;">×</button>
-      
-      <div id="admin-menu" style="max-width: 600px; margin: 100px auto; background: #fff; padding: 20px; border: 1px solid var(--color-primary); border-radius: 8px;">
+    <div id="admin-overlay">
+      <div id="admin-menu">
+        <button id="admin-close">×</button>
         <h2>Admin Menu</h2>
-        <!-- ¡NUEVO! Botón para resetear el personaje -->
-        <button id="admin-reset-character" style="background-color: #e53e3e; color: white;">Resetear Personaje (Borra todo)</button>
-        <!-- ¡NUEVO! Botón para añadir objeto aleatorio -->
-        <button id="admin-add-random-item">Añadir Objeto Aleatorio</button>
-        <!-- Contenido del menú: reset, campos para vida interna, dinero y record -->
-        <button id="reset-stats">Resetear Stats</button>
-        <label for="admin-work-position">Puesto de trabajo:</label>
-        <select id="admin-work-position">
-          <option value="0">Pasante</option>
-          <option value="1">Empleado Junior</option>
-          <option value="2">Empleado Senior</option>
-          <option value="3">Supervisor</option>
-          <option value="4">Coordinador</option>
-          <option value="5">Gerente</option>
-          <option value="6">Director</option>
-          <option value="7">CEO</option>
-        </select>
-        <br><br>
-        <label>Vida Interna actual: <span id="admin-vida-actual">0</span></label>
-        <br>
-        <label for="admin-edad-interna">Nueva Vida Interna:</label>
-        <input type="number" id="admin-edad-interna" placeholder="Nueva vida interna" />
-        <br>
-        <label for="admin-dinero">Nuevo Dinero:</label>
-        <input type="number" id="admin-dinero" placeholder="Nuevo dinero" />
-        <br>
-        <label for="admin-flappy">Nuevo record de Flappy Bird:</label>
-        <input type="number" id="admin-flappy" placeholder="Nuevo record de Flappy Bird" />
-        <br>
-        <label for="admin-peso">Nuevo Peso (kg):</label>
-        <input type="number" id="admin-peso" placeholder="Nuevo peso" step="0.1" />
-        <br><br>
-        <button id="admin-edad-aceptar">Aceptar</button>
+        <div class="admin-actions">
+          <button id="admin-reset-character">Resetear Personaje</button>
+          <button id="admin-add-random-item">Añadir Objeto Aleatorio</button>
+          <button id="reset-stats">Resetear Stats a 0</button>
+        </div>
+        <div class="admin-form">
+          <div class="form-group">
+            <label for="admin-work-position">Puesto de trabajo:</label>
+            <select id="admin-work-position">
+              <option value="0">Pasante</option>
+              <option value="1">Empleado Junior</option>
+              <option value="2">Empleado Senior</option>
+              <option value="3">Supervisor</option>
+              <option value="4">Coordinador</option>
+              <option value="5">Gerente</option>
+              <option value="6">Director</option>
+              <option value="7">CEO</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Vida Interna actual: <span id="admin-vida-actual">0</span></label>
+            <input type="number" id="admin-edad-interna" placeholder="Nueva vida interna" />
+          </div>
+          <div class="form-group"><label for="admin-dinero">Dinero:</label><input type="number" id="admin-dinero" placeholder="Nuevo dinero" /></div>
+          <div class="form-group"><label for="admin-flappy">Récord Flappy Bird:</label><input type="number" id="admin-flappy" placeholder="Nuevo récord" /></div>
+          <div class="form-group"><label for="admin-peso">Peso (kg):</label><input type="number" id="admin-peso" placeholder="Nuevo peso" step="0.1" /></div>
+        </div>
+        <button id="admin-edad-aceptar">Aplicar Cambios</button>
       </div>
     </div>
     
