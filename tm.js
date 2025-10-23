@@ -2735,21 +2735,19 @@ function populateMuseumList(forceShowIds = null) {
       ? forceShowIds 
       : Object.keys(itemCounts).filter(id => itemCounts[id] > 1);
 
-    // 3. Recorrer los objetos que tienes y crear una entrada por cada uno SI su ID está en la lista de IDs a mostrar.
-    ownedItems.forEach(item => {
-      // --- ¡LÓGICA CORREGIDA! ---
-      // Usamos la lista `idsToShow` que considera el estado ANTES de la venta.
-      if (idsToShow.includes(item.id)) {
+    // 3. Para cada tipo de objeto que está duplicado, mostrar todas las unidades EXCEPTO la primera.
+    idsToShow.forEach(id => {
+      const itemsOfThisType = ownedItems.filter(i => i.id === id);
+      // Empezamos desde el segundo item (índice 1)
+      for (let i = 1; i < itemsOfThisType.length; i++) {
+        const item = itemsOfThisType[i];
         const itemDiv = document.createElement("div");
         itemDiv.className = "inventory-item owned";
 
-        // Añadimos el texto en un span para separarlo del botón
         const textSpan = document.createElement("span");
         textSpan.textContent = item.name;
         itemDiv.appendChild(textSpan);
 
-        // Añadir botón de vender para este objeto específico.
-        // Usamos una copia del objeto para evitar problemas de referencia en el closure.
         const itemToSell = { ...item };
         const sellBtn = document.createElement("button");
         sellBtn.className = "museum-sell-btn";
