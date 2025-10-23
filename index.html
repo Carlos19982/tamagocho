@@ -249,17 +249,65 @@
 
 <div id="inventory-icon">📦</div>
 <!-- Overlay de Inventario en Full Screen -->
-<!-- Overlay de Inventario en Full Screen -->
 <div id="inventory-overlay" style="display: none;">
-  <div class="inventory-content">
-    <h2>Lista de propiedades</h2>
-    <ul id="inventory-unique-list"></ul>
-    <button id="close-inventory">Cerrar</button>
+  <div id="inventory-book">
+    <!-- Páginas del libro -->
+    <div class="inventory-page" data-page-id="store">
+      <h2>Propiedades</h2>
+      <div class="item-grid" id="inventory-store-list"></div>
+    </div>
+    <div class="inventory-page" data-page-id="common">
+      <h2>Tesoros Comunes</h2>
+      <div class="item-grid" id="inventory-common-list"></div>
+    </div>
+    <div class="inventory-page" data-page-id="uncommon">
+      <h2>Tesoros Poco Comunes</h2>
+      <div class="item-grid" id="inventory-uncommon-list"></div>
+    </div>
+    <div class="inventory-page" data-page-id="rare">
+      <h2>Tesoros Raros</h2>
+      <div class="item-grid" id="inventory-rare-list"></div>
+    </div>
+
+    <!-- Controles del libro -->
+    <div id="inventory-controls">
+      <button id="prev-page">‹ Anterior</button>
+      <button id="open-museum-btn">Museo de Duplicados</button>
+      <button id="next-page">Siguiente ›</button>
+    </div>
   </div>
 </div>
 
 
   
+
+<!-- ¡NUEVO! Overlay del Museo de Duplicados -->
+<div id="museum-overlay" style="display: none;">
+  <div id="museum-book">
+    <!-- Botón de cierre -->
+    <button id="close-museum-btn" class="close-museum-button">×</button>
+    
+    <!-- Páginas del libro del museo -->
+    <div class="museum-page" data-page-id="common">
+      <h2>Tesoros Comunes</h2>
+      <div class="item-grid" id="museum-common-list"></div>
+    </div>
+    <div class="museum-page" data-page-id="uncommon">
+      <h2>Tesoros Poco Comunes</h2>
+      <div class="item-grid" id="museum-uncommon-list"></div>
+    </div>
+    <div class="museum-page" data-page-id="rare">
+      <h2>Tesoros Raros</h2>
+      <div class="item-grid" id="museum-rare-list"></div>
+    </div>
+
+    <!-- Controles del libro del museo -->
+    <div id="museum-controls">
+      <button id="museum-prev-page">‹ Anterior</button>
+      <button id="museum-next-page">Siguiente ›</button>
+    </div>
+  </div>
+</div>
 
 
     <div id="admin-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #fff; z-index: 1000;">
@@ -270,6 +318,8 @@
         <h2>Admin Menu</h2>
         <!-- ¡NUEVO! Botón para resetear el personaje -->
         <button id="admin-reset-character" style="background-color: #e53e3e; color: white;">Resetear Personaje (Borra todo)</button>
+        <!-- ¡NUEVO! Botón para añadir objeto aleatorio -->
+        <button id="admin-add-random-item">Añadir Objeto Aleatorio</button>
         <!-- Contenido del menú: reset, campos para vida interna, dinero y record -->
         <button id="reset-stats">Resetear Stats</button>
         <label for="admin-work-position">Puesto de trabajo:</label>

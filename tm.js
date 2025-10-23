@@ -112,6 +112,7 @@ const foodEffects = {
     let minijuegoActivo = false, minijuegoScore = 0, obstacleInterval = null, collisionInterval = null, isJumping = false;
     let tamagotchi, estaDurmiendo = false, ciclosDesdeCumple = 0, juegoTerminado = false;
     let flappyEnded = false;
+    let currentMuseumPageIndex = 0; // <-- ¡NUEVO! Variable global para la página del museo
     
     // --- Funciones de actualización y utilidades ---
     function updateSleepProgress() {
@@ -150,9 +151,9 @@ function disableControls() {
   
     // Deshabilitar botones específicos, excepto los de menús abiertos o necesarios
     document.querySelectorAll("button").forEach(button => {
-      // Excepciones: botones dentro de menús específicos, botones de minijuego, admin, tienda interna, compra, cerrar overlays
-      const parentMenu = button.closest("#work-menu, #admin-menu, #food-menu, #clean-menu, #game-menu, #sleep-menu, #store-overlay, #inventory-overlay");
-      const isExemptId = ["juego-saltar", "juego-reaccion", "juego-ducha", "boton-saltar", "admin-close", "btn-store-comida", "btn-store-objetos", "close-inventory"].includes(button.id);
+      // Excepciones: botones dentro de menús/overlays específicos, botones de minijuego, admin, tienda interna, compra, cerrar overlays
+      const parentMenu = button.closest("#work-menu, #admin-menu, #food-menu, #clean-menu, #game-menu, #sleep-menu, #store-overlay, #inventory-overlay, #museum-overlay");
+      const isExemptId = ["juego-saltar", "juego-reaccion", "juego-ducha", "boton-saltar", "admin-close", "btn-store-comida", "btn-store-objetos"].includes(button.id);
       
       if (parentMenu || isExemptId) {
          // console.log("Botón NO deshabilitado:", button.id || button.textContent.substring(0, 20));
@@ -1700,6 +1701,10 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("store-overlay").style.display = "none";
   document.getElementById("inventory-overlay").style.display = "none";
   document.getElementById("store-food").style.display = "none"; // Ocultar sección comida tienda por defecto
+  // --- ¡NUEVO! Ocultar museo ---
+  document.getElementById("museum-overlay").style.display = "none";
+
+
   document.getElementById("store-objects").style.display = "none"; // Ocultar sección objetos tienda por defecto
   document.getElementById("admin-overlay").style.display = "none";
 
@@ -2085,25 +2090,87 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- FIN Listeners Botones Compra ---
 
-
   // --- Inventario de Objetos (Interruptor / Toggle) ---
   const inventoryIcon = document.getElementById("inventory-icon");
   const inventoryOverlay = document.getElementById("inventory-overlay");
-  const closeInventory = document.getElementById("close-inventory");
-  if (inventoryIcon && inventoryOverlay) { /* ... listener icono inventario sin cambios ... */
+  const prevPageBtn = document.getElementById("prev-page");
+  const nextPageBtn = document.getElementById("next-page");
+  const openMuseumBtn = document.getElementById("open-museum-btn");
+  let currentPageIndex = 0;
+  const pages = document.querySelectorAll(".inventory-page");
+
+  // --- ¡NUEVO! Variables para el museo ---
+  const museumOverlay = document.getElementById("museum-overlay"); // La variable se ha movido al ámbito global
+
+  if (inventoryIcon && inventoryOverlay) {
       inventoryIcon.addEventListener("click", (e) => {
           e.stopPropagation(); if (estaDurmiendo || minijuegoActivo) return;
-          const isVisible = getComputedStyle(inventoryOverlay).display === "block";
-          if (isVisible) { inventoryOverlay.style.display = "none"; if (getComputedStyle(document.getElementById("store-overlay")).display === 'none') { enableControls(); } } 
-          else { populateInventoryList(); inventoryOverlay.style.display = "block"; disableControls(); }
+          
+          const isVisible = getComputedStyle(inventoryOverlay).display === "flex";
+          
+          if (isVisible) {
+              inventoryOverlay.style.display = "none"; // Si está visible, lo oculta
+              const storeVisible = getComputedStyle(document.getElementById("store-overlay")).display === 'block';
+              if (!storeVisible) { enableControls(); }
+          } else {
+              populateInventoryList(); // Si está oculto, lo rellena
+              inventoryOverlay.style.display = "flex"; // y lo muestra
+              disableControls(); // Desactiva los controles de fondo
+          }
       });
   }
-  if (closeInventory && inventoryOverlay) { /* ... listener botón cerrar inventario sin cambios ... */
-      closeInventory.addEventListener("click", (e) => {
-          e.stopPropagation(); inventoryOverlay.style.display = "none";
-          if (getComputedStyle(document.getElementById("store-overlay")).display === 'none') { if (!estaDurmiendo && !minijuegoActivo) enableControls(); }
-      });
+
+  // --- Listeners para paginación del inventario ---
+  if (prevPageBtn) {
+    prevPageBtn.addEventListener("click", () => changePage(-1));
   }
+  if (nextPageBtn) {
+    nextPageBtn.addEventListener("click", () => changePage(1));
+  }
+
+
+  function changePage(direction) {
+    pages[currentPageIndex].classList.remove("active");
+    currentPageIndex = (currentPageIndex + direction + pages.length) % pages.length;
+    pages[currentPageIndex].classList.add("active");
+  }
+
+  // --- ¡NUEVO! Listeners para el Museo ---
+  if (openMuseumBtn) {
+    openMuseumBtn.addEventListener("click", () => {
+      // 1. Cierra el inventario
+      inventoryOverlay.style.display = "none";
+      // 2. Rellena y abre el museo
+      populateMuseumList();
+      museumOverlay.style.display = "flex";
+      // 3. Llama a disableControls() para mantener los controles de fondo desactivados,
+      // pero ahora los del museo estarán exentos y funcionarán.
+      disableControls();
+    });
+  }
+
+  document.getElementById("close-museum-btn")?.addEventListener("click", () => {
+    museumOverlay.style.display = "none";
+    // Habilitar controles solo si ningún otro overlay principal está abierto
+    if (getComputedStyle(document.getElementById("store-overlay")).display === 'none') {
+      enableControls();
+    }
+  });
+
+  document.getElementById("museum-prev-page")?.addEventListener("click", () => changeMuseumPage(-1));
+  document.getElementById("museum-next-page")?.addEventListener("click", () => changeMuseumPage(1));
+
+  function changeMuseumPage(direction) {
+    const museumPages = document.querySelectorAll(".museum-page");
+    if (museumPages.length === 0) return;
+
+    museumPages[currentMuseumPageIndex].classList.remove("active");
+    currentMuseumPageIndex = (currentMuseumPageIndex + direction + museumPages.length) % museumPages.length;
+    museumPages[currentMuseumPageIndex].classList.add("active");
+  }
+
+
+
 
   // --- Menú Admin --- (Sin cambios en su lógica interna)
   document.getElementById("admin-close")?.addEventListener("click", () => { /* ... listener admin-close ... */
@@ -2116,6 +2183,25 @@ document.addEventListener("DOMContentLoaded", () => {
           localStorage.clear(); // Borra todos los datos guardados
           window.location.reload(); // Recarga la página
       }
+  });
+  // --- ¡NUEVO! Listener para el botón de añadir objeto aleatorio ---
+  document.getElementById("admin-add-random-item")?.addEventListener("click", () => {
+      if (!tamagotchi) return;
+
+      // 1. Combinar todos los objetos del mercadillo en un solo array
+      const allItems = [
+          ...mercadilloObjects.common,
+          ...mercadilloObjects.uncommon,
+          ...mercadilloObjects.rare
+      ];
+
+      // 2. Seleccionar un objeto al azar
+      const randomItem = allItems[Math.floor(Math.random() * allItems.length)];
+
+      // 3. Añadirlo al inventario y notificar
+      tamagotchi.mercadilloInventory.push(randomItem);
+      guardarTamagotchi();
+      showPopup(`Objeto de admin añadido: ${randomItem.name}`, 3000);
   });
 
   document.getElementById("reset-stats")?.addEventListener("click", () => { /* ... */ });
@@ -2131,7 +2217,7 @@ document.addEventListener("DOMContentLoaded", () => {
       for (const area of interactiveAreas) { if (e.target.closest(area)) { clickedInsideInteractiveElement = true; break; } }
 
       if (!clickedInsideInteractiveElement) {
-          let somethingClosed = false;
+          let somethingClosed = false; // ... (resto de la lógica sin cambios)
           menusToCloseOnClickOutside.forEach(id => { const m = document.getElementById(id); if (m && getComputedStyle(m).display === "block") { m.style.display = "none"; somethingClosed = true; } });
            const sO = document.getElementById("store-overlay"); if (sO && getComputedStyle(sO).display === 'block') { sO.style.display = 'none'; somethingClosed = true; }
            const iO = document.getElementById("inventory-overlay"); if (iO && getComputedStyle(iO).display === 'block') { iO.style.display = 'none'; somethingClosed = true; }
@@ -2140,7 +2226,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
    // Evitar que clics dentro de los menús/overlays los cierren (propagación)
-   ["food-menu", "clean-menu", "game-menu", "sleep-menu", "work-menu", "store-overlay", "inventory-overlay", "admin-overlay"].forEach((id) => {
+   ["food-menu", "clean-menu", "game-menu", "sleep-menu", "work-menu", "store-overlay", "inventory-overlay", "admin-overlay", "museum-overlay"].forEach((id) => {
        document.getElementById(id)?.addEventListener("click", (e) => e.stopPropagation());
    });
 
@@ -2550,108 +2636,153 @@ function comprarObjeto(itemId, costo, itemName) {
   }
 }
 
-function sellMercadilloObject(item) {
-  if (!tamagotchi) return;
-
-  const index = tamagotchi.mercadilloInventory.findIndex(i => i.id === item.id);
-  if (index > -1) {
-    const soldItem = tamagotchi.mercadilloInventory.splice(index, 1)[0];
-    const sellPrice = Math.floor(Math.random() * (soldItem.value[1] - soldItem.value[0] + 1)) + soldItem.value[0];
-    tamagotchi.coins += sellPrice;
-    guardarTamagotchi();
-    actualizarInterfaz();
-    populateInventoryList();
-    showPopup(`Has vendido ${soldItem.name} por ${sellPrice} monedas.`);
-  }
-}
-
-// --- Encuentra esta sección en tu tm.js y MODIFÍCALA ---
-document.addEventListener("DOMContentLoaded", () => {
-  const inventoryIcon = document.getElementById("inventory-icon");
-  const inventoryOverlay = document.getElementById("inventory-overlay");
-  const closeInventory = document.getElementById("close-inventory");
-
-  // Verificar si los elementos existen
-  if (!inventoryIcon) console.error("¡Icono de inventario no encontrado!");
-  if (!inventoryOverlay) console.error("¡Superposición de inventario no encontrada!");
-  if (!closeInventory) console.error("¡Botón de cerrar inventario no encontrado!");
-
-  // Solo añadir listeners si los elementos existen
-  if (inventoryIcon && inventoryOverlay) {
-      // Mostrar el overlay del inventario al hacer clic en el icono
-      inventoryIcon.addEventListener("click", () => {
-        populateInventoryList(); // *** AÑADE ESTA LÍNEA *** Llama a la función para rellenar la lista
-        inventoryOverlay.style.display = "block"; // Muestra la superposición
-      });
-  }
-
-  if (closeInventory && inventoryOverlay) {
-      // Ocultar el overlay al hacer clic en el botón de cerrar
-      closeInventory.addEventListener("click", () => {
-        inventoryOverlay.style.display = "none";
-      });
-  }
-
-  // ... (resto de tu código DOMContentLoaded, como listeners de botones de tienda, etc.)
-});
-
-// --- FUNCIÓN MODIFICADA para mostrar solo el tier más alto de cada objeto ---
+// --- FUNCIÓN MODIFICADA para que el museo sea un catálogo de todos los objetos ---
 function populateInventoryList() {
-  const listElement = document.getElementById("inventory-unique-list");
-  if (!listElement) {
-    console.error("¡Elemento de lista de inventario ('inventory-unique-list') no encontrado!");
-    return;
-  }
-  listElement.innerHTML = ""; // Limpiar elementos anteriores
+  const storeList = document.getElementById("inventory-store-list");
+  const commonList = document.getElementById("inventory-common-list");
+  const uncommonList = document.getElementById("inventory-uncommon-list");
+  const rareList = document.getElementById("inventory-rare-list");
+  const pages = document.querySelectorAll(".inventory-page");
+  
+  // Limpiar todas las listas
+  [storeList, commonList, uncommonList, rareList].forEach(list => list.innerHTML = "");
 
-  if ((!tamagotchi || !tamagotchi.objectInventory || tamagotchi.objectInventory.length === 0) && (!tamagotchi.mercadilloInventory || tamagotchi.mercadilloInventory.length === 0)) {
-    listElement.innerHTML = "<li>No tienes objetos comprados.</li>";
-    return;
-  }
-
-  const highestTierItems = [];
-
-  // 1. Itera sobre cada categoría de objeto (movil, habitacion, etc.)
+  // 1. Poblar propiedades de la tienda (TODOS los tiers)
   for (const category in objectTiers) {
-    const tiers = objectTiers[category]; // Array de tiers para la categoría actual
-    let highestOwnedTierForCategory = null;
+    const tiersForCategory = objectTiers[category];
+    tiersForCategory.forEach(tier => {
+      const itemDiv = document.createElement("div");
+      itemDiv.className = "inventory-item";
 
-    // 2. Revisa los tiers de la categoría en orden inverso (del más alto al más bajo)
-    for (let i = tiers.length - 1; i >= 0; i--) {
-      const tier = tiers[i];
-      // 3. Si el jugador posee este tier, es el más alto de esa categoría. Guárdalo y sal del bucle.
       if (tamagotchi.objectInventory.includes(tier.id)) {
-        highestOwnedTierForCategory = tier;
-        break;
+        itemDiv.textContent = tier.name;
+        itemDiv.classList.add("owned");
+      } else {
+        itemDiv.textContent = "???";
+        itemDiv.classList.add("locked");
       }
-    }
-
-    // 4. Si se encontró un objeto para esta categoría, añádelo a la lista para mostrar
-    if (highestOwnedTierForCategory) {
-      highestTierItems.push(highestOwnedTierForCategory);
-    }
+      storeList.appendChild(itemDiv);
+    });
   }
 
-  // 5. Muestra los objetos encontrados o el mensaje de inventario vacío
-  if (highestTierItems.length === 0 && tamagotchi.mercadilloInventory.length === 0) {
-    listElement.innerHTML = "<li>No tienes objetos comprados.</li>";
-  } else {
-    highestTierItems.forEach(item => {
-      const li = document.createElement("li");
-      li.textContent = item.name;
-      listElement.appendChild(li);
-    });
+  // 2. Poblar objetos del mercadillo (TODOS los objetos posibles)
+  const populateTreasurePage = (listElement, allPossibleItems) => {
+    allPossibleItems.forEach(possibleItem => {
+      const itemDiv = document.createElement("div");
+      itemDiv.className = "inventory-item";
 
-    tamagotchi.mercadilloInventory.forEach(item => {
-      const li = document.createElement("li");
-      li.textContent = item.name;
-      const sellButton = document.createElement("button");
-      sellButton.textContent = "Vender";
-      sellButton.onclick = () => sellMercadilloObject(item);
-      li.appendChild(sellButton);
-      listElement.appendChild(li);
+      // Comprobar si el jugador tiene este objeto en su inventario
+      const ownedItem = tamagotchi.mercadilloInventory.find(invItem => invItem.id === possibleItem.id);
+
+      if (ownedItem) {
+        // Contar cuántos de este objeto se poseen
+        itemDiv.textContent = ownedItem.name;
+        itemDiv.classList.add("owned");
+
+      } else {
+        itemDiv.textContent = "???";
+        itemDiv.classList.add("locked");
+      }
+
+      listElement.appendChild(itemDiv);
     });
+  };
+
+  // Llamar a la función para cada categoría de tesoro
+  populateTreasurePage(commonList, mercadilloObjects.common);
+  populateTreasurePage(uncommonList, mercadilloObjects.uncommon);
+  populateTreasurePage(rareList, mercadilloObjects.rare);
+
+  // 3. Resetear y mostrar la primera página
+  pages.forEach(page => page.classList.remove("active"));
+  currentPageIndex = 0;
+  if (pages.length > 0) {
+    pages[0].classList.add("active");
+  }
+
+}
+
+// --- ¡NUEVA FUNCIÓN! Para poblar el museo solo con objetos poseídos ---
+function populateMuseumList(forceShowIds = null) {
+  const commonList = document.getElementById("museum-common-list");
+  const uncommonList = document.getElementById("museum-uncommon-list");
+  const rareList = document.getElementById("museum-rare-list");
+  const museumPages = document.querySelectorAll(".museum-page");
+
+  [commonList, uncommonList, rareList].forEach(list => list.innerHTML = "");
+
+  const populateMuseumPage = (listElement, rarity) => {
+    // Agrupar objetos por ID para contar duplicados
+    const ownedItems = tamagotchi.mercadilloInventory.filter(item => 
+      mercadilloObjects[rarity].some(proto => proto.id === item.id)
+    );
+
+    // 1. Contar cuántos de cada objeto hay.
+    const itemCounts = ownedItems.reduce((acc, item) => {
+      acc[item.id] = (acc[item.id] || 0) + 1;
+      return acc;
+    }, {});
+
+    // 2. Determinar qué IDs mostrar. Usar la lista forzada si existe, si no, calcularla.
+    const idsToShow = forceShowIds 
+      ? forceShowIds 
+      : Object.keys(itemCounts).filter(id => itemCounts[id] > 1);
+
+    // 3. Recorrer los objetos que tienes y crear una entrada por cada uno SI su ID está en la lista de IDs a mostrar.
+    ownedItems.forEach(item => {
+      // --- ¡LÓGICA CORREGIDA! ---
+      // Usamos la lista `idsToShow` que considera el estado ANTES de la venta.
+      if (idsToShow.includes(item.id)) {
+        const itemDiv = document.createElement("div");
+        itemDiv.className = "inventory-item owned";
+
+        // Añadimos el texto en un span para separarlo del botón
+        const textSpan = document.createElement("span");
+        textSpan.textContent = item.name;
+        itemDiv.appendChild(textSpan);
+
+        // Añadir botón de vender para este objeto específico.
+        // Usamos una copia del objeto para evitar problemas de referencia en el closure.
+        const itemToSell = { ...item };
+        const sellBtn = document.createElement("button");
+        sellBtn.className = "museum-sell-btn";
+        sellBtn.textContent = "Vender";
+        sellBtn.onclick = (e) => { e.stopPropagation(); sellDuplicateObject(itemToSell, idsToShow); };
+        itemDiv.appendChild(sellBtn);
+
+        listElement.appendChild(itemDiv);
+      }
+    });
+  };
+
+  populateMuseumPage(commonList, 'common');
+  populateMuseumPage(uncommonList, 'uncommon');
+  populateMuseumPage(rareList, 'rare');
+
+  // Asegurarse de que solo la página actual esté activa, sin resetearla a la primera.
+  museumPages.forEach(page => page.classList.remove("active"));
+  if (museumPages.length > 0) {
+    // Vuelve a activar la página que ya estaba seleccionada.
+    museumPages[currentMuseumPageIndex].classList.add("active");
   }
 }
+
+  // --- ¡NUEVA FUNCIÓN! Para vender un objeto duplicado desde el museo ---
+  function sellDuplicateObject(item, currentDuplicateIds) {
+    if (!tamagotchi) return;
+  
+    // Encontrar el índice del primer objeto que coincida para eliminarlo
+    const index = tamagotchi.mercadilloInventory.findIndex(i => i.id === item.id);
+    if (index > -1) {
+      const soldItem = tamagotchi.mercadilloInventory.splice(index, 1)[0];
+      const sellPrice = Math.floor(Math.random() * (soldItem.value[1] - soldItem.value[0] + 1)) + soldItem.value[0];
+      tamagotchi.coins += sellPrice;
+      guardarTamagotchi();
+      actualizarInterfaz(); // Actualiza el contador de monedas
+      populateMuseumList(currentDuplicateIds); // Vuelve a poblar el museo, forzando la vista con los IDs originales
+      populateInventoryList(); // Actualiza también el inventario principal
+      showPopup(`Has vendido 1x ${soldItem.name} por ${sellPrice} monedas.`);
+    }
+  }
 
   //skyJUM`P
