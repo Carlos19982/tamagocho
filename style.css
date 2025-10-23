@@ -7,11 +7,6 @@
          ESTILOS BASE Y GENERALES
       ============================== */
       body {
-        background-image: url("https://i.pinimg.com/originals/f2/5c/2c/f25c2cbf4babfac7a301c3441215484c.gif");
-        background-repeat: no-repeat;
-        background-position: center center;
-        background-attachment: fixed;
-        background-size: cover;
         background-color: #1c1d22; /* Color de fondo si el canvas falla */
         transition: filter 0.5s ease, background-image 0.5s ease;
         font-family: "Noto Sans", "Roboto", sans-serif;
