@@ -1449,19 +1449,6 @@ document.addEventListener("DOMContentLoaded", () => {
       actualizarInterfaz(); updateStorePrices();
       if (tamagotchi.estado === "muerto") { mostrarMensajeDeMuerte(); }
   } else { 
-      // --- ¡NUEVO! Lógica para el regalo de CUCHIPUNEIRO en la creación ---
-      const nombreInput = document.getElementById("nombre");
-      if (nombreInput) {
-        nombreInput.addEventListener('input', (e) => {
-          if (e.target.value === 'CUCHIPUNEIRO') {
-            const trabajoInput = document.getElementById("trabajo");
-            if(trabajoInput) trabajoInput.value = "Streamer";
-            const edadInput = document.getElementById("edad");
-            if(edadInput) edadInput.value = 25;
-          }
-        });
-      }
-
       console.log("No hay datos guardados, mostrando menú de inicio."); 
       menuContainer.style.display = "block"; 
       gameContainer.style.display = "none"; 
@@ -1575,14 +1562,6 @@ document.addEventListener("DOMContentLoaded", () => {
           gameEngineInterval = setInterval(gameEngine, 1000); // Inicia el motor de juego
           guardarTamagotchi();
       });
-
-      // --- ¡NUEVO! Comprobación del regalo para CUCHIPUNEIRO ---
-      if (tamagotchi && tamagotchi.nombre === 'CUCHIPUNEIRO' && !localStorage.getItem('cuchipuneiroGift')) {
-        tamagotchi.coins += 500;
-        localStorage.setItem('cuchipuneiroGift', 'true');
-        guardarTamagotchi();
-        showPopup("¡Un admirador secreto te ha regalado 500 monedas!", 5000);
-      }
   }
 
   // Contenedor del Muñeco (Click, Long Press, Multi-Tap)
