@@ -182,7 +182,7 @@
         padding-bottom: 10px;
       }
 
-      .item-grid {
+      .item-grid, .museum-item-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         gap: 15px;
@@ -298,7 +298,7 @@
         padding: 15px;
       }
 
-      .close-museum-button {
+      .close-book-button {
         position: absolute;
         top: 5px;
         right: 10px;
@@ -311,6 +311,8 @@
         width: auto; /* Reset width */
       }
 
+      /* --- ¡CORRECCIÓN! El botón del museo no tenía esta clase asignada antes --- */
+      
       .museum-page {
         display: none; /* Ocultas por defecto */
         height: calc(100% - 60px); /* Altura total menos los controles */
@@ -827,20 +829,47 @@
         color: var(--color-primary);
         font-size: 1.1rem;
       }
+
+      /* --- ESTILOS DE TARJETA DE PRODUCTO (MODIFICADO) --- */
       .store-item {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: #ffffff;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 5px;
-        transition: background-color 0.3s ease;
+        flex-direction: column; /* Apila los elementos verticalmente */
+        align-items: center;   /* Centra horizontalmente */
+        justify-content: space-between; /* Distribuye el espacio */
+        background: #f5efde;
+        border: 1px solid #d4c0a1;
+        border-radius: 10px;
+        padding: 15px 10px;
+        text-align: center;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        gap: 10px; /* Espacio entre nombre, precio y botón */
       }
+
       .store-item:hover {
-        background-color: #f0f0f0;
+        transform: translateY(-5px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.1);
       }
+
+      .store-item .item-name {
+        font-weight: bold;
+        font-size: 1rem;
+        color: #5a3a1a;
+      }
+
+      .store-item .item-price {
+        font-size: 0.9rem;
+        color: #8B4513;
+        background-color: #eaddc7;
+        padding: 3px 8px;
+        border-radius: 12px;
+      }
+
       .buy-btn {
+        /* --- BOTÓN DE COMPRA MEJORADO --- */
+        width: 80%; /* No ocupa todo el ancho */
+        margin-top: auto; /* Empuja el botón hacia abajo */
+        padding: 8px 12px;
+        font-weight: bold;
         background-color: var(--color-primary);
         color: #fff;
         border: none;
@@ -849,9 +878,95 @@
         cursor: pointer;
         transition: background-color 0.3s ease;
       }
+
       .buy-btn:hover {
-        background-color: #357abd;
+        background-color: #3a78c2;
       }
+
+/* ==============================
+   NUEVO: ESTILOS DE LA TIENDA (DISEÑO LIBRO)
+============================== */
+#store-overlay {
+  /* display: none; ya está en el HTML */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+}
+
+#store-book {
+  width: 90vw;
+  max-width: 800px;
+  height: 80vh;
+  max-height: 600px;
+  background: #fdfaf1; /* Color pergamino */
+  border: 3px solid #8B4513; /* Borde de cuero */
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+}
+
+.close-book-button {
+  position: absolute;
+  top: 5px;
+  right: 10px;
+  font-size: 2rem;
+  background: none;
+  border: none;
+  color: #5a3a1a;
+  cursor: pointer;
+  z-index: 10;
+  width: auto; /* Reset width */
+}
+
+/* --- ¡CORRECCIÓN! El botón del museo no tenía esta clase asignada antes --- */
+.close-museum-button {
+  /* Hereda de .close-book-button si es necesario, pero lo definimos explícitamente para claridad */
+}
+
+.store-page {
+  display: none; /* Ocultas por defecto */
+  height: calc(100% - 60px); /* Altura total menos los controles */
+  overflow-y: auto;
+}
+
+.store-page.active {
+  display: block;
+}
+
+.store-page h2 {
+  text-align: center;
+  font-family: 'Georgia', serif;
+  color: #5a3a1a;
+  border-bottom: 2px solid #d4c0a1;
+  padding-bottom: 10px;
+}
+
+.store-item-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 15px;
+  padding: 10px;
+}
+
+#store-controls {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
 
 /* ===================================================================
    NUEVO PATCH (v3): Zona Táctil Unificada y Ampliada para Móvil

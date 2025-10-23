@@ -11,9 +11,9 @@
         <meta http-equiv="Expires" content="0" />
       
         <!-- Agregar un query string a los recursos para forzar que se recarguen -->
-        <link rel="stylesheet" type="text/css" href="style.css?v=1.16" />
-        <script defer src="background.js?v=1.16"></script>
-        <script defer src="tm.js?v=1.16"></script>
+        <link rel="stylesheet" type="text/css" href="style.css?v=1.17" />
+        <script defer src="background.js?v=1.17"></script>
+        <script defer src="tm.js?v=1.17"></script>
       </head>
       
   <body>
@@ -193,58 +193,62 @@
 <div id="store-icon">🛒</div>
 
 <!-- Overlay de la tienda -->
-<div id="store-overlay">
-  <h2>Tienda</h2>
+<div id="store-overlay" style="display: none;">
+  <div id="store-book">
+    <!-- Botón de cierre -->
+    <button id="close-store-btn" class="close-book-button">×</button>
 
-  <!-- Botones para alternar -->
-  <div id="store-buttons">
-    <button id="btn-store-comida">Comida</button>
-    <button id="btn-store-objetos">Objetos</button>
-  </div>
-
-  <!-- Contenedor de contenido de la tienda -->
-  <div id="store-content">
-
-    <!-- SECCIÓN DE COMIDA -->
-    <div id="store-food" style="display: none;">
-      <div class="store-menu">
-        <div class="store-section healthy">
-          <h3>Comida Sana</h3>
-          <div class="store-item"><span>Ensalada - 120 monedas</span><button class="buy-btn">Comprar</button></div>
-          <div class="store-item"><span>Manzana - 100 monedas</span><button class="buy-btn">Comprar</button></div>
-          <div class="store-item"><span>Yogurt - 110 monedas</span><button class="buy-btn">Comprar</button></div>
-          <div class="store-item"><span>Smoothie - 150 monedas</span><button class="buy-btn">Comprar</button></div>
-          <div class="store-item"><span>Zanahoria - 80 monedas</span><button class="buy-btn">Comprar</button></div>
-        </div>
-        <div class="store-section fast">
-          <h3>Comida Rápida</h3>
-          <div class="store-item"><span>Hamburguesa - 250 monedas</span><button class="buy-btn">Comprar</button></div>
-          <div class="store-item"><span>Pizza - 500 monedas</span><button class="buy-btn">Comprar</button></div>
-          <div class="store-item"><span>Papas Fritas - 160 monedas</span><button class="buy-btn">Comprar</button></div>
-          <div class="store-item"><span>Refresco - 140 monedas</span><button class="buy-btn">Comprar</button></div>
-          <div class="store-item"><span>Helado - 160 monedas</span><button class="buy-btn">Comprar</button></div>
-        </div>
-        <div class="store-section medicines">
-          <h3>Medicinas</h3>
-          <div class="store-item"><span>Pastilla - 250 monedas</span><button class="buy-btn">Comprar</button></div>
-          <div class="store-item"><span>Jeringuilla - 600 monedas</span><button class="buy-btn">Comprar</button></div>
-          <div class="store-item" id="store-item-insulina"><span>Insulina - 350 monedas</span><button class="buy-btn">Comprar</button></div>
-        </div>
+    <!-- Página 1: Comida Sana -->
+    <div class="store-page" data-page-id="healthy-food">
+      <h2>Comida Sana</h2>
+      <div class="store-item-grid">
+        <div class="store-item"><span class="item-name">Smoothie</span><span class="item-price">150 monedas</span><button class="buy-btn">Comprar</button></div>
+        <div class="store-item"><span class="item-name">Ensalada</span><span class="item-price">120 monedas</span><button class="buy-btn">Comprar</button></div>
+        <div class="store-item"><span class="item-name">Yogurt</span><span class="item-price">110 monedas</span><button class="buy-btn">Comprar</button></div>
+        <div class="store-item"><span class="item-name">Manzana</span><span class="item-price">100 monedas</span><button class="buy-btn">Comprar</button></div>
+        <div class="store-item"><span class="item-name">Zanahoria</span><span class="item-price">80 monedas</span><button class="buy-btn">Comprar</button></div>
       </div>
     </div>
 
-    <!-- SECCIÓN DE OBJETOS -->
-    <div id="store-objects" style="display: none;">
-      <div class="store-section objects">
-        <h3>Objetos</h3>
-        <div class="store-item" data-item-type="movil"><span></span><button class="buy-btn">Comprar</button></div>
-        <div class="store-item" data-item-type="habitacion"><span></span><button class="buy-btn">Comprar</button></div>
-        <div class="store-item" data-item-type="bicicleta"><span></span><button class="buy-btn">Comprar</button></div>
-        <div class="store-item" data-item-type="portatil"><span></span><button class="buy-btn">Comprar</button></div>
-        <div class="store-item" data-item-type="auriculares"><span></span><button class="buy-btn">Comprar</button></div>
+    <!-- Página 2: Comida Rápida -->
+    <div class="store-page" data-page-id="fast-food">
+      <h2>Comida Rápida</h2>
+      <div class="store-item-grid">
+        <div class="store-item"><span class="item-name">Pizza</span><span class="item-price">500 monedas</span><button class="buy-btn">Comprar</button></div>
+        <div class="store-item"><span class="item-name">Hamburguesa</span><span class="item-price">250 monedas</span><button class="buy-btn">Comprar</button></div>
+        <div class="store-item"><span class="item-name">Papas Fritas</span><span class="item-price">160 monedas</span><button class="buy-btn">Comprar</button></div>
+        <div class="store-item"><span class="item-name">Helado</span><span class="item-price">160 monedas</span><button class="buy-btn">Comprar</button></div>
+        <div class="store-item"><span class="item-name">Refresco</span><span class="item-price">140 monedas</span><button class="buy-btn">Comprar</button></div>
       </div>
     </div>
 
+    <!-- Página 3: Medicinas -->
+    <div class="store-page" data-page-id="medicines">
+      <h2>Medicinas</h2>
+      <div class="store-item-grid">
+        <div class="store-item"><span class="item-name">Pastilla</span><span class="item-price">250 monedas</span><button class="buy-btn">Comprar</button></div>
+        <div class="store-item"><span class="item-name">Jeringuilla</span><span class="item-price">600 monedas</span><button class="buy-btn">Comprar</button></div>
+        <div class="store-item" id="store-item-insulina"><span class="item-name">Insulina</span><span class="item-price">350 monedas</span><button class="buy-btn">Comprar</button></div>
+      </div>
+    </div>
+
+    <!-- Página 4: Objetos -->
+    <div class="store-page" data-page-id="objects">
+      <h2>Objetos</h2>
+      <div class="store-item-grid" id="store-objects-grid">
+        <div class="store-item" data-item-type="movil"><span class="item-name"></span><span class="item-price"></span><button class="buy-btn">Comprar</button></div>
+        <div class="store-item" data-item-type="habitacion"><span class="item-name"></span><span class="item-price"></span><button class="buy-btn">Comprar</button></div>
+        <div class="store-item" data-item-type="bicicleta"><span class="item-name"></span><span class="item-price"></span><button class="buy-btn">Comprar</button></div>
+        <div class="store-item" data-item-type="portatil"><span class="item-name"></span><span class="item-price"></span><button class="buy-btn">Comprar</button></div>
+        <div class="store-item" data-item-type="auriculares"><span class="item-name"></span><span class="item-price"></span><button class="buy-btn">Comprar</button></div>
+      </div>
+    </div>
+    
+    <!-- Controles del libro de la tienda -->
+    <div id="store-controls">
+      <button id="store-prev-page">‹ Anterior</button>
+      <button id="store-next-page">Siguiente ›</button>
+    </div>
   </div>
 </div>
 
@@ -252,6 +256,8 @@
 <!-- Overlay de Inventario en Full Screen -->
 <div id="inventory-overlay" style="display: none;">
   <div id="inventory-book">
+    <!-- Botón de cierre -->
+    <button id="close-inventory-btn" class="close-book-button">×</button>
     <!-- Páginas del libro -->
     <div class="inventory-page" data-page-id="store">
       <h2>Propiedades</h2>
@@ -286,7 +292,7 @@
 <div id="museum-overlay" style="display: none;">
   <div id="museum-book">
     <!-- Botón de cierre -->
-    <button id="close-museum-btn" class="close-museum-button">×</button>
+    <button id="close-museum-btn" class="close-book-button">×</button>
     
     <!-- Páginas del libro del museo -->
     <div class="museum-page" data-page-id="common">

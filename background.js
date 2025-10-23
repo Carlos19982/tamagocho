@@ -264,14 +264,19 @@ function actualizarFondoDinamico(timestamp) {
     const horaDecimal = hora + minutos / 60;
 
     // --- MODIFICADO: Sistema de interpolación de colores para transiciones suaves ---
+    // Las transiciones ahora duran 1 hora, empezando justo antes de la fase clave.
     const colorPalettes = [
-        { time: 0,  sky: ['#0c0a18', '#2c3e50'], sun: '#f4f4f4', ground: '#2b2f31', hill1: '#1c1e22', hill2: '#222629' }, // Medianoche
-        { time: 5,  sky: ['#2c3e50', '#e74c3c', '#f1c40f'], sun: '#ffd700', ground: '#38302b', hill1: '#4a3f37', hill2: '#5c4e44' }, // Amanecer
-        { time: 7,  sky: ['#87CEEB', '#a9dff3'], sun: '#FFDE00', ground: '#5d7a3c', hill1: '#4b6330', hill2: '#526e33' }, // Mañana
-        { time: 12, sky: ['#63a4ff', '#89bfff'], sun: '#FFEE88', ground: '#6b8c43', hill1: '#546e35', hill2: '#5b7a39' }, // Mediodía
-        { time: 17, sky: ['#34495e', '#e67e22', '#d35400'], sun: '#ff6347', ground: '#4a403a', hill1: '#3b332e', hill2: '#453a34' }, // Atardecer
-        { time: 21, sky: ['#0c0a18', '#2c3e50'], sun: '#f4f4f4', ground: '#2b2f31', hill1: '#1c1e22', hill2: '#222629' }, // Anochecer
-        { time: 24, sky: ['#0c0a18', '#2c3e50'], sun: '#f4f4f4', ground: '#2b2f31', hill1: '#1c1e22', hill2: '#222629' }  // Siguiente medianoche (para cerrar el ciclo)
+        { time: 0,  sky: ['#0c0a18', '#2c3e50'], sun: '#f4f4f4', ground: '#2b2f31', hill1: '#1c1e22', hill2: '#222629' }, // 00:00 - Noche Profunda
+        { time: 4,  sky: ['#0c0a18', '#2c3e50'], sun: '#f4f4f4', ground: '#2b2f31', hill1: '#1c1e22', hill2: '#222629' }, // 04:00 - Inicio transición amanecer
+        { time: 5,  sky: ['#2c3e50', '#e74c3c', '#f1c40f'], sun: '#ffd700', ground: '#38302b', hill1: '#4a3f37', hill2: '#5c4e44' }, // 05:00 - Amanecer
+        { time: 6,  sky: ['#87CEEB', '#a9dff3'], sun: '#FFDE00', ground: '#5d7a3c', hill1: '#4b6330', hill2: '#526e33' }, // 06:00 - Mañana
+        { time: 11, sky: ['#87CEEB', '#a9dff3'], sun: '#FFDE00', ground: '#5d7a3c', hill1: '#4b6330', hill2: '#526e33' }, // 11:00 - Inicio transición mediodía
+        { time: 12, sky: ['#63a4ff', '#89bfff'], sun: '#FFEE88', ground: '#6b8c43', hill1: '#546e35', hill2: '#5b7a39' }, // 12:00 - Mediodía
+        { time: 16, sky: ['#63a4ff', '#89bfff'], sun: '#FFEE88', ground: '#6b8c43', hill1: '#546e35', hill2: '#5b7a39' }, // 16:00 - Inicio transición atardecer
+        { time: 17, sky: ['#34495e', '#e67e22', '#d35400'], sun: '#ff6347', ground: '#4a403a', hill1: '#3b332e', hill2: '#453a34' }, // 17:00 - Atardecer
+        { time: 20, sky: ['#34495e', '#e67e22', '#d35400'], sun: '#ff6347', ground: '#4a403a', hill1: '#3b332e', hill2: '#453a34' }, // 20:00 - Inicio transición anochecer
+        { time: 21, sky: ['#0c0a18', '#2c3e50'], sun: '#f4f4f4', ground: '#2b2f31', hill1: '#1c1e22', hill2: '#222629' }, // 21:00 - Anochecer
+        { time: 24, sky: ['#0c0a18', '#2c3e50'], sun: '#f4f4f4', ground: '#2b2f31', hill1: '#1c1e22', hill2: '#222629' }  // 24:00 - Medianoche
     ];
 
     let palette1, palette2;

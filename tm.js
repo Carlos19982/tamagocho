@@ -113,6 +113,7 @@ const foodEffects = {
     let tamagotchi, estaDurmiendo = false, ciclosDesdeCumple = 0, juegoTerminado = false;
     let flappyEnded = false;
     let currentMuseumPageIndex = 0; // <-- ¡NUEVO! Variable global para la página del museo
+    let currentStorePageIndex = 0; // <-- ¡NUEVO! Variable para la página de la tienda
     let currentAdminPageIndex = 0; // <-- ¡NUEVO! Variable para la página de objetos del admin
     
     // --- Funciones de actualización y utilidades ---
@@ -293,12 +294,12 @@ function disableControls() {
     
     // --- ¡NUEVO! Función para actualizar la tienda de objetos con tiers ---
     function updateObjectStore() {
-      if (!tamagotchi) return;
+      if (!tamagotchi) { return; }
     
       // Recorre cada tipo de objeto en la tienda
-      document.querySelectorAll('#store-objects .store-item').forEach(itemElement => {
+      document.querySelectorAll('#store-objects-grid .store-item').forEach(itemElement => {
         const itemType = itemElement.dataset.itemType;
-        if (!itemType || !objectTiers[itemType]) return;
+        if (!itemType || !objectTiers[itemType]) { return; }
     
         // Encuentra el último tier comprado de este tipo
         const tiersForType = objectTiers[itemType];
@@ -312,13 +313,14 @@ function disableControls() {
     
         // Determina el siguiente tier a mostrar
         const nextTierIndex = lastOwnedTierIndex + 1;
-        const span = itemElement.querySelector('span');
-        const button = itemElement.querySelector('button');
+        const nameSpan = itemElement.querySelector('.item-name');
+        const priceSpan = itemElement.querySelector('.item-price');
     
-        if (nextTierIndex < tiersForType.length) {
+        if (nextTierIndex < tiersForType.length && nameSpan && priceSpan) {
           // Muestra el siguiente tier disponible
           const nextTier = tiersForType[nextTierIndex];
-          span.textContent = `${nextTier.name} - ${nextTier.cost} monedas`;
+          nameSpan.textContent = nextTier.name;
+          priceSpan.textContent = `${nextTier.cost} monedas`;
           itemElement.style.display = 'flex'; // Asegura que el item sea visible
         } else {
           // Si ya se compró el último tier, oculta el objeto de la tienda
@@ -1411,15 +1413,10 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("game-menu").style.display = "none";
   document.getElementById("sleep-menu").style.display = "none";
   document.getElementById("food-menu").style.display = "none";
-  document.getElementById("minijuego-container").style.display = "none";
   document.getElementById("store-overlay").style.display = "none";
   document.getElementById("inventory-overlay").style.display = "none";
-  document.getElementById("store-food").style.display = "none"; // Ocultar sección comida tienda por defecto
   // --- ¡NUEVO! Ocultar museo ---
   document.getElementById("museum-overlay").style.display = "none";
-
-
-  document.getElementById("store-objects").style.display = "none"; // Ocultar sección objetos tienda por defecto
   document.getElementById("admin-overlay").style.display = "none";
 
   const menuContainer = document.querySelector(".menu-container");
@@ -1715,50 +1712,66 @@ document.addEventListener("DOMContentLoaded", () => {
     mostrarRequisitosAscenso();
 });
 
-  // --- Tienda (Interruptor / Toggle y Listeners Compra con DEBUG) ---
+  // --- Tienda (Interruptor / Toggle y Paginación) ---
   const storeIcon = document.getElementById("store-icon");
   const storeOverlay = document.getElementById("store-overlay");
   if (storeIcon && storeOverlay) {
       storeIcon.addEventListener("click", function(e) {
           e.stopPropagation(); if (estaDurmiendo || minijuegoActivo) return;
-          const isVisible = getComputedStyle(storeOverlay).display === "block";
+          const isVisible = getComputedStyle(storeOverlay).display === "flex";
           if (isVisible) { 
               storeOverlay.style.display = "none"; 
-              storeIcon.classList.remove("on-top"); // Quita la clase para bajar el z-index
-              if (getComputedStyle(document.getElementById("inventory-overlay")).display === 'none') { 
-                  enableControls(); 
-              } 
+              if (getComputedStyle(document.getElementById("inventory-overlay")).display === 'none') { enableControls(); } 
           } else { 
               updateStorePrices(); 
               updateObjectStore(); 
-              storeOverlay.style.display = "block"; 
-              storeIcon.classList.add("on-top"); // Añade la clase para subir el z-index
-              disableControls(); if(getComputedStyle(document.getElementById("store-food")).display === 'none' && getComputedStyle(document.getElementById("store-objects")).display === 'none') { document.getElementById("store-food").style.display = "block"; } } // Asegura que la sección de comida se muestre por defecto
+              storeOverlay.style.display = "flex"; 
+              disableControls(); 
+              // Mostrar la primera página por defecto
+              changeStorePage(0, true);
+          }
       });
   }
-  // Botones secciones tienda
-  document.getElementById("btn-store-comida")?.addEventListener("click", function(e) { e.stopPropagation(); document.getElementById("store-food").style.display = "block"; document.getElementById("store-objects").style.display = "none"; });
-  document.getElementById("btn-store-objetos")?.addEventListener("click", function(e) { e.stopPropagation(); document.getElementById("store-food").style.display = "none"; document.getElementById("store-objects").style.display = "block"; });
+
+  // Cierre de la tienda
+  document.getElementById("close-store-btn")?.addEventListener("click", () => {
+    storeOverlay.style.display = "none";
+    if (getComputedStyle(document.getElementById("inventory-overlay")).display === 'none') {
+      enableControls();
+    }
+  });
+
+  // --- ¡NUEVO! Cierre del inventario ---
+  document.getElementById("close-inventory-btn")?.addEventListener("click", () => {
+    inventoryOverlay.style.display = "none";
+    if (getComputedStyle(document.getElementById("store-overlay")).display === 'none') {
+      enableControls();
+    }
+  });
+
+  // Paginación de la tienda
+  document.getElementById("store-prev-page")?.addEventListener("click", () => changeStorePage(-1));
+  document.getElementById("store-next-page")?.addEventListener("click", () => changeStorePage(1));
 
   // --- Listeners Botones Compra (CON DEBUG DETALLADO) ---
   // Botones de Compra (Comida y Medicinas)
   console.log("Asignando listeners a botones de compra de comida/medicina...");
-  document.querySelectorAll("#store-food .buy-btn").forEach((btn) => {
+  document.querySelectorAll(".store-page .buy-btn").forEach((btn) => {
       btn.addEventListener("click", (e) => {
           console.log("Botón Comprar Comida/Medicina clickeado:", btn);
           e.stopPropagation();
           if (!tamagotchi) { console.error("Tamagotchi no definido al intentar comprar."); return; }
           const storeItem = btn.closest(".store-item");
           if (!storeItem) { console.error("No se encontró .store-item ancestro."); return; }
-          const spanElement = storeItem.querySelector("span");
-          if (!spanElement) { console.error("No se encontró span dentro de .store-item"); return; }
-          const spanText = spanElement.textContent;
-          console.log("Texto del Span:", spanText);
-          const productNameMatch = spanText.match(/^([a-zA-ZáéíóúñÁÉÍÓÚÑ\s]+)\s*-/i);
-          const costMatch = spanText.match(/(\d+)\s*monedas/i);
-          if (!productNameMatch || !costMatch) { console.error("Error al parsear nombre o costo con Regex:", spanText); alert("Error al leer la información del producto."); return; }
-          let productName = productNameMatch[1].trim().toLowerCase();
-          let cost = parseInt(costMatch[1], 10);
+          const nameSpan = storeItem.querySelector(".item-name");
+          const priceSpan = storeItem.querySelector(".item-price");
+          if (!nameSpan || !priceSpan) { console.error("No se encontraron spans de nombre o precio."); return; }
+          
+          const productName = nameSpan.textContent.trim().toLowerCase();
+          const costMatch = priceSpan.textContent.match(/(\d+)/);
+          if (!costMatch) { console.error("No se pudo parsear el costo desde:", priceSpan.textContent); return; }
+          const cost = parseInt(costMatch[1], 10);
+
           console.log(`Parseado -> Nombre: '${productName}', Costo: ${cost}`);
           if (isNaN(cost)) { console.error("El costo parseado no es un número:", cost); alert("Error al leer el costo del producto."); return; }
           if (tamagotchi.coins < cost) { console.log(`Monedas insuficientes: ${tamagotchi.coins} < ${cost}`); alert("No tienes suficientes monedas."); return; }
@@ -1773,21 +1786,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
    // Botones de Compra (Objetos)
    console.log("Asignando listeners a botones de compra de objetos...");
-   document.querySelectorAll("#store-objects .store-item").forEach(item => {
+   document.querySelectorAll("#store-objects-grid .store-item").forEach(item => {
        const buyButton = item.querySelector("button.buy-btn");
-       const spanElement = item.querySelector("span");
-       if (buyButton && spanElement) {
+       const nameSpan = item.querySelector(".item-name");
+       const priceSpan = item.querySelector(".item-price");
+       if (buyButton && nameSpan && priceSpan) {
            buyButton.addEventListener("click", (e) => {
               console.log("Botón Comprar Objeto clickeado:", buyButton);
               e.stopPropagation();
               if (!tamagotchi) { console.error("Tamagotchi no definido al intentar comprar objeto."); return; }
-              const text = spanElement.textContent;
-              console.log("Texto del Span (Objeto):", text);
-               const parts = text.split(" - ");
-               if (parts.length < 2) { console.error("Formato incorrecto (split no funcionó):", text); alert("Error al leer información del objeto."); return; }
-               const nombre = parts[0].trim();
-               const costString = parts[1].replace(/monedas/i, "").trim();
-               const costo = parseInt(costString, 10);
+               const nombre = nameSpan.textContent.trim();
+               const costMatch = priceSpan.textContent.match(/(\d+)/);
+               if (!costMatch) { console.error("No se pudo parsear el costo del objeto desde:", priceSpan.textContent); return; }
+               const costo = parseInt(costMatch[1], 10);
                console.log(`Parseado -> Nombre: '${nombre}', Costo String: '${costString}', Costo Num: ${costo}`);
                if (isNaN(costo)) { console.error("El costo parseado del objeto no es un número:", costo); alert("Error al leer el costo del objeto."); return; }
                
@@ -1902,6 +1913,20 @@ document.addEventListener("DOMContentLoaded", () => {
     museumPages[currentMuseumPageIndex].classList.add("active");
   }
 
+  // --- ¡NUEVA FUNCIÓN! Para la paginación de la tienda ---
+  function changeStorePage(direction, absolute = false) {
+    const storePages = document.querySelectorAll(".store-page");
+    if (storePages.length === 0) return;
+
+    storePages[currentStorePageIndex].classList.remove("active");
+
+    if (absolute) {
+      currentStorePageIndex = direction;
+    } else {
+      currentStorePageIndex = (currentStorePageIndex + direction + storePages.length) % storePages.length;
+    }
+    storePages[currentStorePageIndex].classList.add("active");
+  }
 
 
 
@@ -2316,29 +2341,6 @@ document.getElementById("admin-edad-aceptar").addEventListener("click", (e) => {
   guardarTamagotchi();
   actualizarAdminMenu(); // Actualiza todos los campos del menú admin
   alert(message);
-});
-
-
-document.getElementById("btn-store-comida").addEventListener("click", function() {
-  const foodSection = document.getElementById("store-food");
-  // Si ya se muestra, se oculta; de lo contrario, se muestra
-  if (foodSection.style.display === "block") {
-    foodSection.style.display = "none";
-  } else {
-    foodSection.style.display = "block";
-    // Opcional: ocultar la sección de objetos si estuviera visible
-    document.getElementById("store-objects").style.display = "none";
-  }
-});
-document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("btn-store-comida").addEventListener("click", () => {
-    document.getElementById("store-food").style.display = "block";
-    document.getElementById("store-objects").style.display = "none";
-  });
-  document.getElementById("btn-store-objetos").addEventListener("click", () => {
-    document.getElementById("store-food").style.display = "none";
-    document.getElementById("store-objects").style.display = "block";
-  });
 });
 
 // --- ¡NUEVO! Función para poblar la lista de objetos en el menú de admin ---
