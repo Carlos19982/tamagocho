@@ -1,3 +1,4 @@
+
 /**
  * background.js
  * 
@@ -259,44 +260,79 @@ function actualizarFondoDinamico(timestamp) {
     const height = bg_canvas.clientHeight;
 
     const hora = new Date().getHours();
-    let needsRedraw = hora !== bg_lastRenderedHour;
-    let skyGradient, sunColor, isNight, isSunset, groundColor, hillColor1, hillColor2;
+    const minutos = new Date().getMinutes();
+    const horaDecimal = hora + minutos / 60;
 
-    // --- OPTIMIZACIÓN: Mover la creación de gradientes y cálculo de sol/luna ---
-    // Estos valores solo se recalculan cuando la hora cambia.
-    if (needsRedraw) {
-    if (hora >= 5 && hora < 7) {
-        skyGradient = bg_ctx.createLinearGradient(0, 0, 0, height);
-        skyGradient.addColorStop(0, '#2c3e50'); skyGradient.addColorStop(0.6, '#e74c3c'); skyGradient.addColorStop(1, '#f1c40f');
-        sunColor = '#ffd700'; isNight = false; isSunset = false;
-        groundColor = '#38302b'; hillColor1 = '#4a3f37'; hillColor2 = '#5c4e44';
-    } else if (hora >= 7 && hora < 12) {
-        skyGradient = bg_ctx.createLinearGradient(0, 0, 0, height);
-        skyGradient.addColorStop(0, '#87CEEB'); skyGradient.addColorStop(1, '#a9dff3');
-        sunColor = '#FFDE00'; isNight = false; isSunset = false;
-        groundColor = '#5d7a3c'; hillColor1 = '#4b6330'; hillColor2 = '#526e33';
-    } else if (hora >= 12 && hora < 17) {
-        skyGradient = bg_ctx.createLinearGradient(0, 0, 0, height);
-        skyGradient.addColorStop(0, '#63a4ff'); skyGradient.addColorStop(1, '#89bfff');
-        sunColor = '#FFEE88'; isNight = false; isSunset = false;
-        groundColor = '#6b8c43'; hillColor1 = '#546e35'; hillColor2 = '#5b7a39';
-    } else if (hora >= 17 && hora < 21) {
-        skyGradient = bg_ctx.createLinearGradient(0, 0, 0, height);
-        skyGradient.addColorStop(0, '#34495e'); skyGradient.addColorStop(0.5, '#e67e22'); skyGradient.addColorStop(1, '#d35400');
-        sunColor = '#ff6347'; isNight = false; isSunset = true;
-        groundColor = '#4a403a'; hillColor1 = '#3b332e'; hillColor2 = '#453a34';
-    } else {
-        skyGradient = bg_ctx.createLinearGradient(0, 0, 0, height);
-        skyGradient.addColorStop(0, '#0c0a18'); skyGradient.addColorStop(1, '#2c3e50');
-        sunColor = '#f4f4f4'; isNight = true; isSunset = false;
-        groundColor = '#2b2f31'; hillColor1 = '#1c1e22'; hillColor2 = '#222629';
+    // --- MODIFICADO: Sistema de interpolación de colores para transiciones suaves ---
+    const colorPalettes = [
+        { time: 0,  sky: ['#0c0a18', '#2c3e50'], sun: '#f4f4f4', ground: '#2b2f31', hill1: '#1c1e22', hill2: '#222629' }, // Medianoche
+        { time: 5,  sky: ['#2c3e50', '#e74c3c', '#f1c40f'], sun: '#ffd700', ground: '#38302b', hill1: '#4a3f37', hill2: '#5c4e44' }, // Amanecer
+        { time: 7,  sky: ['#87CEEB', '#a9dff3'], sun: '#FFDE00', ground: '#5d7a3c', hill1: '#4b6330', hill2: '#526e33' }, // Mañana
+        { time: 12, sky: ['#63a4ff', '#89bfff'], sun: '#FFEE88', ground: '#6b8c43', hill1: '#546e35', hill2: '#5b7a39' }, // Mediodía
+        { time: 17, sky: ['#34495e', '#e67e22', '#d35400'], sun: '#ff6347', ground: '#4a403a', hill1: '#3b332e', hill2: '#453a34' }, // Atardecer
+        { time: 21, sky: ['#0c0a18', '#2c3e50'], sun: '#f4f4f4', ground: '#2b2f31', hill1: '#1c1e22', hill2: '#222629' }, // Anochecer
+        { time: 24, sky: ['#0c0a18', '#2c3e50'], sun: '#f4f4f4', ground: '#2b2f31', hill1: '#1c1e22', hill2: '#222629' }  // Siguiente medianoche (para cerrar el ciclo)
+    ];
+
+    let palette1, palette2;
+    for (let i = 0; i < colorPalettes.length - 1; i++) {
+        if (horaDecimal >= colorPalettes[i].time && horaDecimal < colorPalettes[i+1].time) {
+            palette1 = colorPalettes[i];
+            palette2 = colorPalettes[i+1];
+            break;
+        }
     }
-        // Calcular posición del sol/luna (arco en el cielo)
-        const cyclePercent = ((hora - 5 + 24) % 24) / 18; // Ciclo de 18h de luz (5am a 11pm)
-        bg_sunMoonPos.x = width * cyclePercent;
+
+    const timeRange = palette2.time - palette1.time;
+    const progress = (horaDecimal - palette1.time) / timeRange;
+
+    // Función para interpolar colores en formato hexadecimal
+    function lerpColor(c1, c2, factor) {
+        const r1 = parseInt(c1.substring(1, 3), 16);
+        const g1 = parseInt(c1.substring(3, 5), 16);
+        const b1 = parseInt(c1.substring(5, 7), 16);
+        const r2 = parseInt(c2.substring(1, 3), 16);
+        const g2 = parseInt(c2.substring(3, 5), 16);
+        const b2 = parseInt(c2.substring(5, 7), 16);
+
+        const r = Math.round(r1 + (r2 - r1) * factor).toString(16).padStart(2, '0');
+        const g = Math.round(g1 + (g2 - g1) * factor).toString(16).padStart(2, '0');
+        const b = Math.round(b1 + (b2 - b1) * factor).toString(16).padStart(2, '0');
+        return `#${r}${g}${b}`;
+    }
+
+    // Interpolar colores sólidos
+    const sunColor = lerpColor(palette1.sun, palette2.sun, progress);
+    const groundColor = lerpColor(palette1.ground, palette2.ground, progress);
+    const hillColor1 = lerpColor(palette1.hill1, palette2.hill1, progress);
+    const hillColor2 = lerpColor(palette1.hill2, palette2.hill2, progress);
+
+    // Interpolar gradiente del cielo
+    const skyGradient = bg_ctx.createLinearGradient(0, 0, 0, height);
+    const maxStops = Math.max(palette1.sky.length, palette2.sky.length);
+    for (let i = 0; i < maxStops; i++) {
+        const color1 = palette1.sky[i] || palette1.sky[palette1.sky.length - 1];
+        const color2 = palette2.sky[i] || palette2.sky[palette2.sky.length - 1];
+        const stopColor = lerpColor(color1, color2, progress);
+        const stopPosition = i / (maxStops - 1);
+        skyGradient.addColorStop(isNaN(stopPosition) ? 1 : stopPosition, stopColor);
+    }
+
+    // Forzar redibujado del caché en cada frame para la transición suave
+    let needsRedraw = true; 
+    let isNight, isSunset;
+
+    // --- MODIFICADO: Lógica de ciclo unificada para un movimiento continuo ---
+    if (needsRedraw) {
+        // El ciclo de 24h se mapea a un valor entre -0.1 y 1.1 para que el astro
+        // empiece fuera de la pantalla y termine fuera de la pantalla.
+        // El punto 0 del ciclo son las 5 AM.
+        const cyclePercent = ((horaDecimal - 5 + 24) % 24) / 20; // 20 horas de "visibilidad"
+
+        bg_sunMoonPos.x = width * cyclePercent; // La posición X es un porcentaje del ancho
         bg_sunMoonPos.y = height * 0.7 - Math.sin(cyclePercent * Math.PI) * height * 0.6;
 
-        bg_lastRenderedHour = hora;
+        // bg_lastRenderedHour ya no es necesario para la lógica de redibujado principal
         bg_backgroundCacheCanvas.width = bg_canvas.width;
         bg_backgroundCacheCanvas.height = bg_canvas.height;
         bg_backgroundCacheCtx.scale(dpr, dpr);
@@ -306,22 +342,15 @@ function actualizarFondoDinamico(timestamp) {
         bg_backgroundCacheCtx.fillRect(0, 0, width, height);
         drawLandscape(bg_backgroundCacheCtx, width, height, groundColor, hillColor1, hillColor2);
     }
-    // --- FIN DE LA OPTIMIZACIÓN ---
 
-    // Para el resto del código, necesitamos saber si es de noche o atardecer.
-    // Lo recalculamos aquí de forma muy ligera, sin crear gradientes.
     isNight = (hora < 5 || hora >= 21);
     isSunset = (hora >= 17 && hora < 21);
 
-    // El color del sol/luna también debe estar disponible fuera del bloque `if (needsRedraw)`
-    if (isNight) sunColor = '#f4f4f4';
-    else if (isSunset) sunColor = '#ff6347';
-    else if (hora >= 5 && hora < 7) sunColor = '#ffd700';
-    else if (hora >= 12 && hora < 17) sunColor = '#FFEE88';
-    else sunColor = '#FFDE00';
-
-    // --- ¡NUEVO! Limpiar caché de sprites si la hora cambia para regenerar colores ---
-    if (needsRedraw) bg_sprites = {};
+    // Limpiar caché de sprites si la hora cambia para regenerar colores (si fuera necesario)
+    if (hora !== bg_lastRenderedHour) {
+        bg_sprites = {};
+        bg_lastRenderedHour = hora;
+    }
 
     if (isNight) {
         document.body.classList.add('night-mode');
@@ -377,9 +406,11 @@ function actualizarFondoDinamico(timestamp) {
             bg_ctx.lineWidth = 2; bg_ctx.beginPath(); bg_ctx.moveTo(star.x, star.y); bg_ctx.lineTo(star.x + star.len, star.y - star.len / 3); bg_ctx.stroke();
         });
     } else {
+        // --- MODIFICADO: Se elimina la lógica de transición con fundido. ---
+        // Ahora solo se dibuja el sol, que sigue su trayectoria continua.
         drawSun(bg_ctx, bg_sunMoonPos.x, bg_sunMoonPos.y, 25, sunColor);
     }
-
+    
     // --- ¡NUEVO! Lógica de colisión de nubes, ahora modular ---
     const charRect = bg_collisionElement ? bg_collisionElement.getBoundingClientRect() : null;
 
