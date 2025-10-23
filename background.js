@@ -322,13 +322,16 @@ function actualizarFondoDinamico(timestamp) {
     let needsRedraw = true; 
     let isNight, isSunset;
 
-    // --- MODIFICADO: Lógica de ciclo unificada para un movimiento continuo ---
     if (needsRedraw) {
-        // El ciclo de 24h se mapea a un valor entre -0.1 y 1.1 para que el astro
-        // empiece fuera de la pantalla y termine fuera de la pantalla.
-        // El punto 0 del ciclo son las 5 AM.
-        const cyclePercent = ((horaDecimal - 5 + 24) % 24) / 20; // 20 horas de "visibilidad"
-
+        // Calcular posición del sol/luna (arco en el cielo)
+        let cyclePercent;
+        if (hora >= 5 && hora < 21) { // Ciclo del día (5:00 a 20:59)
+            // El ciclo de 16 horas del día (de 5 a 21) se mapea de 0 a 1.
+            cyclePercent = (horaDecimal - 5) / 16;
+        } else { // Ciclo de la noche (21:00 a 4:59)
+            // El ciclo de 8 horas de la noche se mapea de 0 a 1.
+            cyclePercent = ((horaDecimal - 21 + 24) % 24) / 8;
+        }
         bg_sunMoonPos.x = width * cyclePercent; // La posición X es un porcentaje del ancho
         bg_sunMoonPos.y = height * 0.7 - Math.sin(cyclePercent * Math.PI) * height * 0.6;
 
@@ -405,9 +408,38 @@ function actualizarFondoDinamico(timestamp) {
             bg_ctx.strokeStyle = `rgba(255, 255, 255, ${star.life})`;
             bg_ctx.lineWidth = 2; bg_ctx.beginPath(); bg_ctx.moveTo(star.x, star.y); bg_ctx.lineTo(star.x + star.len, star.y - star.len / 3); bg_ctx.stroke();
         });
+    } else if (horaDecimal >= 4 && horaDecimal < 6) { // Transición Amanecer (4:00 - 5:59)
+        const transitionProgress = (horaDecimal - 4) / 2; // 0.0 a 1.0
+
+        // La luna se desvanece
+        bg_ctx.globalAlpha = 1 - transitionProgress;
+        drawMoon(bg_ctx, bg_sunMoonPos.x, bg_sunMoonPos.y, 25, sunColor);
+
+        // El sol aparece
+        const sunCyclePercent = (horaDecimal - 5) / 16;
+        const sunX = width * sunCyclePercent;
+        const sunY = height * 0.7 - Math.sin(sunCyclePercent * Math.PI) * height * 0.6;
+        bg_ctx.globalAlpha = transitionProgress;
+        drawSun(bg_ctx, sunX, sunY, 25, sunColor);
+
+        bg_ctx.globalAlpha = 1.0; // Restaurar alpha
+
+    } else if (horaDecimal >= 20 && horaDecimal < 22) { // Transición Atardecer (20:00 - 21:59)
+        const transitionProgress = (horaDecimal - 20) / 2; // 0.0 a 1.0
+
+        // El sol se desvanace
+        bg_ctx.globalAlpha = 1 - transitionProgress;
+        drawSun(bg_ctx, bg_sunMoonPos.x, bg_sunMoonPos.y, 25, sunColor);
+
+        // La luna aparece
+        const moonCyclePercent = ((horaDecimal - 21 + 24) % 24) / 8;
+        const moonX = width * moonCyclePercent;
+        const moonY = height * 0.7 - Math.sin(moonCyclePercent * Math.PI) * height * 0.6;
+        bg_ctx.globalAlpha = transitionProgress;
+        drawMoon(bg_ctx, moonX, moonY, 25, sunColor);
+
+        bg_ctx.globalAlpha = 1.0; // Restaurar alpha
     } else {
-        // --- MODIFICADO: Se elimina la lógica de transición con fundido. ---
-        // Ahora solo se dibuja el sol, que sigue su trayectoria continua.
         drawSun(bg_ctx, bg_sunMoonPos.x, bg_sunMoonPos.y, 25, sunColor);
     }
     
