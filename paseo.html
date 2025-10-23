@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <link rel="stylesheet" type="text/css" href="style.css?v=1.10" />
+    <link rel="stylesheet" type="text/css" href="style.css?v=1.20" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Paseo con Tamagotchi</title>
@@ -290,6 +290,12 @@
         let sunMoonPos = { x: 0, y: 0 };
         let animationFrameId;
 
+        // --- ¡NUEVO! Variables para optimizar la animación ---
+        let lastFrameTime = 0;
+        const targetFPS = 15; // Reducimos a 15 FPS para ahorrar batería
+        const frameInterval = 1000 / targetFPS;
+
+
         function drawPixelatedCircle(x, y, radius, color) {
             for (let i = -radius; i <= radius; i++) {
                 for (let j = -radius; j <= radius; j++) {
@@ -381,10 +387,17 @@
             document.body.style.backgroundImage = 'none';
         }
 
-        function animateBackground() {
-            if (!ctx) { animationFrameId = requestAnimationFrame(animateBackground); return; }
-            actualizarFondoDinamico();
+        function animateBackground(timestamp) {
             animationFrameId = requestAnimationFrame(animateBackground);
+            if (!ctx) return;
+
+            // --- ¡NUEVO! Control de FPS para ahorrar batería ---
+            if (timestamp - lastFrameTime < frameInterval) {
+                return;
+            }
+            lastFrameTime = timestamp; // Actualizamos el tiempo del último frame
+
+            actualizarFondoDinamico();
         }
 
         function initBackgroundCanvas() {
