@@ -2157,8 +2157,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  document.getElementById("museum-prev-page")?.addEventListener("click", () => changeMuseumPage(-1));
-  document.getElementById("museum-next-page")?.addEventListener("click", () => changeMuseumPage(1));
+  // --- MODIFICADO: Redibujar el museo al cambiar de página ---
+  document.getElementById("museum-prev-page")?.addEventListener("click", () => {
+    populateMuseumList(); // Forzar recálculo
+    changeMuseumPage(-1);
+  });
+  document.getElementById("museum-next-page")?.addEventListener("click", () => {
+    populateMuseumList(); // Forzar recálculo
+    changeMuseumPage(1);
+  });
 
   function changeMuseumPage(direction) {
     const museumPages = document.querySelectorAll(".museum-page");
@@ -2770,7 +2777,7 @@ function populateMuseumList(forceShowIds = null) {
   // --- ¡NUEVA FUNCIÓN! Para vender un objeto duplicado desde el museo ---
   function sellDuplicateObject(item, currentDuplicateIds) {
     if (!tamagotchi) return;
-  
+
     // Encontrar el índice del primer objeto que coincida para eliminarlo
     const index = tamagotchi.mercadilloInventory.findIndex(i => i.id === item.id);
     if (index > -1) {
@@ -2779,10 +2786,12 @@ function populateMuseumList(forceShowIds = null) {
       tamagotchi.coins += sellPrice;
       guardarTamagotchi();
       actualizarInterfaz(); // Actualiza el contador de monedas
-      populateMuseumList(currentDuplicateIds); // Vuelve a poblar el museo, forzando la vista con los IDs originales
+      // Volvemos a poblar el museo, forzando la vista con los IDs que estaban duplicados ANTES de la venta.
+      populateMuseumList(currentDuplicateIds);
       populateInventoryList(); // Actualiza también el inventario principal
       showPopup(`Has vendido 1x ${soldItem.name} por ${sellPrice} monedas.`);
     }
   }
 
   //skyJUM`P
+  
