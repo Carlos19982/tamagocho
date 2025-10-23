@@ -11,9 +11,9 @@
         <meta http-equiv="Expires" content="0" />
       
         <!-- Agregar un query string a los recursos para forzar que se recarguen -->
-        <link rel="stylesheet" type="text/css" href="style.css?v=1.8" />
-        <script defer src="background.js?v=1.8"></script>
-        <script defer src="tm.js?v=1.8"></script>
+        <link rel="stylesheet" type="text/css" href="style.css?v=1.9" />
+        <script defer src="background.js?v=1.9"></script>
+        <script defer src="tm.js?v=1.9"></script>
       </head>
       
   <body>
@@ -314,9 +314,27 @@
       <div id="admin-menu">
         <button id="admin-close">×</button>
         <h2>Admin Menu</h2>
+        <!-- Paginación de Objetos para Añadir -->
+        <div id="admin-item-book">
+          <div class="admin-item-page" data-page-id="common">
+            <h4>Tesoros Comunes</h4>
+            <div class="admin-item-grid" id="admin-common-list"></div>
+          </div>
+          <div class="admin-item-page" data-page-id="uncommon">
+            <h4>Tesoros Poco Comunes</h4>
+            <div class="admin-item-grid" id="admin-uncommon-list"></div>
+          </div>
+          <div class="admin-item-page" data-page-id="rare">
+            <h4>Tesoros Raros</h4>
+            <div class="admin-item-grid" id="admin-rare-list"></div>
+          </div>
+          <div id="admin-item-controls">
+            <button id="admin-prev-page">‹ Ant</button>
+            <button id="admin-next-page">Sig ›</button>
+          </div>
+        </div>
         <div class="admin-actions">
           <button id="admin-reset-character">Resetear Personaje</button>
-          <button id="admin-add-random-item">Añadir Objeto Aleatorio</button>
           <button id="reset-stats">Resetear Stats a 0</button>
         </div>
         <div class="admin-form">

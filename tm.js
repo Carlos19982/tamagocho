@@ -113,6 +113,7 @@ const foodEffects = {
     let tamagotchi, estaDurmiendo = false, ciclosDesdeCumple = 0, juegoTerminado = false;
     let flappyEnded = false;
     let currentMuseumPageIndex = 0; // <-- ¡NUEVO! Variable global para la página del museo
+    let currentAdminPageIndex = 0; // <-- ¡NUEVO! Variable para la página de objetos del admin
     
     // --- Funciones de actualización y utilidades ---
     function updateSleepProgress() {
@@ -151,7 +152,7 @@ function disableControls() {
   
     // Deshabilitar botones específicos, excepto los de menús abiertos o necesarios
     document.querySelectorAll("button").forEach(button => {
-      // Excepciones: botones dentro de menús/overlays específicos, botones de minijuego, admin, tienda interna, compra, cerrar overlays
+      // --- MODIFICADO: Añadido #museum-overlay a la lista de excepciones ---
       const parentMenu = button.closest("#work-menu, #admin-menu, #food-menu, #clean-menu, #game-menu, #sleep-menu, #store-overlay, #inventory-overlay, #museum-overlay");
       const isExemptId = ["juego-saltar", "juego-reaccion", "juego-ducha", "boton-saltar", "admin-close", "btn-store-comida", "btn-store-objetos"].includes(button.id);
       
@@ -1607,7 +1608,7 @@ document.addEventListener("DOMContentLoaded", () => {
               }
               if (adminTapCount === 10) {
                   clearTimeout(adminTapTimeout);
-                  adminTapCount = 0;
+                  adminTapCount = 0; // Resetea el contador
                   if (tamagotchi && tamagotchi.nombre === "Carlos") {
                       const aO = document.getElementById("admin-overlay");
                       if (aO) { actualizarAdminMenu(); aO.style.display = "block"; disableControls(); }
@@ -1881,10 +1882,11 @@ document.addEventListener("DOMContentLoaded", () => {
     changeMuseumPage(1);
   });
 
+  // --- FUNCIÓN CORREGIDA ---
   function changeMuseumPage(direction) {
     const museumPages = document.querySelectorAll(".museum-page");
     if (museumPages.length === 0) return;
-
+  
     museumPages[currentMuseumPageIndex].classList.remove("active");
     currentMuseumPageIndex = (currentMuseumPageIndex + direction + museumPages.length) % museumPages.length;
     museumPages[currentMuseumPageIndex].classList.add("active");
@@ -1905,25 +1907,6 @@ document.addEventListener("DOMContentLoaded", () => {
           window.location.reload(); // Recarga la página
       }
   });
-  // --- ¡NUEVO! Listener para el botón de añadir objeto aleatorio ---
-  document.getElementById("admin-add-random-item")?.addEventListener("click", () => {
-      if (!tamagotchi) return;
-
-      // 1. Combinar todos los objetos del mercadillo en un solo array
-      const allItems = [
-          ...mercadilloObjects.common,
-          ...mercadilloObjects.uncommon,
-          ...mercadilloObjects.rare
-      ];
-
-      // 2. Seleccionar un objeto al azar
-      const randomItem = allItems[Math.floor(Math.random() * allItems.length)];
-
-      // 3. Añadirlo al inventario y notificar
-      tamagotchi.mercadilloInventory.push(randomItem);
-      guardarTamagotchi();
-      showPopup(`Objeto de admin añadido: ${randomItem.name}`, 3000);
-  });
 
   document.getElementById("reset-stats")?.addEventListener("click", () => { /* ... */ });
   document.getElementById("admin-work-position")?.addEventListener("change", (e) => { /* ... */ });
@@ -1932,7 +1915,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Cerrar Menús/Overlays al hacer clic fuera (MODIFICADO para no cerrar work-menu) ---
   document.addEventListener("click", function (e) {
-      const menusToCloseOnClickOutside = ["food-menu", "clean-menu", "game-menu", "sleep-menu"]; // Excluye work-menu
+      const menusToCloseOnClickOutside = ["food-menu", "clean-menu", "game-menu", "sleep-menu"];
       let clickedInsideInteractiveElement = false;
       const interactiveAreas = ["#food-menu", "#clean-menu", "#game-menu", "#sleep-menu", "#work-menu", "#store-overlay", "#inventory-overlay", "#admin-overlay", "#store-icon", "#inventory-icon", ".buttons-container", "#muñeco-container"];
       for (const area of interactiveAreas) { if (e.target.closest(area)) { clickedInsideInteractiveElement = true; break; } }
@@ -1950,6 +1933,22 @@ document.addEventListener("DOMContentLoaded", () => {
    ["food-menu", "clean-menu", "game-menu", "sleep-menu", "work-menu", "store-overlay", "inventory-overlay", "admin-overlay", "museum-overlay"].forEach((id) => {
        document.getElementById(id)?.addEventListener("click", (e) => e.stopPropagation());
    });
+
+   // --- ¡NUEVO! Listeners para paginación del menú de admin ---
+   document.getElementById("admin-prev-page")?.addEventListener("click", () => {
+     changeAdminItemPage(-1);
+   });
+   document.getElementById("admin-next-page")?.addEventListener("click", () => {
+     changeAdminItemPage(1);
+   });
+
+   function changeAdminItemPage(direction) {
+     const pages = document.querySelectorAll(".admin-item-page");
+     if (pages.length === 0) return;
+     pages[currentAdminPageIndex].classList.remove("active");
+     currentAdminPageIndex = (currentAdminPageIndex + direction + pages.length) % pages.length;
+     pages[currentAdminPageIndex].classList.add("active");
+   }
 
   console.log("Listeners de DOMContentLoaded asignados.");
 
@@ -2237,6 +2236,7 @@ function actualizarAdminVidaInterna() {
 function actualizarAdminMenu() {
   if (!tamagotchi) return;
   actualizarAdminVidaInterna(); // Mantiene la actualización de la edad interna
+  populateAdminObjectList(); // ¡NUEVO! Rellena la lista de objetos
   const inputPeso = document.getElementById("admin-peso");
   if (inputPeso) inputPeso.value = tamagotchi.peso.toFixed(1); // Rellena el input con el peso actual
 }
@@ -2330,6 +2330,54 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("store-objects").style.display = "block";
   });
 });
+
+// --- ¡NUEVO! Función para poblar la lista de objetos en el menú de admin ---
+function populateAdminObjectList() {
+  const commonList = document.getElementById("admin-common-list");
+  const uncommonList = document.getElementById("admin-uncommon-list");
+  const rareList = document.getElementById("admin-rare-list");
+  const pages = document.querySelectorAll(".admin-item-page");
+
+  if (!commonList || !uncommonList || !rareList) return;
+
+  // Limpiar listas
+  [commonList, uncommonList, rareList].forEach(list => list.innerHTML = "");
+
+  const createItemEntry = (item) => {
+    const itemDiv = document.createElement("div");
+    itemDiv.className = "admin-item";
+
+    const textSpan = document.createElement("span");
+    textSpan.textContent = item.name;
+    itemDiv.appendChild(textSpan);
+
+    const addBtn = document.createElement("button");
+    addBtn.className = "admin-add-btn";
+    addBtn.textContent = "Añadir";
+    addBtn.onclick = (e) => {
+      e.stopPropagation();
+      if (tamagotchi) {
+        tamagotchi.mercadilloInventory.push({ ...item }); // Añade una copia
+        guardarTamagotchi();
+        populateInventoryList(); // Actualiza el inventario visual si está abierto
+        showPopup(`Objeto añadido: ${item.name}`, 2000);
+      }
+    };
+    itemDiv.appendChild(addBtn);
+    return itemDiv;
+  };
+
+  mercadilloObjects.common.forEach(item => commonList.appendChild(createItemEntry(item)));
+  mercadilloObjects.uncommon.forEach(item => uncommonList.appendChild(createItemEntry(item)));
+  mercadilloObjects.rare.forEach(item => rareList.appendChild(createItemEntry(item)));
+
+  // Resetear y mostrar la primera página
+  pages.forEach(page => page.classList.remove("active"));
+  currentAdminPageIndex = 0;
+  if (pages.length > 0) {
+    pages[0].classList.add("active");
+  }
+}
 
 
 // Función para manejar la compra de un objeto
