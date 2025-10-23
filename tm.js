@@ -1286,6 +1286,11 @@ function cargarTamagotchi(data) {
     let canvas, ctx, stars, clouds, fireflies, shootingStars;
     let sunMoonPos = { x: 0, y: 0 };
     let animationFrameId;
+    
+    // --- ¡NUEVO! Variables para optimizar la animación del fondo ---
+    let lastFrameTime = 0;
+    const targetFPS = 15; // Reducimos a 15 FPS para ahorrar batería
+    const frameInterval = 1000 / targetFPS;
 
     function initBackgroundCanvas() {
         canvas = document.getElementById('background-canvas');
@@ -1339,7 +1344,10 @@ function cargarTamagotchi(data) {
         animateBackground();
     }
 
-    function animateBackground() {
+    function animateBackground(timestamp) {
+        // Solicitar el siguiente frame inmediatamente
+        animationFrameId = requestAnimationFrame(animateBackground);
+
         if (!ctx || estaDurmiendo || juegoTerminado) {
             if (estaDurmiendo || juegoTerminado) {
                 // Si está durmiendo o el juego terminó, pinta un fondo negro y para.
@@ -1348,14 +1356,18 @@ function cargarTamagotchi(data) {
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                 }
             }
-            // Vuelve a intentar en 1 segundo si el canvas no está listo
-            animationFrameId = requestAnimationFrame(animateBackground);
             return;
         }
-        
+
+        // --- ¡NUEVO! Control de FPS para ahorrar batería ---
+        // Si no ha pasado suficiente tiempo desde el último frame, no redibujamos.
+        if (timestamp - lastFrameTime < frameInterval) {
+            return;
+        }
+        lastFrameTime = timestamp; // Actualizamos el tiempo del último frame dibujado
+
         // Actualizar y dibujar el fondo
         actualizarFondoDinamico();
-        animationFrameId = requestAnimationFrame(animateBackground);
     }
 
     function drawPixelatedCircle(x, y, radius, color) {
@@ -1667,6 +1679,8 @@ function cargarTamagotchi(data) {
         if (document.visibilityState === 'visible') {
             console.log("Pestaña visible de nuevo. Forzando actualización del motor.");
             gameEngine(); // Ejecuta el motor inmediatamente para simular el tiempo en segundo plano.
+            lastFrameTime = performance.now(); // Resetea el temporizador de la animación de fondo
+            if (!animationFrameId) animateBackground(lastFrameTime); // Reanuda la animación si estaba parada
         }
     });
     
