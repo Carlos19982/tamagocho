@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="style.css?v=1.20" />
-    <script defer src="tm.js?v=1.20"></script>
+    <link rel="stylesheet" type="text/css" href="style.css?v=1.0" />
+    <script defer src="tm.js?v=1.0"></script>
     <title>Consulta del Médico</title>
     <style>
         body {
@@ -211,6 +211,20 @@
             drawPixelatedCircle(x, y, radius, color);
         }
 
+        function createPuffEffect(x, y) {
+            for (let i = 0; i < 10; i++) {
+                const p = document.createElement('div');
+                p.style.position = 'fixed'; p.style.left = `${x}px`; p.style.top = `${y}px`;
+                p.style.width = `${Math.random()*10+5}px`; p.style.height = p.style.width;
+                p.style.background = 'rgba(255,255,255,0.7)'; p.style.borderRadius = '50%';
+                p.style.zIndex = '1'; p.style.transition = 'transform 1s ease-out, opacity 1s ease-out';
+                document.body.appendChild(p);
+                const angle = Math.random()*2*Math.PI; const dist = Math.random()*50+20;
+                setTimeout(() => { p.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px) scale(0.5)`; p.style.opacity = '0'; }, 10);
+                setTimeout(() => p.remove(), 1010);
+            }
+        }
+
         function drawLandscape(width, height, groundColor, hillColor1, hillColor2) {
             ctx.fillStyle = hillColor1;
             ctx.beginPath(); ctx.moveTo(0, height * 0.8); ctx.bezierCurveTo(width * 0.2, height * 0.7, width * 0.3, height * 0.75, width * 0.5, height * 0.8); ctx.bezierCurveTo(width * 0.7, height * 0.85, width * 0.8, height * 0.7, width, height * 0.75); ctx.lineTo(width, height); ctx.lineTo(0, height); ctx.closePath(); ctx.fill();
@@ -253,7 +267,25 @@
             } else {
                 drawSun(sunMoonPos.x, sunMoonPos.y, 25, sunColor);
             }
-            clouds.forEach(cloud => { cloud.x += cloud.speed; if (cloud.x * width > width + cloud.width) { cloud.x = -cloud.width / width; } drawCloud(cloud); });
+
+            const characterElement = document.getElementById('paciente');
+            const charRect = characterElement ? characterElement.getBoundingClientRect() : null;
+            clouds.forEach((cloud, index) => {
+                cloud.x += cloud.speed;
+                if (cloud.x * width > width + cloud.width) { cloud.x = -cloud.width / width; }
+                if (charRect) {
+                    const cloudX = cloud.x * width; const cloudY = cloud.y * height;
+                    const cloudWidth = cloud.width; const cloudHeight = cloud.width / 2;
+                    const hPad = charRect.width * 0.25; const vPad = charRect.height * 0.10;
+                    const cBox = { left: charRect.left + hPad, right: charRect.right - hPad, top: charRect.top + vPad, bottom: charRect.bottom - vPad };
+                    if (cloudX < cBox.right && cloudX + cloudWidth > cBox.left && cloudY < cBox.bottom && cloudY + cloudHeight > cBox.top) {
+                        createPuffEffect(cloudX + cloudWidth / 2, cloudY + cloudHeight / 2);
+                        clouds.splice(index, 1); return;
+                    }
+                }
+                drawCloud(cloud);
+            });
+
             document.body.style.backgroundImage = 'none';
         }
 

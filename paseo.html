@@ -1,72 +1,79 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <link rel="stylesheet" type="text/css" href="style.css?v=1.20" />
+    <link rel="stylesheet" type="text/css" href="style.css?v=1.0" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Paseo con Tamagotchi</title>
     <style>
         body {
             margin: 0;
-            display: flex;
+            display: grid;
+            grid-template-rows: auto auto 1fr; /* Título, Panel de Texto, Escena */
             justify-content: center;
             align-items: center;
             height: 100vh;
             overflow: hidden;
             font-family: 'Courier New', Courier, monospace;
-            user-select: none; /* El color de fondo ahora lo gestiona el canvas */
+            user-select: none;
             -webkit-user-select: none;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
+        /* --- MODIFICADO: El contenedor principal se elimina, los estilos se aplican a los elementos directamente --- */
         #walk-container {
+            display: contents; /* Este elemento ya no actúa como contenedor visual */
+        }
+
+        /* --- MODIFICADO: El panel ahora está en la parte superior --- */
+        #top-panel {
+            grid-row: 2; /* El panel de texto va en la segunda fila */
             width: 95%;
             max-width: 600px;
-            background: white;
-            border: 2px solid #555;
+            margin: 0 auto; /* Centrar el panel inferior */
+            background: rgba(0, 0, 0, 0.3); /* FONDO SEMITRANSPARENTE */
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            padding: 15px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
             text-align: center;
             display: flex;
             flex-direction: column;
+            margin-bottom: 20px; /* Espacio entre el panel y la escena */
         }
 
         h1 {
-            color: #333;
-            border-bottom: 2px dashed #ccc;
+            grid-row: 1; /* El título va en la primera fila del grid del body */
+            color: #fff; /* TEXTO BLANCO */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7); /* SOMBRA PARA LEGIBILIDAD */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
             padding-bottom: 10px;
             margin-top: 0;
+            margin-bottom: 20px;
+            text-align: center;
         }
 
         #scene-container {
+            grid-row: 3; /* La escena ahora ocupa la tercera fila (inferior) */
             position: relative;
             width: 100%;
-            height: 250px;
-            background-color: #87CEEB; /* Cielo azul por defecto */
-            border-radius: 10px;
+            background-color: transparent; /* SIN FONDO DE COLOR */
             overflow: hidden;
-            margin-bottom: 20px;
             display: flex;
             justify-content: center;
-            align-items: flex-end;
-            transition: background-color 1s ease;
+            align-items: flex-end; /* ALINEA EL PERSONAJE ABAJO */
         }
         
-        /* --- ¡NUEVO! Animación de fondo en movimiento --- */
-        #scene-container.walking {
-            /* Imagen de nubes SVG repetible incrustada como data URI */
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='250'%3E%3Cdefs%3E%3Csymbol id='c'%3E%3Cpath fill='rgba(255,255,255,0.8)' d='M75 50 C85 50 95 40 95 30 C95 20 85 10 75 10 C70 10 65 12 60 15 C55 5 45 0 35 0 C20 0 10 10 10 25 C10 26 10 27 11 28 C5 30 0 35 0 40 C0 45 5 50 10 50 Z'/%3E%3C/symbol%3E%3C/defs%3E%3Cuse href='%23c' x='50' y='30' transform='scale(1.2)'/%3E%3Cuse href='%23c' x='250' y='50' transform='scale(1.5)'/%3E%3Cuse href='%23c' x='450' y='20' transform='scale(1)'/%3E%3Cuse href='%23c' x='650' y='60' transform='scale(1.3)'/%3E%3C/svg%3E");
-            background-repeat: repeat-x;
-            background-size: auto 100%;
-            animation: scroll-background 30s linear infinite;
-        }
+        /* --- MODIFICADO: Se elimina la animación de nubes redundante --- */
+      
 
         @keyframes scroll-background {
             from { background-position: 0 0; }
             to { background-position: -800px 0; } /* Coincide con el ancho del SVG */
         }
 
-        /* --- ¡NUEVO! Animación de caminata para el personaje --- */
+        /* Animación de caminata para el personaje */
         #character-display.walking {
             animation: walk-bob 0.8s ease-in-out infinite;
         }
@@ -76,31 +83,37 @@
             white-space: pre;
             line-height: 1.2;
             z-index: 10;
+            padding-bottom: 20px; /* Un poco de espacio desde el borde inferior */
             transition: transform 0.5s ease;
+            color: rgba(255, 255, 255, 0.85); /* Personaje siempre blanco */
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7); /* Sombra para mejorar legibilidad */
         }
 
         #dialog-box {
-            border: 2px solid #333;
-            background-color: #fdfdfd;
+            width: 100%; /* Ocupa todo el ancho del panel inferior */
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background-color: rgba(0, 0, 0, 0.4); /* FONDO SEMITRANSPARENTE */
             border-radius: 8px;
             padding: 15px;
             min-height: 120px;
-            text-align: left;
             font-size: 1.1rem;
-            color: #444;
             margin-bottom: 20px;
         }
 
         #event-description {
             font-style: italic;
-            color: #666;
+            color: #ccc; /* TEXTO MÁS CLARO */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
         }
 
         #character-dialog {
             font-weight: bold;
+            color: #fff; /* TEXTO BLANCO */
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
         }
 
         #choices-container {
+            width: 100%;
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -192,6 +205,8 @@
         }
         /* --- Fin de nuevos estilos --- */
 
+
+
         @media (max-width: 600px) {
             #character-display {
                 font-size: 2rem;
@@ -261,16 +276,21 @@
         </div>
     </div>
 
-    <div id="walk-container">
-        <h1>De Paseo</h1>
-        <div id="critical-warning-container"></div>
-        <div id="scene-container">
-            <div id="stat-changes-container"></div>
-            <div id="walk-coin-display" class="hidden" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); color: white; padding: 5px 10px; border-radius: 5px; font-size: 0.9rem;">Paseo: 0 🪙</div>
-            <div id="character-display">
-                <!-- El personaje se cargará aquí -->
-            </div>
+    <!-- Título principal -->
+    <h1>De Paseo</h1>
+
+    <!-- Escena principal (personaje) -->
+    <div id="scene-container">
+        <div id="stat-changes-container"></div>
+        <div id="walk-coin-display" class="hidden" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); color: white; padding: 5px 10px; border-radius: 5px; font-size: 0.9rem;">Paseo: 0 🪙</div>
+        <div id="character-display">
+            <!-- El personaje se cargará aquí -->
         </div>
+    </div>
+
+    <!-- Panel inferior con diálogos y botones -->
+    <div id="top-panel">
+        <div id="critical-warning-container"></div>
         <div id="dialog-box">
             <p id="event-description">El día es perfecto para un paseo.</p>
             <p id="character-dialog">"¡Qué bien se está aquí fuera!"</p>
@@ -282,7 +302,7 @@
             <button id="start-walk-btn" class="choice-btn">Empezar Paseo</button>
             <button id="exit-btn" class="choice-btn secondary hidden">Terminar Paseo y Volver</button>
         </div>
-    </div>
+    </div>    
 
     <script>
         // --- ¡NUEVO! LÓGICA DEL FONDO DINÁMICO ---
@@ -341,6 +361,20 @@
             drawPixelatedCircle(x, y, radius, color);
         }
 
+        function createPuffEffect(x, y) {
+            for (let i = 0; i < 10; i++) {
+                const p = document.createElement('div');
+                p.style.position = 'fixed'; p.style.left = `${x}px`; p.style.top = `${y}px`;
+                p.style.width = `${Math.random()*10+5}px`; p.style.height = p.style.width;
+                p.style.background = 'rgba(255,255,255,0.7)'; p.style.borderRadius = '50%';
+                p.style.zIndex = '1'; p.style.transition = 'transform 1s ease-out, opacity 1s ease-out';
+                document.body.appendChild(p);
+                const angle = Math.random()*2*Math.PI; const dist = Math.random()*50+20;
+                setTimeout(() => { p.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px) scale(0.5)`; p.style.opacity = '0'; }, 10);
+                setTimeout(() => p.remove(), 1010);
+            }
+        }
+
         function drawLandscape(width, height, groundColor, hillColor1, hillColor2) {
             ctx.fillStyle = hillColor1;
             ctx.beginPath(); ctx.moveTo(0, height * 0.8); ctx.bezierCurveTo(width * 0.2, height * 0.7, width * 0.3, height * 0.75, width * 0.5, height * 0.8); ctx.bezierCurveTo(width * 0.7, height * 0.85, width * 0.8, height * 0.7, width, height * 0.75); ctx.lineTo(width, height); ctx.lineTo(0, height); ctx.closePath(); ctx.fill();
@@ -357,15 +391,24 @@
             }
             const width = canvas.clientWidth; const height = canvas.clientHeight;
             const hora = new Date().getHours();
-            let skyGradient, sunColor, isNight, groundColor, hillColor1, hillColor2;
+            let skyGradient, sunColor, isNight, isSunset, groundColor, hillColor1, hillColor2;
 
             if (hora >= 5 && hora < 7) { skyGradient = ctx.createLinearGradient(0, 0, 0, height); skyGradient.addColorStop(0, '#2c3e50'); skyGradient.addColorStop(0.6, '#e74c3c'); skyGradient.addColorStop(1, '#f1c40f'); sunColor = '#ffd700'; isNight = false; groundColor = '#38302b'; hillColor1 = '#4a3f37'; hillColor2 = '#5c4e44'; }
             else if (hora >= 7 && hora < 12) { skyGradient = ctx.createLinearGradient(0, 0, 0, height); skyGradient.addColorStop(0, '#87CEEB'); skyGradient.addColorStop(1, '#a9dff3'); sunColor = '#FFDE00'; isNight = false; groundColor = '#5d7a3c'; hillColor1 = '#4b6330'; hillColor2 = '#526e33'; }
             else if (hora >= 12 && hora < 17) { skyGradient = ctx.createLinearGradient(0, 0, 0, height); skyGradient.addColorStop(0, '#63a4ff'); skyGradient.addColorStop(1, '#89bfff'); sunColor = '#FFEE88'; isNight = false; groundColor = '#6b8c43'; hillColor1 = '#546e35'; hillColor2 = '#5b7a39'; }
-            else if (hora >= 17 && hora < 21) { skyGradient = ctx.createLinearGradient(0, 0, 0, height); skyGradient.addColorStop(0, '#34495e'); skyGradient.addColorStop(0.5, '#e67e22'); skyGradient.addColorStop(1, '#d35400'); sunColor = '#ff6347'; isNight = false; groundColor = '#4a403a'; hillColor1 = '#3b332e'; hillColor2 = '#453a34'; }
-            else { skyGradient = ctx.createLinearGradient(0, 0, 0, height); skyGradient.addColorStop(0, '#0c0a18'); skyGradient.addColorStop(1, '#2c3e50'); sunColor = '#f4f4f4'; isNight = true; groundColor = '#2b2f31'; hillColor1 = '#1c1e22'; hillColor2 = '#222629'; }
+            else if (hora >= 17 && hora < 21) { skyGradient = ctx.createLinearGradient(0, 0, 0, height); skyGradient.addColorStop(0, '#34495e'); skyGradient.addColorStop(0.5, '#e67e22'); skyGradient.addColorStop(1, '#d35400'); sunColor = '#ff6347'; isNight = false; isSunset = true; groundColor = '#4a403a'; hillColor1 = '#3b332e'; hillColor2 = '#453a34'; }
+            else { skyGradient = ctx.createLinearGradient(0, 0, 0, height); skyGradient.addColorStop(0, '#0c0a18'); skyGradient.addColorStop(1, '#2c3e50'); sunColor = '#f4f4f4'; isNight = true; isSunset = false; groundColor = '#2b2f31'; hillColor1 = '#1c1e22'; hillColor2 = '#222629'; }
 
-            if (isNight) { document.body.classList.add('night-mode'); } else { document.body.classList.remove('night-mode'); }
+            if (isNight) {
+                document.body.classList.add('night-mode');
+                document.body.classList.remove('sunset-mode');
+            } else if (isSunset) {
+                document.body.classList.add('sunset-mode');
+                document.body.classList.remove('night-mode');
+            } else {
+                document.body.classList.remove('night-mode');
+                document.body.classList.remove('sunset-mode');
+            }
             ctx.fillStyle = skyGradient; ctx.fillRect(0, 0, width, height);
             const cyclePercent = ((hora - 5 + 24) % 24) / 18;
             sunMoonPos.x = width * cyclePercent;
@@ -383,7 +426,34 @@
             } else {
                 drawSun(sunMoonPos.x, sunMoonPos.y, 25, sunColor);
             }
-            clouds.forEach(cloud => { cloud.x += cloud.speed; if (cloud.x * width > width + cloud.width) { cloud.x = -cloud.width / width; } drawCloud(cloud); });
+
+            const characterElement = document.getElementById('character-display');
+            const charRect = characterElement ? characterElement.getBoundingClientRect() : null;
+            clouds.forEach((cloud, index) => {
+                cloud.x += cloud.speed;
+                if (cloud.x * width > width + cloud.width) { cloud.x = -cloud.width / width; }
+                if (charRect) {
+                    const cloudX = cloud.x * width; const cloudY = cloud.y * height;
+                    const cloudWidth = cloud.width; const cloudHeight = cloud.width / 2;
+
+                    // --- ¡MODIFICADO! Se reduce la caja de colisión ---
+                    const horizontalPadding = charRect.width * 0.25;
+                    const verticalPadding = charRect.height * 0.10;
+                    const collisionBox = {
+                        left: charRect.left + horizontalPadding,
+                        right: charRect.right - horizontalPadding,
+                        top: charRect.top + verticalPadding,
+                        bottom: charRect.bottom - verticalPadding
+                    };
+
+                    if (cloudX < collisionBox.right && cloudX + cloudWidth > collisionBox.left &&
+                        cloudY < collisionBox.bottom && cloudY + cloudHeight > collisionBox.top) {
+                        createPuffEffect(cloudX + cloudWidth / 2, cloudY + cloudHeight / 2);
+                        clouds.splice(index, 1); return;
+                    }
+                }
+                drawCloud(cloud);
+            });
             document.body.style.backgroundImage = 'none';
         }
 
@@ -440,7 +510,11 @@
             }
 
             function showAbandonmentScene() {
-                document.getElementById('walk-container').style.display = 'none';
+                // --- CORRECCIÓN: Ocultar los elementos de la interfaz principal en lugar del contenedor que ya no existe ---
+                document.querySelector('h1').style.display = 'none';
+                document.getElementById('scene-container').style.display = 'none';
+                document.getElementById('top-panel').style.display = 'none';
+
                 const scene = document.getElementById('abandonment-scene');
                 const charDisplay = document.getElementById('abandonment-character');
                 const dialogDisplay = document.getElementById('abandonment-dialog');
@@ -1053,8 +1127,8 @@
                     return;
                 }
 
-                characterDisplay.innerHTML = `<pre>(\_/)
-( ^_^ )
+                characterDisplay.innerHTML = `<pre>(\\_/)
+( ^_^)
 (>   <)</pre>`;
                 walkCoinDisplay.classList.add('hidden');
 
@@ -1098,10 +1172,6 @@
                 clearTimeout(eventTimeout);
                 if (!walkInProgress) return;
 
-                // --- ¡NUEVO! Solo cambia el color si no está caminando (para no cortar la animación de nubes) ---
-                if (!sceneContainer.classList.contains('walking')) {
-                }
-                sceneContainer.style.backgroundColor = '#87CEEB';
                 const delay = Math.random() * 5000 + 8000;
                 eventTimeout = setTimeout(triggerRandomEvent, delay);
             }
@@ -1121,9 +1191,7 @@
 
                 eventDescription.textContent = event.description;
                 characterDialog.textContent = event.characterDialog;
-                if (event.sceneChange) {
-                    sceneContainer.style.backgroundColor = event.sceneChange.backgroundColor;
-                }
+                // Se elimina el cambio de color de fondo para mantener el fondo dinámico general.
 
                 choicesContainer.innerHTML = '';
 

@@ -1433,6 +1433,31 @@ function cargarTamagotchi(data) {
         drawPixelatedCircle(x, y, radius, color);
     }
 
+    // --- ¡NUEVO! Función para crear un efecto de "puff" al romperse una nube ---
+    function createPuffEffect(x, y) {
+        const numParticles = 10;
+        for (let i = 0; i < numParticles; i++) {
+            const particle = document.createElement('div');
+            particle.style.position = 'fixed';
+            particle.style.left = `${x}px`;
+            particle.style.top = `${y}px`;
+            particle.style.width = `${Math.random() * 10 + 5}px`;
+            particle.style.height = particle.style.width;
+            particle.style.background = 'rgba(255, 255, 255, 0.7)';
+            particle.style.borderRadius = '50%';
+            particle.style.zIndex = '1'; // Encima del canvas, debajo del resto
+            particle.style.transition = 'transform 1s ease-out, opacity 1s ease-out';
+            document.body.appendChild(particle);
+
+            const angle = Math.random() * 2 * Math.PI;
+            const distance = Math.random() * 50 + 20;
+            setTimeout(() => {
+                particle.style.transform = `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px) scale(0.5)`;
+                particle.style.opacity = '0';
+            }, 10);
+            setTimeout(() => particle.remove(), 1010);
+        }
+    }
 
     // --- ¡NUEVO! Función para dibujar el paisaje ---
     function drawLandscape(width, height, groundColor, hillColor1, hillColor2) {
@@ -1475,7 +1500,7 @@ function cargarTamagotchi(data) {
         const height = canvas.clientHeight;
 
         const hora = new Date().getHours();
-        let skyGradient, sunColor, isNight, groundColor, hillColor1, hillColor2;
+        let skyGradient, sunColor, isNight, isSunset, groundColor, hillColor1, hillColor2;
 
         // Definir colores y si es de noche
         if (hora >= 5 && hora < 7) { // Amanecer
@@ -1496,20 +1521,25 @@ function cargarTamagotchi(data) {
         } else if (hora >= 17 && hora < 21) { // Atardecer
             skyGradient = ctx.createLinearGradient(0, 0, 0, height);
             skyGradient.addColorStop(0, '#34495e'); skyGradient.addColorStop(0.5, '#e67e22'); skyGradient.addColorStop(1, '#d35400');
-            sunColor = '#ff6347'; isNight = false;
+            sunColor = '#ff6347'; isNight = false; isSunset = true;
             groundColor = '#4a403a'; hillColor1 = '#3b332e'; hillColor2 = '#453a34';
         } else { // Noche
             skyGradient = ctx.createLinearGradient(0, 0, 0, height);
             skyGradient.addColorStop(0, '#0c0a18'); skyGradient.addColorStop(1, '#2c3e50');
-            sunColor = '#f4f4f4'; isNight = true;
+            sunColor = '#f4f4f4'; isNight = true; isSunset = false;
             groundColor = '#2b2f31'; hillColor1 = '#1c1e22'; hillColor2 = '#222629';
         }
 
-        // --- ¡NUEVO! Añadir/quitar clase para modo noche ---
+        // --- MODIFICADO: Añadir/quitar clases para modo noche y atardecer ---
         if (isNight) {
             document.body.classList.add('night-mode');
+            document.body.classList.remove('sunset-mode');
+        } else if (isSunset) {
+            document.body.classList.add('sunset-mode');
+            document.body.classList.remove('night-mode');
         } else {
             document.body.classList.remove('night-mode');
+            document.body.classList.remove('sunset-mode');
         }
 
         // Dibujar el cielo
@@ -1576,11 +1606,41 @@ function cargarTamagotchi(data) {
             drawSun(sunMoonPos.x, sunMoonPos.y, 25, sunColor);
         }
 
-        // Mover y dibujar nubes
-        clouds.forEach(cloud => {
+        // --- MODIFICADO: Lógica de nubes con colisión ---
+        const characterElement = document.getElementById('muñeco-container');
+        const charRect = characterElement ? characterElement.getBoundingClientRect() : null;
+
+        clouds.forEach((cloud, index) => {
             cloud.x += cloud.speed;
             if (cloud.x * width > width + cloud.width) {
                 cloud.x = -cloud.width / width; // Reposicionar a la izquierda
+            }
+
+            if (charRect) {
+                const cloudX = cloud.x * width;
+                const cloudY = cloud.y * height;
+                const cloudWidth = cloud.width;
+                const cloudHeight = cloud.width / 2; // Aproximación de la altura
+
+                // --- ¡MODIFICADO! Se reduce la caja de colisión para que sea más precisa ---
+                // La nube debe acercarse más al centro del personaje para explotar.
+                const horizontalPadding = charRect.width * 0.25; // Reduce 25% por cada lado
+                const verticalPadding = charRect.height * 0.10;   // Reduce 10% por arriba/abajo
+
+                const collisionBox = {
+                    left: charRect.left + horizontalPadding,
+                    right: charRect.right - horizontalPadding,
+                    top: charRect.top + verticalPadding,
+                    bottom: charRect.bottom - verticalPadding
+                };
+
+                if (cloudX < collisionBox.right && cloudX + cloudWidth > collisionBox.left &&
+                    cloudY < collisionBox.bottom && cloudY + cloudHeight > collisionBox.top) {
+                    
+                    createPuffEffect(cloudX + cloudWidth / 2, cloudY + cloudHeight / 2); // Efecto visual
+                    clouds.splice(index, 1); // Eliminar la nube
+                    return; // Saltar al siguiente ciclo del forEach
+                }
             }
             drawCloud(cloud);
         });
