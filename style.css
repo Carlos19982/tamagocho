@@ -778,7 +778,12 @@
         border-radius: 8px;
         box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         font-size: 1.5rem;
-        z-index: 10003; /* Prioridad alta para que esté sobre el overlay de la tienda */
+        z-index: 9998; /* Prioridad base, por debajo de los overlays */
+        transition: background-color 0.3s, z-index 0s; /* Añadimos z-index a la transición (con 0s) */
+      }
+      /* ¡NUEVO! Clase para poner el icono por encima de otros elementos */
+      #store-icon.on-top {
+        z-index: 10003; /* Prioridad máxima para estar sobre la tienda */
       }
       #store-overlay {
         display: none;

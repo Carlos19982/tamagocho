@@ -1722,8 +1722,18 @@ document.addEventListener("DOMContentLoaded", () => {
       storeIcon.addEventListener("click", function(e) {
           e.stopPropagation(); if (estaDurmiendo || minijuegoActivo) return;
           const isVisible = getComputedStyle(storeOverlay).display === "block";
-          if (isVisible) { storeOverlay.style.display = "none"; if (getComputedStyle(document.getElementById("inventory-overlay")).display === 'none') { enableControls(); } } 
-          else { updateStorePrices(); updateObjectStore(); storeOverlay.style.display = "block"; disableControls(); if(getComputedStyle(document.getElementById("store-food")).display === 'none' && getComputedStyle(document.getElementById("store-objects")).display === 'none') { document.getElementById("store-food").style.display = "block"; } } // Asegura que la sección de comida se muestre por defecto
+          if (isVisible) { 
+              storeOverlay.style.display = "none"; 
+              storeIcon.classList.remove("on-top"); // Quita la clase para bajar el z-index
+              if (getComputedStyle(document.getElementById("inventory-overlay")).display === 'none') { 
+                  enableControls(); 
+              } 
+          } else { 
+              updateStorePrices(); 
+              updateObjectStore(); 
+              storeOverlay.style.display = "block"; 
+              storeIcon.classList.add("on-top"); // Añade la clase para subir el z-index
+              disableControls(); if(getComputedStyle(document.getElementById("store-food")).display === 'none' && getComputedStyle(document.getElementById("store-objects")).display === 'none') { document.getElementById("store-food").style.display = "block"; } } // Asegura que la sección de comida se muestre por defecto
       });
   }
   // Botones secciones tienda
