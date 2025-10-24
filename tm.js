@@ -1756,9 +1756,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Listeners Botones Compra (CON DEBUG DETALLADO) ---
   // Botones de Compra (Comida y Medicinas)
   console.log("Asignando listeners a botones de compra de comida/medicina...");
-  document.querySelectorAll(".store-page .buy-btn").forEach((btn) => {
+  // --- CORRECCIÓN: Selectores más específicos para evitar que se aplique a los objetos ---
+  document.querySelectorAll('.store-page[data-page-id="healthy-food"] .buy-btn, .store-page[data-page-id="fast-food"] .buy-btn, .store-page[data-page-id="medicines"] .buy-btn').forEach((btn) => {
       btn.addEventListener("click", (e) => {
-          console.log("Botón Comprar Comida/Medicina clickeado:", btn);
+          console.log("Botón Comprar Comida/Medicina clickeado:", btn.closest('.store-item').querySelector('.item-name').textContent);
           e.stopPropagation();
           if (!tamagotchi) { console.error("Tamagotchi no definido al intentar comprar."); return; }
           const storeItem = btn.closest(".store-item");
@@ -1792,12 +1793,13 @@ document.addEventListener("DOMContentLoaded", () => {
        const priceSpan = item.querySelector(".item-price");
        if (buyButton && nameSpan && priceSpan) {
            buyButton.addEventListener("click", (e) => {
-              console.log("Botón Comprar Objeto clickeado:", buyButton);
+              console.log("Botón Comprar Objeto clickeado:", nameSpan.textContent);
               e.stopPropagation();
               if (!tamagotchi) { console.error("Tamagotchi no definido al intentar comprar objeto."); return; }
                const nombre = nameSpan.textContent.trim();
-               const costMatch = priceSpan.textContent.match(/(\d+)/);
-               if (!costMatch) { console.error("No se pudo parsear el costo del objeto desde:", priceSpan.textContent); return; }
+               const costString = priceSpan.textContent; // Leer el texto del precio
+               const costMatch = costString.match(/(\d+)/);
+               if (!costMatch) { console.error("No se pudo parsear el costo del objeto desde:", costString); return; }
                const costo = parseInt(costMatch[1], 10);
                console.log(`Parseado -> Nombre: '${nombre}', Costo String: '${costString}', Costo Num: ${costo}`);
                if (isNaN(costo)) { console.error("El costo parseado del objeto no es un número:", costo); alert("Error al leer el costo del objeto."); return; }
