@@ -854,15 +854,19 @@ function disableControls() {
 
         // 1. Probabilidad base por edad (combinando lógica antigua y nueva)
         let ageProb = 0;
-        if (this.edad < 5) ageProb = 0.4;  // Probabilidad alta en la infancia (recuperado de tmm.js)
-        else if (this.edad < 10) ageProb = 0.2; // Probabilidad media en la infancia (recuperado de tmm.js)
+        // --- LÓGICA MODIFICADA ---
+        // Para edades menores de 70, se usa la edad cronológica normal.
+        if (this.edad < 5) ageProb = 0.4;
+        else if (this.edad < 10) ageProb = 0.2;
         else if (this.edad < 45) ageProb = 0.01;
         else if (this.edad < 60) ageProb = 0.02;
-        else if (this.edad < 70) ageProb = 0.04;
-        else if (this.edad < 80) ageProb = 0.1;
-        else if (this.edad < 90) ageProb = 0.15;
-        else if (this.edad < 95) ageProb = 0.5;
-        else if (this.edad < 100) ageProb = 0.7;
+        // A partir de los 70, la probabilidad se calcula con la EDAD INTERNA.
+        else if (this.edad >= 70) {
+            if (this.edadInterna < 80) ageProb = 0.1;
+            else if (this.edadInterna < 90) ageProb = 0.15;
+            else if (this.edadInterna < 95) ageProb = 0.5;
+            else if (this.edadInterna < 100) ageProb = 0.7;
+        }
 
         // 2. Probabilidad adicional por peso
         let weightProb = 0;
