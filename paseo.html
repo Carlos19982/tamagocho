@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <link rel="stylesheet" type="text/css" href="style.css?v=1.18" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Paseo con Tamagotchi</title>
@@ -304,7 +303,8 @@
         </div>
     </div>    
 
-    <script defer src="background.js?v=1.18"></script>
+    <link rel="stylesheet" type="text/css" href="style.css?v=1.2" />
+    <script defer src="background.js?v=1.2"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             initBackgroundCanvas('character-display'); // Inicia el fondo con el ID del personaje del paseo
@@ -395,8 +395,21 @@
             let walkInProgress = false;
             let eventTimeout = null; // Para controlar el temporizador de eventos
             let currentEvent = null; // Para guardar el evento activo
+            let feriaHubInterval = null; // <-- ¡NUEVO! Temporizador para refrescar el hub de la feria
             let walkCoins = 0;
+            let mercadoHubInterval = null; // <-- ¡NUEVO! Temporizador para el mercado.
+            // --- ¡NUEVO! Estado para el modo feria ---
+            let inFeria = false; // ¿Está el jugador dentro de la feria?
+            let hasBoughtTombolaTicket = false; // ¿Ha comprado un boleto de tómbola?
+            let feriaAlreadyVisited = false; // ¿Ya ha entrado a la feria en este paseo?
+            let oneTimeEventsVisited = []; // IDs de eventos de un solo uso visitados en esta feria.
             let walkMercadilloInventory = []; // <-- ¡NUEVO! Inventario temporal para el paseo
+
+            // --- ¡NUEVO! Estado para el Mercado de Agricultores ---
+            let inMercado = false;
+            let mercadoAlreadyVisited = false;
+            let mercadoOneTimeEventsVisited = [];
+            let pumpkinHint = null; // <-- ¡NUEVO! Para guardar la pista de la calabaza.
 
             const mercadilloObjects = {
               common: [
@@ -427,12 +440,534 @@
               ]
             };
 
+            // --- ¡NUEVO! Eventos exclusivos de la Feria ---
+            const feriaEvents = [
+                // --- EVENTOS DE ATRACCIONES DE LA FERIA ---
+                {
+                    id: "feria_mystery_box",
+                    description: "Ves un puesto con cajas misteriosas de diferentes tamaños. El cartel dice: '¡Una sorpresa en cada caja!'",
+                    characterDialog: "¡Ooh, me pregunto qué habrá dentro! ¿Probamos suerte?",
+                    choices: [
+                        { text: "Comprar caja pequeña (75 monedas)", action: "buy_small" },
+                        { text: "Comprar caja grande (300 monedas)", action: "buy_large" },
+                        { text: "No, gracias", action: "leave" }
+                    ],
+                    consequences: {
+                        buy_small: (data) => {
+                            if (data.coins >= 75) {
+                                data.coins -= 75;
+                                updateWalkCoins(-75);
+                                const item = buyMercadilloObject(75);
+                                oneTimeEventsVisited.push('feria_mystery_box'); // Marcar como visitado
+                                return { description: `Abres la caja pequeña y... ¡dentro hay un ${item.name}!`, characterDialog: "¡Qué guay! A ver si vale algo." };
+                            }
+                            return { description: "No tienes 75 monedas para la caja pequeña.", characterDialog: "Lástima, me quedaré con la intriga." };
+                        },
+                        buy_large: (data) => {
+                            if (data.coins >= 300) {
+                                data.coins -= 300;
+                                updateWalkCoins(-300);
+                                const item = buyMercadilloObject(300);
+                                oneTimeEventsVisited.push('feria_mystery_box'); // Marcar como visitado
+                                return { description: `Con mucho cuidado, abres la caja grande. ¡Has conseguido un ${item.name}!`, characterDialog: "¡Wow! ¡Esto parece valioso!" };
+                            }
+                            return { description: "La caja grande es demasiado cara, no tienes 300 monedas.", characterDialog: "Uf, 300 monedas es mucho... mejor no arriesgar." };
+                        },
+                        leave: (data) => {
+                            oneTimeEventsVisited.push('feria_mystery_box'); // Marcar como visitado
+                            return { description: "Decides guardar tu dinero para otras atracciones de la feria.", characterDialog: "Mejor no gastar en algo que no sé lo que es." };
+                        }
+                    }
+                },
+                {
+                    id: "feria_algodon",
+                    description: "Un puesto de algodón de azúcar desprende un olor dulzón que te atrae.",
+                    characterDialog: "¡Algodón de azúcar! ¡Es mi favorito! ¿Podemos comprar uno?",
+                    choices: [
+                        { text: "Comprar uno (25 monedas)", action: "buy" },
+                        { text: "No, demasiado azúcar", action: "refuse" }
+                    ],
+                    consequences: {
+                        buy: (data) => {
+                            if (data.coins >= 25) {
+                                data.coins -= 25;
+                                updateWalkCoins(-25);
+                                data.aburrimiento = Math.max(0, data.aburrimiento - 1);
+                                data.hambre = Math.max(0, data.hambre - 0.5);
+                                return { description: "Compráis un algodón de azúcar gigante y pegajoso. Está delicioso.", characterDialog: "¡Ñam! ¡Sabe a nube!" };
+                            }
+                            return { description: "No tienes suficiente dinero para el algodón de azúcar.", characterDialog: "Oh... bueno, solo con olerlo casi me alimento." };
+                        },
+                        refuse: (data) => {
+                            data.hambre = Math.min(10, data.hambre + 0.5); // Aumenta el hambre al rechazar la comida
+                            return { description: "Decides que es mejor no tomar más azúcar y seguís explorando la feria, pero el olor te ha abierto el apetito.", characterDialog: "Jo, con las ganas que tenía... y ahora tengo más hambre." };
+                        }
+                    }
+                },
+                {
+                    id: "feria_tiro_blanco",
+                    description: "Llegáis a una caseta de tiro al blanco. El premio gordo es un peluche enorme.",
+                    characterDialog: "¡Yo quiero ese peluche! ¡Déjame probar, porfa!",
+                    choices: [
+                        { text: "Jugar una partida (40 monedas)", action: "play" },
+                        { text: "Es una estafa, vámonos", action: "leave" }
+                    ],
+                    consequences: {
+                        play: (data) => {
+                            if (data.coins < 40) {
+                                return { description: "No tienes 40 monedas para jugar la partida.", characterDialog: "No puedo jugar... ¡qué rabia!" };
+                            }
+                            data.coins -= 40;
+                            updateWalkCoins(-40);
+                            oneTimeEventsVisited.push('feria_tiro_blanco'); // Marcar como visitado
+
+                            // La probabilidad de ganar depende del karma
+                            const winChance = 0.3 + (data.karma * 0.05); // 30% base + 5% por cada punto de karma
+                            if (Math.random() < winChance) {
+                                data.coins += 75;
+                                updateWalkCoins(75);
+                                data.aburrimiento = Math.max(0, data.aburrimiento - 3);
+                                return { description: "¡Increíble! ¡Has acertado todos los blancos y ganas 75 monedas!", characterDialog: "¡TOMA! ¡Soy el mejor! ¡Hemos ganado dinero!" };
+                            } else {
+                                data.aburrimiento = Math.min(10, data.aburrimiento + 0.5);
+                                return { description: "Fallaste por poco. El feriante te da un pequeño llavero como premio de consolación.", characterDialog: "Uf, casi... Bueno, algo es algo." };
+                            }
+                        },
+                        leave: (data) => {
+                            oneTimeEventsVisited.push('feria_tiro_blanco'); // Marcar como visitado
+                            return { description: "Decidís no gastar el dinero en lo que parece un timo.", characterDialog: "Seguro que la mira de la escopeta estaba torcida." };
+                        }
+                    }
+                },
+                {
+                    id: "feria_casa_terror",
+                    description: "Una casa del terror con ruidos espeluznantes os invita a entrar.",
+                    characterDialog: "Uuuh... da un poco de miedo... pero también parece divertido. ¿Entramos?",
+                    choices: [
+                        { text: "Entrar (50 monedas)", action: "enter" },
+                        { text: "¡Ni hablar! Me da pánico", action: "flee" }
+                    ],
+                    consequences: {
+                        enter: (data) => {
+                            if (data.coins < 50) {
+                                return { description: "No tienes 50 monedas para entrar.", characterDialog: "Mejor, así no paso miedo..." };
+                            }
+                            data.coins -= 50;
+                            updateWalkCoins(-50);
+                            data.aburrimiento = Math.max(0, data.aburrimiento - 2.5);
+                            return { description: "Pasáis un rato de sustos y risas. Al final no era para tanto.", characterDialog: "¡Buah, qué pasada! ¡Casi me muero del susto, pero me ha encantado!" };
+                        },
+                        flee: (data) => {
+                            data.aburrimiento = Math.min(10, data.aburrimiento + 0.3);
+                            return { description: "Decides que es mejor evitar los sustos y rodeáis la atracción.", characterDialog: "Uf, solo con los gritos que se oyen ya tengo bastante. ¡Qué miedica soy!" };
+                        }
+                    }
+                },
+                // Evento final de la feria
+                {
+                    id: "feria_tombola",
+                    description: "En el centro de la feria hay una gran tómbola. El sorteo se anunciará al cierre.",
+                    characterDialog: "¡La tómbola! ¡Aquí se ganan los mejores premios! ¿Compramos un boleto?",
+                    choices: [
+                        { text: "Comprar boleto (100 monedas)", action: "buy_ticket" }
+                    ],
+                    consequences: {
+                        buy_ticket: (data) => {
+                            if (data.coins < 100) {
+                                return { description: "No tienes 100 monedas para el boleto.", characterDialog: "No me llega... Otra vez será." };
+                            }
+                            data.coins -= 100;
+                            updateWalkCoins(-100);
+                            hasBoughtTombolaTicket = true;
+                            oneTimeEventsVisited.push('feria_tombola'); // Marcar como visitado
+
+                            // El resultado se revelará al salir de la feria o del paseo.
+                            return { description: "Compras un boleto para la gran tómbola. ¡Cruza los dedos!", characterDialog: "¡Ya verás como nos toca algo bueno! ¡Lo presiento!" };
+                        }
+                    }
+                },
+                // --- ¡NUEVO! Evento de la Noria ---
+                {
+                    id: "feria_noria",
+                    description: "Una noria gigante se alza sobre la feria, ofreciendo vistas espectaculares.",
+                    characterDialog: "¡Wow, qué alto! ¿Subimos? ¡Veremos toda la ciudad desde ahí arriba!",
+                    choices: [
+                        { text: "Subir a la noria (35 monedas)", action: "ride" },
+                        { text: "Mejor no, me dan miedo las alturas", action: "skip" }
+                    ],
+                    consequences: {
+                        ride: (data) => {
+                            if (data.coins >= 35) {
+                                data.coins -= 35;
+                                updateWalkCoins(-35);
+                                data.aburrimiento = Math.max(0, data.aburrimiento - 2);
+                                return { description: "Subís a la noria. La vista desde la cima es impresionante y el aire fresco os relaja.", characterDialog: "¡Se ve nuestra casa desde aquí! ¡Qué pasada!" };
+                            }
+                            return { description: "No tienes suficiente dinero para subir a la noria.", characterDialog: "Oh... bueno, la veré desde abajo." };
+                        },
+                        skip: (data) => {
+                            data.aburrimiento = Math.min(10, data.aburrimiento + 0.2);
+                            return { description: "Decides mantener los pies en la tierra y seguís explorando.", characterDialog: "Uf, solo de pensarlo me mareo. Demasiado alto para mí." };
+                        }
+                    }
+                },
+                // --- ¡NUEVO! Evento del Adivino ---
+                {
+                    id: "feria_adivino",
+                    description: "En una tienda con cortinas de terciopelo, un misterioso adivino te ofrece leerte el futuro.",
+                    characterDialog: "¿Crees que dirá la verdad? Me da curiosidad... y un poco de miedo.",
+                    choices: [
+                        { text: "Consultar al adivino (60 monedas)", action: "consult" },
+                        { text: "No creo en estas cosas", action: "dismiss" }
+                    ],
+                    consequences: {
+                        consult: (data) => {
+                            if (data.coins >= 60) {
+                                data.coins -= 60;
+                                updateWalkCoins(-60);
+                                let future_reading = "";
+                                if (data.karma > 5) {
+                                    future_reading = "El adivino ve un futuro brillante y próspero. 'Tus buenas acciones te serán recompensadas', susurra.";
+                                } else if (data.karma < -5) {
+                                    future_reading = "El adivino frunce el ceño. 'Veo sombras en tu camino... ten cuidado con tus decisiones', advierte.";
+                                } else {
+                                    future_reading = "El adivino te mira fijamente. 'Tu futuro es incierto, como una moneda en el aire. Solo tus actos decidirán la cara que saldrá'.";
+                                }
+                                return { description: future_reading, characterDialog: "¡Qué intenso! Me ha dejado pensando..." };
+                            }
+                            return { description: "No tienes 60 monedas para que te lean el futuro.", characterDialog: "Supongo que mi futuro tendrá que esperar." };
+                        },
+                        dismiss: (data) => {
+                            return { description: "Prefieres no gastar dinero en supersticiones y continuáis.", characterDialog: "Seguro que se lo inventa todo." };
+                        }
+                    }
+                },
+                // --- ¡NUEVO! Evento del Easter Egg de la Fuente ---
+                {
+                    id: "feria_fuente_secreta",
+                    description: "En el centro de la feria hay una fuente de piedra, bastante normalita.",
+                    characterDialog: "Es solo una fuente. No parece muy interesante.",
+                    choices: [
+                        { text: "Lanzar una moneda y pedir un deseo", action: "wish" }
+                    ],
+                    consequences: {
+                        wish: (data) => {
+                            // Esta es la acción final del Easter Egg.
+                            // Comprueba si se han completado los 3 pasos anteriores.
+                            if (data.feriaEasterEggStep === 4) { // CORREGIDO: Se comprueba si el paso 4 está completado
+                                console.log("Fuente OK - Recompensa activada.");
+                                // ¡Recompensa del Easter Egg!
+                                data.coins += 1800; // MODIFICADO: Recompensa de 1800 monedas
+                                updateWalkCoins(1000);
+                                data.karma = Math.min(10, (data.karma || 0) + 2);
+                                ['hambre', 'aburrimiento', 'sueno', 'higiene'].forEach(s => data[s] = Math.max(0, data[s] - 5));
+                                data.feriaEasterEggStep = 0; // Resetea el contador
+                                oneTimeEventsVisited.push('feria_fuente_secreta'); // Marcar como visitado tras completarlo
+                                return { description: "Al lanzar la moneda, escuchas un 'clic'. Un compartimento secreto se abre en la base de la fuente. ¡Has encontrado un tesoro! Ganas 1800 monedas, +2 de Karma y tus necesidades bajan drásticamente.", characterDialog: "¡¡¡JACKPOT!!! ¡Mi deseo se ha cumplido!" };
+                            }
+                            // Si no es el paso final, es una acción normal.
+                            return { description: "Lanzas una moneda al agua y pides un deseo en silencio.", characterDialog: "Espero que se cumpla..." };
+                        }
+                    }
+                },
+                // --- ¡NUEVO! Evento del Globo Perdido ---
+                {
+                    id: "feria_globo_perdido",
+                    description: "Un pequeño Tamagotchi llora desconsoladamente. Se le ha escapado su globo y se ha quedado enganchado en un poste alto.",
+                    characterDialog: "¡Oh, no! ¡Pobrecito! ¿Podemos ayudarle a recuperar su globo?",
+                    choices: [
+                        { text: "Intentar bajar el globo", action: "help" },
+                        { text: "Decirle que se compre otro", action: "ignore" }
+                    ],
+                    consequences: {
+                        help: (data) => {
+                            data.karma = Math.min(10, (data.karma || 0) + 3);
+                            data.aburrimiento = Math.max(0, data.aburrimiento - 1);
+                            return { description: "Con un poco de ingenio, consigues bajar el globo y dárselo al pequeño, que te lo agradece con una gran sonrisa.", characterDialog: "¡Me siento como un superhéroe! ¡Qué bien sienta ayudar!" };
+                        },
+                        ignore: (data) => {
+                            data.karma = Math.max(-10, (data.karma || 0) - 3);
+                            return { description: "Pasas de largo. 'Son cosas de niños', piensas.", characterDialog: "Que llore, ya se le pasará la tontería." };
+                        }
+                    }
+                },
+                // --- ¡NUEVO! Evento del Carrusel ---
+                {
+                    id: "feria_carrusel",
+                    description: "Un carrusel clásico con caballos de madera y música nostálgica gira lentamente.",
+                    characterDialog: "¡Qué bonito! Es como de cuento. ¿Damos una vuelta?",
+                    choices: [
+                        { text: "Subir al carrusel (20 monedas)", action: "ride" },
+                        { text: "No, es para niños pequeños", action: "skip" }
+                    ],
+                    consequences: {
+                        ride: (data) => {
+                            if (data.coins >= 20) {
+                                data.coins -= 20;
+                                updateWalkCoins(-20);
+                                data.aburrimiento = Math.max(0, data.aburrimiento - 1.5);
+                                data.karma = Math.min(10, (data.karma || 0) + 1); // Pequeño bonus de karma por disfrutar de algo simple
+                                return { description: "Das una vuelta tranquila en el carrusel. La música y el movimiento suave son muy relajantes.", characterDialog: "¡Qué paz! Me ha gustado mucho." };
+                            }
+                            return { description: "No tienes 20 monedas para el carrusel.", characterDialog: "Bueno, lo veo desde aquí, que también es bonito." };
+                        },
+                        skip: (data) => {
+                            return { description: "Decides que el carrusel es demasiado lento para ti y buscas algo más emocionante.", characterDialog: "Busquemos algo con más adrenalina." };
+                        }
+                    }
+                },
+                // --- ¡NUEVO! Evento del Puesto de Comida ---
+                {
+                    id: "feria_puesto_comida",
+                    description: "Un puesto de comida ofrece una variedad de delicias de feria: churros, perritos calientes y manzanas de caramelo.",
+                    characterDialog: "¡Huele de maravilla! ¡Tengo que comer algo!",
+                    choices: [
+                        { text: "Comprar Churros (30 monedas)", action: "buy_churros" },
+                        { text: "Comprar Perrito Caliente (60 monedas)", action: "buy_hotdog" },
+                        { text: "No comer nada", action: "skip" }
+                    ],
+                    consequences: {
+                        buy_churros: (data) => {
+                            if (data.coins >= 30) {
+                                data.coins -= 30;
+                                updateWalkCoins(-30);
+                                data.hambre = Math.max(0, data.hambre - 1.5);
+                                data.peso = Math.min(100, data.peso + 0.5);
+                                return { description: "Compráis una ración de churros calientes y crujientes. ¡Deliciosos!", characterDialog: "¡Mmm, azúcar!" };
+                            }
+                            return { description: "No tienes 30 monedas para los churros.", characterDialog: "Me quedo con las ganas..." };
+                        },
+                        buy_hotdog: (data) => {
+                            if (data.coins >= 60) {
+                                data.coins -= 60;
+                                updateWalkCoins(-60);
+                                data.hambre = Math.max(0, data.hambre - 3);
+                                data.peso = Math.min(100, data.peso + 1.0);
+                                return { description: "Te comes un perrito caliente con todas las salsas. ¡Estaba increíble!", characterDialog: "¡Esto sí que es una cena de campeones!" };
+                            }
+                            return { description: "No tienes 60 monedas para el perrito caliente.", characterDialog: "Demasiado caro para mi bolsillo." };
+                        },
+                        skip: (data) => {
+                            data.hambre = Math.min(10, data.hambre + 1); // Aumenta el hambre al resistir la tentación
+                            return { description: "Decides resistir la tentación y guardar tu apetito (y tu dinero), pero el olor te ha dejado con más hambre.", characterDialog: "Mejor no, que luego no duermo bien... pero ahora tengo un hambre atroz." };
+                        }
+                    }
+                },
+                // --- ¡NUEVO! Evento del Mago Callejero ---
+                {
+                    id: "feria_mago",
+                    description: "Un mago con un sombrero de copa está haciendo trucos de cartas a un pequeño grupo de gente.",
+                    characterDialog: "¡Magia! ¡Vamos a ver qué hace!",
+                    choices: [
+                        { text: "Ver el truco y aplaudir", action: "watch" },
+                        { text: "Acusarle de hacer trampas", action: "accuse" }
+                    ],
+                    consequences: {
+                        watch: (data) => {
+                            data.aburrimiento = Math.max(0, data.aburrimiento - 1);
+                            data.karma = Math.min(10, (data.karma || 0) + 1);
+                            return { description: "Os quedáis a ver el truco. El mago saca la carta que habías pensado. ¡Increíble! Le dais un aplauso.", characterDialog: "¿Cómo lo ha hecho? ¡Es magia de verdad!" };
+                        },
+                        accuse: (data) => {
+                            data.karma = Math.max(-10, (data.karma || 0) - 2);
+                            return { description: "Gritas que es un farsante. El mago te ignora y el público te mira mal. Qué momento más incómodo.", characterDialog: "Bah, seguro que era un truco barato." };
+                        }
+                    }
+                },
+            ];
+
+            // --- ¡NUEVO! Eventos exclusivos del Mercado de Agricultores ---
+            const mercadoEvents = [
+                {
+                    id: "mercado_caja_sorpresa",
+                    description: "Un granjero con un sombrero de paja te ofrece 'Cajas de la Cosecha'. Dice que contienen los mejores productos de la temporada, ¡algunos muy raros!",
+                    characterDialog: "¡Cajas sorpresa! ¡Me encantan las sorpresas! ¿Compramos una?",
+                    choices: [
+                        { text: "Comprar Cesta Pequeña (75 monedas)", action: "buy_small" },
+                        { text: "Comprar Caja Grande (300 monedas)", action: "buy_large" },
+                        { text: "No, gracias", action: "leave" }
+                    ],
+                    consequences: {
+                        buy_small: (data) => {
+                            if (data.coins < 75) return { description: "No tienes 75 monedas para la cesta pequeña.", characterDialog: "Lástima, me quedaré con la intriga." };
+                            data.coins -= 75;
+                            updateWalkCoins(-75);
+                            const item = buyMercadilloObject(75);
+                            mercadoOneTimeEventsVisited.push('mercado_caja_sorpresa'); // Marcar como visitado
+                            return { description: `Abres la cesta y... ¡dentro hay un ${item.name}!`, characterDialog: "¡Qué guay! A ver si vale algo." };
+                        },
+                        buy_large: (data) => {
+                            if (data.coins < 300) return { description: "La caja grande es demasiado cara, no tienes 300 monedas.", characterDialog: "Uf, 300 monedas es mucho... mejor no arriesgar." };
+                            data.coins -= 300;
+                            updateWalkCoins(-300);
+                            const item = buyMercadilloObject(300);
+                            mercadoOneTimeEventsVisited.push('mercado_caja_sorpresa'); // Marcar como visitado
+                            return { description: `Con mucho cuidado, abres la caja grande. ¡Has conseguido un ${item.name}!`, characterDialog: "¡Wow! ¡Esto parece valioso!" };
+                        },
+                        leave: (data) => ({ description: "Decides guardar tu dinero para otras cosas del mercado.", characterDialog: "Mejor no gastar en algo que no sé lo que es." })
+                    }
+                },
+                {
+                    id: "mercado_frutas",
+                    description: "Un puesto lleno de frutas frescas y coloridas llama tu atención. Manzanas, plátanos, naranjas...",
+                    characterDialog: "¡Qué buena pinta tiene todo! Una pieza de fruta me sentaría genial.",
+                    choices: [
+                        { text: "Comprar Manzana (15 monedas)", action: "buy_apple" },
+                        { text: "Comprar Plátano (20 monedas)", action: "buy_banana" },
+                        { text: "No, gracias", action: "leave" }
+                    ],
+                    consequences: {
+                        buy_apple: (data) => {
+                            if (data.coins < 15) return { description: "No tienes 15 monedas para la manzana.", characterDialog: "No me llega..." };
+                            data.coins -= 15; updateWalkCoins(-15);
+                            data.hambre = Math.max(0, data.hambre - 1.5);
+                            data.peso = Math.min(100, data.peso + 0.2);
+                            return { description: "Compras una manzana roja y crujiente. Está deliciosa.", characterDialog: "¡Qué rica y sana!" };
+                        },
+                        buy_banana: (data) => {
+                            if (data.coins < 20) return { description: "No tienes 20 monedas para el plátano.", characterDialog: "Lástima, me apetecía mucho." };
+                            data.coins -= 20; updateWalkCoins(-20);
+                            data.hambre = Math.max(0, data.hambre - 2);
+                            data.peso = Math.min(100, data.peso + 0.3);
+                            return { description: "Compras un plátano maduro. Te da mucha energía.", characterDialog: "¡Justo lo que necesitaba!" };
+                        },
+                        leave: (data) => ({ description: "Decides seguir mirando otros puestos del mercado.", characterDialog: "A ver qué más encuentro por aquí." })
+                    }
+                },
+                {
+                    id: "mercado_cafe",
+                    description: "El aroma a café recién molido te guía a un pequeño puesto de café artesanal.",
+                    characterDialog: "Uhm... ese olor me está despertando. ¿Probamos un café?",
+                    choices: [ { text: "Tomar un café (25 monedas)", action: "drink" }, { text: "No, demasiado nervioso", action: "skip" } ],
+                    consequences: {
+                        drink: (data) => {
+                            if (data.coins < 25) return { description: "No tienes 25 monedas para el café.", characterDialog: "Bueno, solo con olerlo ya casi he despertado." };
+                            data.coins -= 25; updateWalkCoins(-25);
+                            data.sueno = Math.max(0, data.sueno - 2.5);
+                            data.hambre = Math.min(10, data.hambre + 0.5);
+                            return { description: "Tomas un sorbo del café caliente. Su sabor es intenso y te despeja por completo.", characterDialog: "¡Wow! ¡Ahora estoy a tope de energía!" };
+                        },
+                        skip: (data) => ({ description: "Prefieres evitar la cafeína y continúas tu paseo por el mercado.", characterDialog: "Mejor no, que luego no duermo la siesta." })
+                    }
+                },
+                {
+                    id: "mercado_ayuda_granjero",
+                    description: "Un viejo granjero lucha por cargar unas cajas pesadas de verduras en su camioneta.",
+                    characterDialog: "Parece que necesita ayuda. ¿Le echamos una mano?",
+                    choices: [ { text: "Ayudar al granjero", action: "help" }, { text: "No es nuestro problema", action: "ignore" } ],
+                    consequences: {
+                        help: (data) => {
+                            data.karma = Math.min(10, (data.karma || 0) + 2);
+                            data.aburrimiento = Math.max(0, data.aburrimiento - 1);
+                            mercadoOneTimeEventsVisited.push('mercado_ayuda_granjero');
+                            // --- MODIFICADO: Ahora da una pista específica ---
+                            pumpkinHint = ['a', 'b'][Math.floor(Math.random() * 2)]; // Decide el ganador y lo guarda
+                            const hintText = `Gracias, joven. Como agradecimiento, te daré un soplo para el concurso... Apuesta por la calabaza '${pumpkinHint.toUpperCase()}'. No se lo digas a nadie.`;
+                            return { description: `Le ayudas a cargar las cajas. El granjero, muy agradecido, te regala una cesta de verduras y te susurra al oído: "${hintText}"`, characterDialog: "¡Qué amable! Me ha dado un consejo muy específico..." };
+                        },
+                        ignore: (data) => {
+                            data.karma = Math.max(-10, (data.karma || 0) - 1);
+                            mercadoOneTimeEventsVisited.push('mercado_ayuda_granjero');
+                            return { description: "Decides no intervenir y sigues tu camino.", characterDialog: "Seguro que puede solo. No quiero romperme la espalda." };
+                        }
+                    }
+                },
+                {
+                    id: "mercado_musica",
+                    description: "Un músico con una guitarra acústica toca una melodía folk muy alegre. Varios visitantes aplauden.",
+                    characterDialog: "¡Qué música tan bonita! Me dan ganas de bailar.",
+                    consequences: {
+                        proceed: (data) => {
+                            data.aburrimiento = Math.max(0, data.aburrimiento - 1.5);
+                            return { description: "Os quedáis un rato escuchando la música, disfrutando del ambiente animado del mercado.", characterDialog: "¡Esto sí que es empezar bien el día!" };
+                        }
+                    }
+                }
+                ,
+                {
+                    id: "mercado_fuente_pueblo",
+                    description: "En el centro del mercado hay una vieja fuente de piedra con agua fresca y clara.",
+                    characterDialog: "Dicen que si lanzas una moneda, trae buena suerte en la cosecha. ¿Probamos?",
+                    choices: [
+                        { text: "Lanzar una moneda (1 moneda)", action: "wish" }
+                    ],
+                    consequences: {
+                        wish: (data) => {
+                            if (data.coins < 1) return { description: "No tienes ni una moneda para lanzar.", characterDialog: "Vaya, ni para un deseo tengo." };
+                            data.coins -= 1;
+                            updateWalkCoins(-1);
+
+                            if (data.mercadoEasterEggStep === 4) { // ¡Paso final del Easter Egg!
+                                data.coins += 2000;
+                                updateWalkCoins(2000);
+                                data.karma = Math.min(10, (data.karma || 0) + 3);
+                                data.mercadoEasterEggStep = 0; // Resetea el contador
+                                return { description: "Al lanzar la moneda, escuchas un 'clic'. Un compartimento secreto se abre en la base de la fuente. ¡Has descubierto el tesoro del fundador! Ganas 2000 monedas y buen karma.", characterDialog: "¡¡ALUCINANTE!! ¡La leyenda era cierta!" };
+                            }
+                            return { description: "Lanzas una moneda al agua y pides un deseo en silencio.", characterDialog: "Espero que se cumpla..." };
+                        }
+                    }
+                }
+                ,
+                {
+                    id: "mercado_concurso_calabaza",
+                    description: "Hay un concurso para ver qué calabaza es la más grande. Un granjero está tomando apuestas.",
+                    characterDialog: "¡Apuestas! ¡Si elegimos la calabaza correcta, podríamos ganar dinero!",
+                    choices: [
+                        { text: "Apostar por la Calabaza A (20 monedas)", action: "bet_a" },
+                        { text: "Apostar por la Calabaza B (20 monedas)", action: "bet_b" },
+                        { text: "No apostar", action: "skip" }
+                    ],
+                    consequences: {
+                        bet_a: (data) => handleBet(data, 'a'),
+                        bet_b: (data) => handleBet(data, 'b'),
+                        skip: (data) => {
+                            mercadoOneTimeEventsVisited.push('mercado_concurso_calabaza');
+                            return { description: "Decides no apostar y guardas tu dinero.", characterDialog: "Mejor no arriesgar, que luego me arrepiento." };
+                        }
+                    }
+                },
+                {
+                    id: "mercado_tomate_caido",
+                    description: "Un comprador tropieza y su bolsa de tomates caros se desparrama por el suelo.",
+                    characterDialog: "¡Oh, no! ¡Pobrecillo! ¿Qué hacemos?",
+                    choices: [
+                        { text: "Ayudar a recoger los tomates", action: "help" },
+                        { text: "Coger un tomate y huir corriendo", action: "steal" },
+                        { text: "Ignorarlo, no es nuestro problema", action: "ignore" }
+                    ],
+                    consequences: {
+                        help: (data) => {
+                            data.karma = Math.min(10, (data.karma || 0) + 3);
+                            data.coins += 25;
+                            updateWalkCoins(25);
+                            mercadoOneTimeEventsVisited.push('mercado_tomate_caido');
+                            return { description: "Rápidamente le ayudas a recoger todos los tomates. El comprador, muy agradecido, te da 25 monedas por tu amabilidad.", characterDialog: "¡Hacer lo correcto tiene recompensa!" };
+                        },
+                        steal: (data) => {
+                            data.karma = Math.max(-10, (data.karma || 0) - 4);
+                            data.hambre = Math.max(0, data.hambre - 1);
+                            mercadoOneTimeEventsVisited.push('mercado_tomate_caido');
+                            return { description: "Aprovechando la confusión, coges uno de los tomates más rojos y te lo comes mientras te alejas disimuladamente.", characterDialog: "Jeje, gratis y delicioso. Nadie se ha dado cuenta." };
+                        },
+                        ignore: (data) => {
+                            data.karma = Math.max(-10, (data.karma || 0) - 2);
+                            mercadoOneTimeEventsVisited.push('mercado_tomate_caido');
+                            return { description: "Decides que no es asunto tuyo y continúas tu paseo, rodeando el desastre.", characterDialog: "Uf, qué lío. Mejor no meterse." };
+                        }
+                    }
+                }
+            ];
+
             // --- DEFINICIÓN DE EVENTOS ---
-            const walkEvents = [
+            // --- ¡NUEVO! Eventos clasificados por momento del día ---
+            const timeBasedEvents = {
+              // Eventos que pueden ocurrir en cualquier momento
+              anytime: [
                 {
                     id: "rain_event",
                     description: "De repente, el cielo se nubla y empieza a llover.",
-                    condition: (data) => !data.hasUmbrella, // <-- ¡NUEVO! Solo si NO tienes paraguas
+                    condition: (data) => !data.hasUmbrella, // Solo si NO tienes paraguas
                     characterDialog: "¡Oh no, lluvia! ¡Odio mojarme! Cerca hay una tienda...",
                     sceneChange: { backgroundColor: '#708090' },
                     choices: [
@@ -442,7 +977,7 @@
                     consequences: {
                         buy_umbrella: (data) => {
                             if (data.coins >= 50) {
-                                data.hasUmbrella = true; // <-- ¡NUEVO! Marcamos que ya lo tiene
+                                data.hasUmbrella = true; // Marcamos que ya lo tiene
                                 data.coins -= 50;
                                 data.karma = Math.min(10, (data.karma || 0) + 1); // Pequeña buena acción (previsión)
                                 updateWalkCoins(-50);
@@ -461,11 +996,44 @@
                         }
                     }
                 },
-                // --- ¡NUEVO EVENTO! ---
+                {
+                    id: "find_coin",
+                    description: "¡Brilla algo en el suelo! Es una moneda.",
+                    characterDialog: "¡Ooh, dinero gratis!",
+                    consequences: {
+                        proceed: (data) => {
+                            data.coins += 5;
+                            updateWalkCoins(5);
+                            return { description: "La recoges y la guardas en tu bolsillo. No es mucho, pero todo suma.", characterDialog: "¡Día de suerte!" };
+                        }
+                    }
+                }
+              ],
+              morning: [ // De 06:00 a 11:59
+                {
+                    id: "mercado_entrance",
+                    description: "A lo lejos, ves los puestos y el bullicio de un mercado de agricultores.",
+                    condition: (data) => !mercadoAlreadyVisited,
+                    characterDialog: "¡Un mercado! ¡Seguro que hay cosas frescas y ricas! ¿Vamos a echar un vistazo?",
+                    choices: [
+                        { text: "Entrar al mercado", action: "enter_mercado" },
+                        { text: "No, prefiero un paseo tranquilo", action: "ignore_mercado" }
+                    ],
+                    consequences: {
+                        enter_mercado: (data) => {
+                            mercadoAlreadyVisited = true;
+                            mercadoOneTimeEventsVisited = [];
+                            return showMercadoHub(data);
+                        },
+                        ignore_mercado: (data) => {
+                            return { description: "Decides que hoy no te apetece el ajetreo del mercado y sigues tu camino.", characterDialog: "Quizás otro día. Hoy busco paz y tranquilidad." };
+                        }
+                    }
+                },
                 {
                     id: "rain_with_umbrella_event",
                     description: "Empieza a llover, pero por suerte llevas tu paraguas.",
-                    condition: (data) => data.hasUmbrella, // <-- ¡NUEVO! Solo si SÍ tienes paraguas
+                    condition: (data) => data.hasUmbrella, // Solo si SÍ tienes paraguas
                     characterDialog: "¡Menos mal que fui previsor! Ahora puedo disfrutar del sonido de la lluvia.",
                     sceneChange: { backgroundColor: '#708090' },
                     consequences: {
@@ -475,6 +1043,74 @@
                         }
                     }
                 },
+                {
+                    id: "smell_bakery",
+                    description: "Pasáis por delante de una panadería y un delicioso olor a pan recién hecho inunda el aire.",
+                    characterDialog: "Mmmm, ¡qué bien huele! De repente me ha entrado un poco de hambre.",
+                    consequences: {
+                        proceed: (data) => {
+                            data.hambre = Math.min(10, data.hambre + 0.5);
+                            return { description: "El olor es tentador, pero decidís seguir con vuestro paseo.", characterDialog: "Me comeria una barra entera ahora mismo." };
+                        }
+                    }
+                },
+                {
+                    id: "kids_playing",
+                    description: "Veis a un grupo de niños jugando alegremente en un parque.",
+                    characterDialog: "¡Mira cómo se divierten! Me recuerdan a cuando yo era pequeño.",
+                    consequences: {
+                        proceed: (data) => {
+                            data.aburrimiento = Math.max(0, data.aburrimiento - 0.5);
+                            return { description: "La risa de los niños es contagiosa y os saca una sonrisa.", characterDialog: "La vida es para jugar y ser feliz." };
+                        }
+                    }
+                },
+                {
+                    id: "flower_garden",
+                    description: "Pasáis junto a un jardín lleno de flores de todos los colores. El aroma es embriagador.",
+                    characterDialog: "¡Cuántas flores! ¡Y qué bien huelen!",
+                    consequences: {
+                        proceed: (data) => {
+                            data.aburrimiento = Math.max(0, data.aburrimiento - 0.5);
+                            return { description: "Os detenéis un momento para admirar la belleza y el perfume de las flores.", characterDialog: "La naturaleza es increíble." };
+                        }
+                    }
+                },
+                {
+                    id: "charity_donation",
+                    description: "Un puesto de caridad pide donaciones para el refugio de Tamagotchis.",
+                    characterDialog: "Parece una buena causa. ¿Deberíamos ayudar?",
+                    choices: [
+                        { text: "Donar generosamente (100)", action: "donate_generous" },
+                        { text: "Donar un poco (20)", action: "donate_small" },
+                        { text: "Decir que no tienes dinero", action: "no_donate" }
+                    ],
+                    consequences: {
+                        donate_generous: (data) => {
+                            if (data.coins >= 100) {
+                                data.coins -= 100;
+                                updateWalkCoins(-100);
+                                data.karma = Math.min(10, (data.karma || 0) + 4);
+                                return { description: "Donas 100 monedas. El voluntario te lo agradece enormemente.", characterDialog: "¡Me siento genial por haber ayudado tanto!" };
+                            }
+                            return { description: "Quieres donar, pero no tienes 100 monedas.", characterDialog: "¡Oh! Quería ser más generoso..." };
+                        },
+                        donate_small: (data) => {
+                            if (data.coins >= 20) {
+                                data.coins -= 20;
+                                updateWalkCoins(-20);
+                                data.karma = Math.min(10, (data.karma || 0) + 2);
+                                return { description: "Donas 20 monedas. Todo ayuda.", characterDialog: "¡Espero que sirva de algo!" };
+                            }
+                            return { description: "Ni siquiera tienes 20 monedas para donar.", characterDialog: "Qué vergüenza... no tengo nada." };
+                        },
+                        no_donate: (data) => {
+                            return { description: "Pasas de largo del puesto de caridad.", characterDialog: "Hoy no me siento generoso." };
+                        }
+                    }
+                }
+              ],
+              afternoon: [ // De 12:00 a 18:59
                 {
                     id: "ice_cream_truck",
                     description: "¡Un camión de helados! La música suena alegremente y huele a dulce.",
@@ -494,7 +1130,8 @@
                                 return { description: "Disfrutáis de un delicioso helado bajo el sol.", characterDialog: "¡Yummy! ¡El mejor paseo de la historia!" };
                             } else {
                                 data.aburrimiento = Math.min(10, data.aburrimiento + 0.5);
-                                return { description: "Miras tu cartera... no hay suficiente dinero.", characterDialog: "Oh... bueno, no pasa nada. Otro día será." };
+                                data.hambre = Math.min(10, data.hambre + 0.5); // Aumenta el hambre al no poder comprar
+                                return { description: "Miras tu cartera... no hay suficiente dinero. El antojo te ha dejado con más hambre.", characterDialog: "Oh... bueno, no pasa nada. Otro día será... y ahora tengo más hambre." };
                             }
                         },
                         refuse_ice_cream: (data) => {
@@ -611,18 +1248,6 @@
                     }
                 },
                 {
-                    id: "find_coin",
-                    description: "¡Brilla algo en el suelo! Es una moneda.",
-                    characterDialog: "¡Ooh, dinero gratis!",
-                    consequences: {
-                        proceed: (data) => {
-                            data.coins += 5;
-                            updateWalkCoins(5);
-                            return { description: "La recoges y la guardas en tu bolsillo. No es mucho, pero todo suma.", characterDialog: "¡Día de suerte!" };
-                        }
-                    }
-                },
-                {
                     id: "beautiful_sunset",
                     description: "El sol comienza a ponerse, tiñendo el cielo de colores naranjas y rosas.",
                     characterDialog: "¡Wow, mira qué atardecer! Es precioso...",
@@ -634,83 +1259,6 @@
                         }
                     }
                 },
-                {
-                    id: "friendly_cat",
-                    description: "Un gato amigable se acerca y se frota contra tus piernas, ronroneando.",
-                    characterDialog: "¡Hola, gatito! ¡Qué suave eres!",
-                    consequences: {
-                        proceed: (data) => {
-                            data.aburrimiento = Math.max(0, data.aburrimiento - 1.5);
-                            return { description: "Le das unas caricias al gato antes de que siga su camino.", characterDialog: "¡Me encantan los animales! Me ha alegrado el día." };
-                        }
-                    }
-                },
-                {
-                    id: "smell_bakery",
-                    description: "Pasáis por delante de una panadería y un delicioso olor a pan recién hecho inunda el aire.",
-                    characterDialog: "Mmmm, ¡qué bien huele! De repente me ha entrado un poco de hambre.",
-                    consequences: {
-                        proceed: (data) => {
-                            data.hambre = Math.min(10, data.hambre + 0.5);
-                            return { description: "El olor es tentador, pero decidís seguir con vuestro paseo.", characterDialog: "Me comeria una barra entera ahora mismo." };
-                        }
-                    }
-                },
-                {
-                    id: "kids_playing",
-                    description: "Veis a un grupo de niños jugando alegremente en un parque.",
-                    characterDialog: "¡Mira cómo se divierten! Me recuerdan a cuando yo era pequeño.",
-                    consequences: {
-                        proceed: (data) => {
-                            data.aburrimiento = Math.max(0, data.aburrimiento - 0.5);
-                            return { description: "La risa de los niños es contagiosa y os saca una sonrisa.", characterDialog: "La vida es para jugar y ser feliz." };
-                        }
-                    }
-                },
-                {
-                    id: "nice_breeze",
-                    description: "Una suave y fresca brisa sopla, aliviando el calor del día.",
-                    characterDialog: "Ahhh, qué maravilla de brisa. Se está genial.",
-                    consequences: {
-                        proceed: (data) => {
-                            data.aburrimiento = Math.max(0, data.aburrimiento - 0.5);
-                            return { description: "Cierras los ojos un instante para disfrutar del momento.", characterDialog: "¡Esto es vida!" };
-                        }
-                    }
-                },
-                {
-                    id: "airplane_sky",
-                    description: "Un avión surca el cielo, dejando una estela blanca a su paso.",
-                    characterDialog: "¿A dónde irá? Me pregunto qué se sentirá al volar tan alto.",
-                    consequences: {
-                        proceed: (data) => {
-                            return { description: "Seguís al avión con la mirada hasta que desaparece en la distancia.", characterDialog: "Algún día me gustaría viajar por todo el mundo." };
-                        }
-                    }
-                },
-                {
-                    id: "flower_garden",
-                    description: "Pasáis junto a un jardín lleno de flores de todos los colores. El aroma es embriagador.",
-                    characterDialog: "¡Cuántas flores! ¡Y qué bien huelen!",
-                    consequences: {
-                        proceed: (data) => {
-                            data.aburrimiento = Math.max(0, data.aburrimiento - 0.5);
-                            return { description: "Os detenéis un momento para admirar la belleza y el perfume de las flores.", characterDialog: "La naturaleza es increíble." };
-                        }
-                    }
-                },
-                {
-                    id: "sudden_trip",
-                    description: "¡Cuidado! Tropiezas con una baldosa suelta, pero consigues mantener el equilibrio.",
-                    characterDialog: "¡Uf, por los pelos! Casi me caigo de bruces.",
-                    consequences: {
-                        proceed: (data) => {
-                            data.higiene = Math.min(10, data.higiene + 0.5);
-                            return { description: "Te sacudes el polvo de las manos y sigues con más cuidado.", characterDialog: "Hay que mirar por dónde se pisa." };
-                        }
-                    }
-                },
-                // --- EVENTOS NUEVOS ---
                 {
                     id: "bully_event",
                     description: "Ves a un Tamagotchi grande molestando a uno más pequeño.",
@@ -744,35 +1292,179 @@
                     }
                 },
                 {
-                    id: "charity_donation",
-                    description: "Un puesto de caridad pide donaciones para el refugio de Tamagotchis.",
-                    characterDialog: "Parece una buena causa. ¿Deberíamos ayudar?",
+                    id: "street_market",
+                    description: "Os topáis con un mercadillo lleno de puestos con antigüedades y curiosidades.",
+                    characterDialog: "¡Cuántas cosas! Hay de todo... ¿compramos algo de recuerdo?",
                     choices: [
-                        { text: "Donar generosamente (100)", action: "donate_generous" },
-                        { text: "Donar un poco (20)", action: "donate_small" },
-                        { text: "Decir que no tienes dinero", action: "no_donate" }
+                        { text: "Comprar objeto misterioso (75)", action: "buy_common" },
+                        { text: "Comprar objeto raro (300)", action: "buy_uncommon" },
+                        { text: "Solo mirar y seguir", action: "just_look" },
+                        { text: "Volver a la plaza", action: "back_to_hub" } // Opción para volver
                     ],
                     consequences: {
-                        donate_generous: (data) => {
-                            if (data.coins >= 100) {
-                                data.coins -= 100;
-                                updateWalkCoins(-100);
-                                data.karma = Math.min(10, (data.karma || 0) + 4);
-                                return { description: "Donas 100 monedas. El voluntario te lo agradece enormemente.", characterDialog: "¡Me siento genial por haber ayudado tanto!" };
+                        buy_common: (data) => {
+                            if (data.coins >= 75) {
+                                data.coins -= 75;
+                                updateWalkCoins(-75);
+                                const item = buyMercadilloObject(75);
+                                oneTimeEventsVisited.push('street_market'); // Marcar como visitado
+                                return { description: `Compras un ${item.name} por 75 monedas.`, characterDialog: "¡Qué chulo! Lo guardaré en mi inventario." };
                             }
-                            return { description: "Quieres donar, pero no tienes 100 monedas.", characterDialog: "¡Oh! Quería ser más generoso..." };
+                            return { description: "Te encanta el objeto, pero no tienes 75 monedas.", characterDialog: "Lástima, era muy bonito..." };
                         },
-                        donate_small: (data) => {
-                            if (data.coins >= 20) {
-                                data.coins -= 20;
-                                updateWalkCoins(-20);
-                                data.karma = Math.min(10, (data.karma || 0) + 2);
-                                return { description: "Donas 20 monedas. Todo ayuda.", characterDialog: "¡Espero que sirva de algo!" };
+                        buy_uncommon: (data) => {
+                            if (data.coins >= 300) {
+                                data.coins -= 300;
+                                updateWalkCoins(-300);
+                                const item = buyMercadilloObject(300);
+                                oneTimeEventsVisited.push('street_market'); // Marcar como visitado
+                                return { description: `Pagas 300 monedas por un ${item.name}.`, characterDialog: "¡Espero que sea auténtico!" };
                             }
-                            return { description: "Ni siquiera tienes 20 monedas para donar.", characterDialog: "Qué vergüenza... no tengo nada." };
+                            return { description: "El objeto es demasiado caro. No puedes permitírtelo.", characterDialog: "300 monedas... ¡se han pasado un poco!" };
                         },
-                        no_donate: (data) => {
-                            return { description: "Pasas de largo del puesto de caridad.", characterDialog: "Hoy no me siento generoso." };
+                        just_look: (data) => {
+                            data.aburrimiento = Math.max(0, data.aburrimiento - 0.5);
+                            oneTimeEventsVisited.push('street_market'); // Marcar como visitado aunque solo mire
+                            return { description: "Dais una vuelta por el mercadillo sin comprar nada y continuáis el paseo.", characterDialog: "Había cosas interesantes, pero mejor ahorrar." };
+                        },
+                        back_to_hub: (data) => {
+                            return showFeriaHub(data); // Vuelve al hub sin hacer nada
+                        }
+                    }
+                }
+              ],
+              night: [ // De 19:00 a 05:59
+                {
+                    id: "feria_entrance",
+                    description: "A lo lejos, ves las luces y oyes la música de una feria ambulante.",
+                    condition: (data) => !feriaAlreadyVisited, // Solo si no se ha visitado la feria en este paseo
+                    characterDialog: "¡Una feria! ¡Por favor, vamos! ¡Tiene que ser super divertido!",
+                    choices: [
+                        { text: "Entrar a la feria (cuesta 10 monedas)", action: "enter_feria" },
+                        { text: "Mejor no, parece cara", action: "ignore_feria" }
+                    ],
+                    consequences: {
+                        enter_feria: (data) => {
+                            if (data.coins >= 10) {
+                                oneTimeEventsVisited = []; // Resetea los eventos de un solo uso al entrar
+                                feriaAlreadyVisited = true; // Marca que ya hemos estado aquí
+                                data.feriaEasterEggStep = 0; // Inicializa el contador del easter egg
+                                data.coins -= 10;
+                                updateWalkCoins(-10);
+                                // En lugar de iniciar un modo, mostramos el "hub" de la feria
+                                return showFeriaHub(data);
+                            }
+                            return { description: "No tienes ni 10 monedas para la entrada. Pasáis de largo con pena.", characterDialog: "Jo... con las ganas que tenía de ir." };
+                        },
+                        ignore_feria: (data) => {
+                            inFeria = false; // Asegurarse de que no estamos en la feria
+                            data.aburrimiento = Math.min(10, data.aburrimiento + 0.5);
+                            return { description: "Decides seguir con el paseo y no entrar en la feria.", characterDialog: "Seguro que era aburrida de todas formas..." };
+                        }
+                    }
+                },
+                {
+                    id: "friendly_cat",
+                    description: "Un gato amigable se acerca y se frota contra tus piernas, ronroneando.",
+                    characterDialog: "¡Hola, gatito! ¡Qué suave eres!",
+                    consequences: {
+                        proceed: (data) => {
+                            data.aburrimiento = Math.max(0, data.aburrimiento - 1.5);
+                            return { description: "Le das unas caricias al gato antes de que siga su camino.", characterDialog: "¡Me encantan los animales! Me ha alegrado el día." };
+                        }
+                    }
+                },
+                {
+                    id: "nice_breeze",
+                    description: "Una suave y fresca brisa sopla, aliviando el calor del día.",
+                    characterDialog: "Ahhh, qué maravilla de brisa. Se está genial.",
+                    consequences: {
+                        proceed: (data) => {
+                            data.aburrimiento = Math.max(0, data.aburrimiento - 0.5);
+                            return { description: "Cierras los ojos un instante para disfrutar del momento.", characterDialog: "¡Esto es vida!" };
+                        }
+                    }
+                },
+                {
+                    id: "airplane_sky",
+                    description: "Un avión surca el cielo, dejando una estela blanca a su paso.",
+                    characterDialog: "¿A dónde irá? Me pregunto qué se sentirá al volar tan alto.",
+                    consequences: {
+                        proceed: (data) => {
+                            return { description: "Seguís al avión con la mirada hasta que desaparece en la distancia.", characterDialog: "Algún día me gustaría viajar por todo el mundo." };
+                        }
+                    }
+                },
+                {
+                    id: "sudden_trip",
+                    description: "¡Cuidado! Tropiezas con una baldosa suelta, pero consigues mantener el equilibrio.",
+                    characterDialog: "¡Uf, por los pelos! Casi me caigo de bruces.",
+                    consequences: {
+                        proceed: (data) => {
+                            data.higiene = Math.min(10, data.higiene + 0.5);
+                            return { description: "Te sacudes el polvo de las manos y sigues con más cuidado.", characterDialog: "Hay que mirar por dónde se pisa." };
+                        }
+                    }
+                },
+                {
+                    id: "restaurant_dinner",
+                    description: "Pasáis por delante de un restaurante elegante con un menú atractivo.",
+                    condition: (data) => {
+                        const currentHour = new Date().getHours();
+                        return currentHour >= 22 && currentHour < 23; // Solo entre las 22:00 y las 23:00
+                    },
+                    characterDialog: "¡Qué hambre me ha entrado! ¿Cenamos aquí? ¡Mira qué pinta tienen los platos!",
+                    choices: [
+                        { text: "Menú del Chef (150 monedas)", action: "menu_chef" },
+                        { text: "Menú Marinero (200 monedas)", action: "menu_marinero" },
+                        { text: "Menú Vegetariano (120 monedas)", action: "menu_vegetariano" },
+                        { text: "Menú Rápido (80 monedas)", action: "menu_rapido" },
+                        { text: "No, mejor seguimos", action: "skip_dinner" }
+                    ],
+                    consequences: {
+                        menu_chef: (data) => {
+                            if (data.coins >= 150) {
+                                data.coins -= 150;
+                                updateWalkCoins(-150);
+                                data.hambre = Math.max(0, data.hambre - 4); // Buena reducción de hambre
+                                data.peso = Math.min(100, data.peso + 0.8); // Ligero aumento de peso
+                                return { description: "Disfrutáis de un exquisito menú del chef: Sopa de calabaza y Solomillo con patatas. ¡Delicioso!", characterDialog: "¡Qué cena tan rica! ¡Estoy lleno y feliz!" };
+                            }
+                            return { description: "No tienes 150 monedas para el Menú del Chef.", characterDialog: "Qué pena, tenía muy buena pinta..." };
+                        },
+                        menu_marinero: (data) => {
+                            if (data.coins >= 200) {
+                                data.coins -= 200;
+                                updateWalkCoins(-200);
+                                data.hambre = Math.max(0, data.hambre - 5); // Mejor reducción de hambre
+                                data.peso = Math.min(100, data.peso + 0.5); // Menor aumento de peso, más saludable
+                                return { description: "Optáis por el Menú Marinero: Cóctel de gambas y Salmón a la plancha. ¡Una delicia del mar!", characterDialog: "¡El marisco y el pescado son mis favoritos! ¡Qué festín!" };
+                            }
+                            return { description: "No tienes 200 monedas para el Menú Marinero.", characterDialog: "Uf, es un poco caro para mi bolsillo." };
+                        },
+                        menu_vegetariano: (data) => {
+                            if (data.coins >= 120) {
+                                data.coins -= 120;
+                                updateWalkCoins(-120);
+                                data.hambre = Math.max(0, data.hambre - 3); // Reducción de hambre moderada
+                                data.peso = Math.min(100, data.peso + 0.3); // Mínimo aumento de peso
+                                return { description: "Elegís el Menú Vegetariano: Ensalada de quinoa y Lasaña de verduras. ¡Ligero y sabroso!", characterDialog: "¡Me siento ligero y con energía! ¡Qué buena elección!" };
+                            }
+                            return { description: "No tienes 120 monedas para el Menú Vegetariano.", characterDialog: "Bueno, la verdura es sana, pero no me apetece tanto." };
+                        },
+                        menu_rapido: (data) => {
+                            if (data.coins >= 80) {
+                                data.coins -= 80;
+                                updateWalkCoins(-80);
+                                data.hambre = Math.max(0, data.hambre - 2); // Menor reducción de hambre
+                                data.peso = Math.min(100, data.peso + 1.2); // Mayor aumento de peso, comida rápida
+                                return { description: "Pedís el Menú Rápido: Patatas fritas y Hamburguesa con queso. ¡Rápido y contundente!", characterDialog: "¡Esto es lo que necesitaba! ¡Aunque no es lo más sano!" };
+                            }
+                            return { description: "No tienes 80 monedas para el Menú Rápido.", characterDialog: "Ni para un menú rápido... ¡qué desastre!" };
+                        },
+                        skip_dinner: (data) => {
+                            data.hambre = Math.min(10, data.hambre + 1); // El hambre aumenta ligeramente por saltarse la cena
+                            return { description: "Decides que es demasiado caro o no te apetece y sigues el paseo con el estómago vacío.", characterDialog: "Mejor me espero a llegar a casa. Pero tengo un poco más de hambre." };
                         }
                     }
                 },
@@ -868,40 +1560,29 @@
                     }
                 },
                 {
-                    id: "street_market",
-                    description: "Os topáis con un mercadillo lleno de puestos con antigüedades y curiosidades.",
-                    characterDialog: "¡Cuántas cosas! Hay de todo... ¿compramos algo de recuerdo?",
-                    choices: [
-                        { text: "Comprar objeto misterioso (75)", action: "buy_common" },
-                        { text: "Comprar objeto raro (300)", action: "buy_uncommon" },
-                        { text: "Solo mirar y seguir", action: "just_look" }
-                    ],
+                    id: "starry_night",
+                    description: "El cielo está despejado y se pueden ver miles de estrellas.",
+                    characterDialog: "¡Wow! ¡Mira cuántas estrellas! Es como un manto de diamantes.",
                     consequences: {
-                        buy_common: (data) => {
-                            if (data.coins >= 75) {
-                                data.coins -= 75;
-                                updateWalkCoins(-75);
-                                const item = buyMercadilloObject(75);
-                                return { description: `Compras un ${item.name} por 75 monedas.`, characterDialog: "¡Qué chulo! Lo guardaré en mi inventario." };
-                            }
-                            return { description: "Te encanta el objeto, pero no tienes 75 monedas.", characterDialog: "Lástima, era muy bonito..." };
-                        },
-                        buy_uncommon: (data) => {
-                            if (data.coins >= 300) {
-                                data.coins -= 300;
-                                updateWalkCoins(-300);
-                                const item = buyMercadilloObject(300);
-                                return { description: `Pagas 300 monedas por un ${item.name}.`, characterDialog: "¡Espero que sea auténtico!" };
-                            }
-                            return { description: "El objeto es demasiado caro. No puedes permitírtelo.", characterDialog: "300 monedas... ¡se han pasado un poco!" };
-                        },
-                        just_look: (data) => {
-                            data.aburrimiento = Math.max(0, data.aburrimiento - 0.5);
-                            return { description: "Dais una vuelta por el mercadillo sin comprar nada y continuáis el paseo.", characterDialog: "Había cosas interesantes, pero mejor ahorrar." };
+                        proceed: (data) => {
+                            data.aburrimiento = Math.max(0, data.aburrimiento - 2);
+                            return { description: "Os tumbáis un rato en la hierba a contemplar la inmensidad del universo.", characterDialog: "Me siento tan pequeño... y a la vez, tan afortunado." };
                         }
                     }
-                }
-            ];
+                },
+                {
+                    id: "strange_noise",
+                    description: "Escuchas un ruido extraño proveniente de unos arbustos cercanos.",
+                    characterDialog: "¿Has oído eso? Me ha dado un poco de miedo...",
+                    consequences: {
+                        proceed: (data) => {
+                            data.aburrimiento = Math.min(10, data.aburrimiento + 0.5);
+                            return { description: "Aceleráis el paso, mirando de reojo hacia los arbustos. Probablemente no era nada.", characterDialog: "Mejor no tentar a la suerte. ¡Vámonos!" };
+                        }
+                    }
+                },
+              ]
+            };
 
             function buyMercadilloObject(cost) {
               if (!tamagotchiData) return;
@@ -955,7 +1636,7 @@
                 walkCoinDisplay.classList.add('hidden');
 
                 startWalkBtn.addEventListener("click", startWalk);
-                exitBtn.addEventListener("click", () => endWalk(false));
+                exitBtn.addEventListener("click", () => endWalk());
 
                 localStorage.removeItem('walkInProgress');
             }
@@ -974,10 +1655,17 @@
 
                 walkCoins = 0;
                 walkMercadilloInventory = []; // Resetea el inventario temporal
+                hasBoughtTombolaTicket = false; // Resetea el ticket de la tómbola
+                feriaAlreadyVisited = false; // Resetea la visita a la feria
+                mercadoAlreadyVisited = false; // <-- ¡NUEVO! Resetea visita al mercado
                 updateWalkCoins(0);
                 walkCoinDisplay.classList.remove('hidden');
 
                 // --- ¡NUEVO! Añadir clases para animaciones ---
+                // --- ¡NUEVO! Reiniciar estado de la feria ---
+                inFeria = false; // Reinicia el estado de la feria
+
+                inMercado = false; // <-- ¡NUEVO! Reinicia estado del mercado
                 sceneContainer.classList.add("walking");
                 characterDisplay.classList.add("walking");
 
@@ -1001,14 +1689,37 @@
             function triggerRandomEvent() {
                 if (!walkInProgress) return;
 
-                // --- MODIFICADO: Filtrar eventos según las condiciones ---
-                const availableEvents = walkEvents.filter(event => {
+                // --- ¡NUEVO! Determinar el momento del día ---
+                // --- MODIFICADO: Si estamos en la feria o mercado, la lógica cambia ---
+                const currentHour = new Date().getHours();
+                let eventPool = [];
+
+                // Si estamos en la feria o mercado, no se disparan eventos aleatorios de paseo.
+                if (inFeria || inMercado) return;
+                // Si estamos en la feria, no se disparan eventos aleatorios de paseo.
+                if (inFeria) return;
+
+                if (currentHour >= 6 && currentHour < 12) { // Mañana
+                    eventPool = [...timeBasedEvents.morning, ...timeBasedEvents.anytime];
+                } else if (currentHour >= 12 && currentHour < 19) { // Tarde
+                    eventPool = [...timeBasedEvents.afternoon, ...timeBasedEvents.anytime];
+                } else { // Noche
+                    eventPool = [...timeBasedEvents.night, ...timeBasedEvents.anytime];
+                }
+
+
+                // --- MODIFICADO: Filtrar eventos del pool actual según las condiciones ---
+                const availableEvents = eventPool.filter(event => {
                     // Si el evento no tiene condición, siempre está disponible.
                     // Si tiene condición, se evalúa.
                     return !event.condition || event.condition(tamagotchiData);
                 });
+                
+                const event = availableEvents[Math.floor(Math.random() * availableEvents.length)];                
+                displayEvent(event);
+            }
 
-                const event = availableEvents[Math.floor(Math.random() * availableEvents.length)];
+            function displayEvent(event) {
                 currentEvent = event;
 
                 eventDescription.textContent = event.description;
@@ -1029,41 +1740,264 @@
                         choicesContainer.appendChild(btn);
                     });
                 } else {
-                    // --- MODIFICADO: Lógica para eventos no interactivos ---
-                    // 1. Guardamos una copia del estado ANTES de la consecuencia
-                    const oldData = JSON.parse(JSON.stringify(tamagotchiData));
-
-                    // 2. Ejecutamos la consecuencia del evento
-                    const result = event.consequences.proceed(tamagotchiData);
-
-                    // 3. Comparamos estados y mostramos los cambios en pantalla
-                    compareAndShowChanges(oldData, tamagotchiData);
-
-                    // 4. Comprobamos si alguna estadística ha llegado a un nivel crítico
-                    checkCriticalStats();
-
-                    // 5. Actualizamos el diálogo
-                    eventDescription.textContent = result.description;
-                    characterDialog.textContent = result.characterDialog;
-
-                    // 6. Programamos el siguiente evento
-                    setTimeout(scheduleNextEvent, 3500);
+                    // Para eventos no interactivos, simulamos una elección automática para unificar la lógica.
+                    setTimeout(() => handleChoice('proceed'), 50);
                 }
+            }
+
+            // --- ¡NUEVA FUNCIÓN! Muestra el menú principal del Mercado de Agricultores ---
+            function showMercadoHub(data) {
+                clearInterval(mercadoHubInterval);
+                mercadoHubInterval = setInterval(() => showMercadoHub(data), 10000); // AUMENTADO: De 8 a 10 segundos
+
+                inMercado = true;
+
+                const allMercadoChoices = [
+                    { id: "mercado_frutas", text: "Ir al puesto de frutas" },
+                    { id: "mercado_cafe", text: "Probar el café artesanal" },
+                    { id: "mercado_ayuda_granjero", text: "Ver al granjero de las cajas" },
+                    { id: "mercado_musica", text: "Escuchar al músico" },
+                    { id: "mercado_caja_sorpresa", text: "Ver las 'Cajas de la Cosecha'" },
+                    { id: "mercado_concurso_calabaza", text: "Ir al Concurso de Calabazas" },
+                    { id: "mercado_tomate_caido", text: "Acercarse al puesto de tomates" }
+                ];
+
+                let availableChoices = allMercadoChoices.filter(choice => !mercadoOneTimeEventsVisited.includes(choice.id));
+
+                // Barajar y seleccionar hasta 3 opciones
+                let selectedChoices = availableChoices.sort(() => 0.5 - Math.random()).slice(0, 2); // Seleccionamos 2 para dejar espacio a la fuente
+
+                // --- ¡NUEVA LÓGICA! La fuente solo aparece si es el siguiente paso del Easter Egg ---
+                if (data.mercadoEasterEggStep === 3 && !mercadoOneTimeEventsVisited.includes('mercado_fuente_pueblo')) {
+                    selectedChoices.unshift({ id: "mercado_fuente_pueblo", text: "Ir a la fuente del pueblo" });
+                }
+
+                // Añadir siempre la opción de salir
+                selectedChoices.push({ text: "Seguir paseando", action: "exit_mercado" });
+
+                const hubEvent = {
+                    id: "mercado_hub",
+                    description: "Estás en el mercado. Hay puestos con productos frescos y un ambiente muy animado.",
+                    characterDialog: "¿Qué hacemos ahora? ¡Todo parece interesante!",
+                    choices: selectedChoices.map(c => ({ text: c.text, action: c.id || c.action })),
+                    consequences: {
+                        exit_mercado: (data) => {
+                            inMercado = false;
+                            clearInterval(mercadoHubInterval);
+                            return { description: "El mercado ha sido agradable, pero es hora de continuar el paseo.", characterDialog: "¡Vámonos! A ver qué más nos depara la mañana." };
+                        }
+                    }
+                };
+
+                // Añadir consecuencias dinámicas
+                selectedChoices.forEach(choice => {
+                    const actionId = choice.id || choice.action;
+                    if (actionId !== 'exit_mercado') {
+                        hubEvent.consequences[actionId] = () => {
+                            // Si es la fuente, la marcamos como visitada para que no vuelva a salir en este paseo.
+                            if (actionId === 'mercado_fuente_pueblo') {
+                                mercadoOneTimeEventsVisited.push('mercado_fuente_pueblo');
+                            }
+                            const eventToShow = mercadoEvents.find(e => e.id === actionId);
+                            clearInterval(mercadoHubInterval); // ¡CORRECCIÓN! Detener el refresco al entrar a una atracción.
+                            if (eventToShow) displayEvent(eventToShow);
+                        };
+                    }
+                });
+
+                displayEvent(hubEvent);
+                return hubEvent;
+            }
+
+            // --- ¡NUEVA FUNCIÓN! Para manejar la lógica de la apuesta de calabazas ---
+            function handleBet(data, choice, checkOnly = false) {
+                if (data.coins < 20) {
+                    if (checkOnly) return false;
+                    return { description: "No tienes 20 monedas para apostar.", characterDialog: "No me llega para la apuesta..." };
+                }
+
+                // --- MODIFICADO: El ganador depende de la pista ---
+                let winner;
+                // Si tenemos una pista (del Easter Egg) y estamos en el paso correcto, el ganador está fijado.
+                if (pumpkinHint && data.mercadoEasterEggStep === 1) {
+                    winner = pumpkinHint;
+                    pumpkinHint = null; // La pista se usa una sola vez.
+                } else {
+                    winner = ['a', 'b'][Math.floor(Math.random() * 2)]; // Si no, el ganador es aleatorio.
+                }
+                
+                if (choice === winner) {
+                    if (checkOnly) return true;
+                    data.coins -= 20; updateWalkCoins(-20);
+                    mercadoOneTimeEventsVisited.push('mercado_concurso_calabaza');
+                    data.coins += 50;
+                    updateWalkCoins(50);
+                    return { description: `El granjero pesa las calabazas y... ¡la ganadora es la ${winner.toUpperCase()}! Has ganado 50 monedas.`, characterDialog: "¡TOMA! ¡Qué ojo tengo para las calabazas!" };
+                } else {
+                    if (checkOnly) return false;
+                    data.coins -= 20; updateWalkCoins(-20);
+                    mercadoOneTimeEventsVisited.push('mercado_concurso_calabaza');
+                    return { description: `El granjero pesa las calabazas y... la ganadora es la ${winner.toUpperCase()}. Has perdido tu apuesta.`, characterDialog: "Vaya, por poco. La próxima vez habrá más suerte." };
+                }
+            }
+
+
+            // --- ¡NUEVA FUNCIÓN! Muestra el menú principal de la feria ---
+            function showFeriaHub(data) {
+                // --- ¡NUEVO! Lógica del temporizador ---
+                clearInterval(feriaHubInterval); // Limpia el temporizador anterior si existe
+                feriaHubInterval = setInterval(() => showFeriaHub(data), 8000); // Refresca las opciones cada 8 segundos
+
+                inFeria = true;
+
+                const easterEggSequence = ['feria_mago', 'feria_carrusel', 'feria_adivino', 'feria_fuente_secreta'];
+                const currentStep = data.feriaEasterEggStep || 0;
+
+                const allFeriaChoices = [
+                    { id: "feria_noria", text: "Ir a la Noria" },
+                    { id: "feria_tiro_blanco", text: "Probar suerte en el Tiro al Blanco" },
+                    { id: "feria_mystery_box", text: "Comprar una Caja Misteriosa" }, // ID corregido para que coincida con el evento
+                    { id: "feria_adivino", text: "Visitar al Adivino" },
+                    { id: "feria_carrusel", text: "Ver el Carrusel" },
+                    { id: "feria_puesto_comida", text: "Ir al Puesto de Comida" },
+                    { id: "feria_mago", text: "Acercarse al Mago" },
+                    { id: "feria_globo_perdido", text: "Ayudar con el Globo Perdido" },
+                    { id: "feria_fuente_secreta", text: "Ir a la fuente del centro" },
+                    { id: "feria_tombola", text: "Jugar a la Tómbola" },
+                    { id: "feria_algodon", text: "Comprar Algodón de Azúcar" },
+                    { id: "feria_casa_terror", text: "Entrar a la Casa del Terror" }
+                ];
+
+                // Filtrar las atracciones que no se han visitado (si son de un solo uso)
+                let availableChoices = allFeriaChoices.filter(choice => !oneTimeEventsVisited.includes(choice.id));
+                let selectedChoices = [];
+
+                // --- ¡NUEVA LÓGICA EASTER EGG! ---
+                // Si estamos en medio de la secuencia del easter egg...
+                if (currentStep > 0 && currentStep < easterEggSequence.length) {
+                    const nextRequiredAttractionId = easterEggSequence[currentStep];
+                    const nextRequiredAttraction = allFeriaChoices.find(c => c.id === nextRequiredAttractionId);
+
+                    if (nextRequiredAttraction && availableChoices.some(c => c.id === nextRequiredAttractionId)) {
+                        selectedChoices.push(nextRequiredAttraction);
+                        availableChoices = availableChoices.filter(c => c.id !== nextRequiredAttractionId);
+                    }
+                }
+
+                // Rellenar el resto de opciones aleatoriamente hasta tener 4
+                const shuffledAvailable = availableChoices.sort(() => 0.5 - Math.random());
+                while (selectedChoices.length < 4 && shuffledAvailable.length > 0) {
+                    selectedChoices.push(shuffledAvailable.shift());
+                }
+
+                // Barajar la selección final para que la opción del easter egg no esté siempre en el mismo sitio
+                selectedChoices.sort(() => 0.5 - Math.random());
+
+                // Añadir siempre la opción de salir
+                selectedChoices.push({ text: "Salir de la feria", action: "exit_feria" });
+
+                const hubEvent = {
+                    id: "feria_hub",
+                    description: "Estáis en la plaza principal de la feria. Hay atracciones por todas partes.",
+                    characterDialog: "¿A dónde vamos ahora? ¡Hay tanto que hacer!",
+                    choices: selectedChoices.map(c => ({ text: c.text, action: c.id || c.action })),
+                    consequences: {
+                        // Las acciones aquí simplemente disparan el evento correspondiente
+                        exit_feria: (data) => { // <-- LÓGICA MODIFICADA
+                            inFeria = false;
+                            clearInterval(feriaHubInterval); // Detener el refresco al salir
+                            if (hasBoughtTombolaTicket) {
+                                // Si se compró boleto, se revela el resultado ahora.
+                                return revealTombolaResult(data);
+                            } else {
+                                // Si no, simplemente se continúa el paseo.
+                                return { description: "La feria ha sido divertida, pero es hora de seguir el paseo.", characterDialog: "¡Vámonos! A ver qué más nos depara la noche." };
+                            }
+                        }
+                    }
+                };
+
+                // Añadir las consecuencias dinámicamente para las atracciones seleccionadas
+                selectedChoices.forEach(choice => {
+                    const actionId = choice.id || choice.action;
+                    if (actionId !== 'exit_feria') {
+                        hubEvent.consequences[actionId] = () => {
+                            const eventToShow = feriaEvents.find(e => e.id === actionId);
+                            clearInterval(feriaHubInterval); // ¡CORRECCIÓN! Detener el refresco al entrar a una atracción.
+                            if (eventToShow) displayEvent(eventToShow);
+                        };
+                    }
+                });
+
+                // Usamos displayEvent para mostrar el hub, pero devolvemos el objeto para que la función que lo llamó lo procese.
+                displayEvent(hubEvent);
+                return hubEvent; // Devolvemos el evento para que se muestre correctamente
             }
 
             function handleChoice(action) {
                 if (!currentEvent || !walkInProgress) return;
 
-                choicesContainer.querySelectorAll('button').forEach(btn => btn.disabled = true);
+                clearInterval(feriaHubInterval); // Detiene el refresco de la feria al tomar cualquier decisión
 
-                const consequence = currentEvent.consequences[action];
+                choicesContainer.querySelectorAll('button').forEach(btn => btn.disabled = true);
+                
+                // --- ¡NUEVO! Lógica para el Easter Egg "El Secreto del Granjero" ---
+                const easterEggSequence = ['mercado_ayuda_granjero', 'mercado_concurso_calabaza', 'mercado_cafe', 'mercado_fuente_pueblo'];
+                const currentStep = tamagotchiData.mercadoEasterEggStep || 0;
+                const eventId = currentEvent.id;
+
+                // Comprueba si la acción actual es la correcta en la secuencia
+                if (eventId === easterEggSequence[currentStep]) {
+                    // Caso especial para el concurso: solo avanza si se gana.
+                    if (eventId === 'mercado_concurso_calabaza' && action.startsWith('bet_') && handleBet(tamagotchiData, action.slice(-1), true)) {
+                         tamagotchiData.mercadoEasterEggStep = currentStep + 1;
+                    } else if (eventId !== 'mercado_concurso_calabaza') {
+                        tamagotchiData.mercadoEasterEggStep = currentStep + 1;
+                    }
+                } else if (eventId !== 'mercado_hub' && !eventId.startsWith('mercado_concurso_calabaza')) { // Si se hace otra acción, se rompe la cadena
+                    tamagotchiData.mercadoEasterEggStep = 0;
+                }
+
+                // Si la acción es una atracción del mercado, la consecuencia es mostrar esa atracción.
+                if (action.startsWith('mercado_') && currentEvent.id === 'mercado_hub') {
+                    const consequenceFn = currentEvent.consequences[action];
+                    if (consequenceFn) consequenceFn();
+                    return;
+                }
+
+                let consequence = currentEvent.consequences[action];
+
+                // Si la acción es una atracción de la feria, la consecuencia es mostrar esa atracción.
+                if (action.startsWith('feria_') && currentEvent.id === 'feria_hub') {
+                    // --- LÓGICA DEL EASTER EGG (REUBICADA) ---
+                    // Se ejecuta ANTES de mostrar la atracción para que el log aparezca.
+                    const easterEggSequence = ['feria_mago', 'feria_carrusel', 'feria_adivino', 'feria_fuente_secreta'];
+                    const currentStep = tamagotchiData.feriaEasterEggStep || 0;
+
+                    if (action === easterEggSequence[currentStep]) {
+                        tamagotchiData.feriaEasterEggStep = currentStep + 1;
+                        console.log(`Progresión ${tamagotchiData.feriaEasterEggStep}/4`);
+                    } else if (action !== 'exit_feria') {
+                        if (tamagotchiData.feriaEasterEggStep > 0) {
+                            console.log("Easter egg interrumpido.");
+                        }
+                        tamagotchiData.feriaEasterEggStep = 0;
+                    }
+                    if (action === 'feria_mystery_box') {
+                        oneTimeEventsVisited.push('feria_mystery_box');
+                    }
+
+                    // La consecuencia es una función que llama a displayEvent. La ejecutamos directamente.
+                    consequence();
+                    return; // Este return ahora es correcto, después de procesar el log.
+                }
 
                 // --- ¡NUEVO! Lógica para mostrar cambios de stats ---
                 // 1. Guardamos una copia del estado ANTES de la consecuencia
                 const oldData = JSON.parse(JSON.stringify(tamagotchiData));
 
                 if (consequence) {
-                    const result = consequence(tamagotchiData, endWalk);
+                    const result = consequence(tamagotchiData);
                     
                     // 2. Comparamos el estado nuevo con el viejo y mostramos los cambios
                     compareAndShowChanges(oldData, tamagotchiData);
@@ -1074,12 +2008,25 @@
                     if (walkInProgress) {
                         eventDescription.textContent = result.description;
                         characterDialog.textContent = result.characterDialog;
+                        // Si el evento no termina el paseo, actualizamos el diálogo
+                        if (result) {
+                            eventDescription.textContent = result.description;
+                            characterDialog.textContent = result.characterDialog;
+                        }
                         
                         setTimeout(() => {
-                            choicesContainer.innerHTML = '';
-                            scheduleNextEvent();
+                            // --- MODIFICADO: Si estábamos en la feria, volvemos al hub ---
+                            if (inMercado) {
+                                showMercadoHub(tamagotchiData);
+                            } else if (inFeria) {
+                                showFeriaHub(tamagotchiData);
+                            } else if (!inFeria) {
+                                choicesContainer.innerHTML = '';
+                                scheduleNextEvent();
+                            }
                         }, 3500);
                     }
+
                 }
             }
 
@@ -1176,10 +2123,12 @@
             }
 
 
-            function endWalk(forced = false) {
+            function endWalk() {
                 localStorage.removeItem('walkInProgress');
                 walkInProgress = false;
                 clearTimeout(eventTimeout);
+                clearInterval(feriaHubInterval); // Asegurarse de que el temporizador de la feria se detiene
+                clearInterval(mercadoHubInterval); // <-- ¡NUEVO! Detener también el del mercado
 
                 // --- ¡NUEVO! Eliminar clases de animación ---
                 sceneContainer.classList.remove("walking");
@@ -1187,13 +2136,6 @@
 
                 choicesContainer.innerHTML = '';
                 walkCoinDisplay.classList.add('hidden');
-
-                if (forced) {
-                    localStorage.setItem('tamagotchiData', JSON.stringify(tamagotchiData));
-                    localStorage.setItem('walkGameResult', 'finished');
-                    window.location.href = "index.html";
-                    return;
-                }
 
                 // --- ¡NUEVA LÓGICA DE KARMA AL FINALIZAR! ---
                 if (tamagotchiData && tamagotchiData.karma < 0) {
@@ -1224,6 +2166,35 @@
                     localStorage.setItem('walkGameResult', 'finished');
                     setTimeout(() => { window.location.href = "index.html"; }, 4000);
                 }
+            }
+
+            // --- ¡NUEVA FUNCIÓN! Para revelar el resultado de la tómbola al salir de la feria ---
+            function revealTombolaResult(data) {
+                let resultDescription, resultDialog;
+                hasBoughtTombolaTicket = false; // Se resetea el ticket una vez se revela el resultado.
+
+                // El resultado final depende directamente del karma acumulado
+                if (data.karma >= 13) {
+                    const rareItem = mercadilloObjects.rare[Math.floor(Math.random() * mercadilloObjects.rare.length)];
+                    walkMercadilloInventory.push(rareItem);
+                    resultDescription = `Al salir de la feria, anuncian el número de la tómbola y... ¡Tu número es el ganador! ¡Has ganado el premio gordo: un ${rareItem.name}!`;
+                    resultDialog = "¡NO ME LO PUEDO CREER! ¡SOMOS RICOS!";
+                } else if (data.karma > 0) { // Karma bueno
+                    data.coins += 600;
+                    updateWalkCoins(600);
+                    resultDescription = "Al salir de la feria, anuncian el número de la tómbola y... ¡Tu número ha sido premiado! Ganas 600 monedas.";
+                    resultDialog = "¡Genial! ¡Hemos salido ganando!";
+                } else if (data.karma <= -5) { // Karma muy malo
+                    const lostCoins = Math.min(walkCoins, 150); // Pierdes lo ganado en el paseo, hasta 150
+                    data.coins -= lostCoins;
+                    updateWalkCoins(-lostCoins);
+                    resultDescription = "Al salir de la feria, anuncian el número de la tómbola y no es el tuyo. Además, en el barullo de la salida, te das cuenta de que has perdido parte del dinero que encontraste.";
+                    resultDialog = "¡Esto es un timo! ¡Y encima pierdo dinero!";
+                } else { // Karma malo o neutral
+                    resultDescription = "Anuncian el número de la tómbola, pero no es el tuyo. La feria ha sido divertida, pero es hora de seguir el paseo.";
+                    resultDialog = "Vaya, no ha habido suerte. Bueno, al menos nos hemos divertido.";
+                }
+                return { description: resultDescription, characterDialog: resultDialog };
             }
 
             function showError(message) {

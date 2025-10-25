@@ -725,11 +725,13 @@ function disableControls() {
         this.ciclosEnfermo = 0;
         this.pastillaCount = 0;
         this.pastillaDisponible = true;
+        this.hasUmbrella = false; // <-- ¡NUEVO! El personaje no empieza con paraguas.
         // --- ¡NUEVO! Propiedades para la diabetes ---
         this.esDiabetico = false;
         this.vecesEnfermoPorComidaRapida = 0;
         this.necesitaInsulina = false;
         this.ciclosSinInsulina = 0;
+        this.mercadoEasterEggStep = 0; // <-- ¡NUEVO! Para el Easter Egg del mercado.
         this.edadInternaMaxima = 100;
         this.happyLock = false; // prettier-ignore
         this.statsHistory = { hambre: [], aburrimiento: [], sueno: [], higiene: [] };
@@ -1058,11 +1060,13 @@ function cargarTamagotchi(data) {
   t.ciclosEnfermo = data.ciclosEnfermo || 0;
   t.pastillaCount = data.pastillaCount || 0;
   t.pastillaDisponible = data.pastillaDisponible !== undefined ? data.pastillaDisponible : true;
+  t.hasUmbrella = data.hasUmbrella || false; // <-- ¡NUEVO! Carga si el personaje tiene paraguas.
   // --- ¡NUEVO! Cargar datos de diabetes ---
   t.esDiabetico = data.esDiabetico || false;
   t.vecesEnfermoPorComidaRapida = data.vecesEnfermoPorComidaRapida || 0;
   t.necesitaInsulina = data.necesitaInsulina || false;
   t.ciclosSinInsulina = data.ciclosSinInsulina || 0;
+  t.mercadoEasterEggStep = data.mercadoEasterEggStep || 0; // <-- ¡NUEVO! Carga el progreso del Easter Egg.
   t.edadInternaMaxima = data.edadInternaMaxima || 100;
   t.happyLock = data.happyLock || false; // prettier-ignore
   t.edadInterna = data.edadInterna || data.edad; // Usa edadInterna guardada o la edad normal si no existe
