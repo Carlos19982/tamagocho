@@ -1,383 +1,559 @@
 <!DOCTYPE html>
 <html lang="es">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Tamagochi - Ciclo Dinámico y Minijuegos</title>
-        
-        <!-- Meta tags para evitar la caché -->
-        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-        <meta http-equiv="Pragma" content="no-cache" />
-        <meta http-equiv="Expires" content="0" />
-      
-        <!-- Agregar un query string a los recursos para forzar que se recarguen -->
-        <link rel="stylesheet" type="text/css" href="style.css?v=1.2" />
-        <script defer src="background.js?v=1.2"></script>
-        <script defer src="tm.js?v=1.2"></script>
-      </head>
-      
-  <body>
-    <!-- ¡NUEVO! Lienzo dedicado para el fondo dinámico -->
-    <canvas id="background-canvas"></canvas>
 
-    <div
-      id="popup-message"
-      style="position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 10px 15px; border-radius: 5px; display: none; z-index: 10000; font-family: sans-serif; font-size: 0.9rem;"
-    ></div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tamagochi - Ciclo Dinámico y Minijuegos</title>
 
-    <!-- Menú de configuración -->
-    <div class="menu-container">
-      <h1>Configura tu Tamagotchi</h1>
-      <label for="nombre">Nombre:</label>
-      <input type="text" id="nombre" placeholder="Ingresa un nombre" />
-      <label for="trabajo">Futuro Trabajo:</label>
-      <input type="text" id="trabajo" placeholder="¿Qué te gustaría ser?" />
-      <label for="edad">Edad de inicio:</label>
-      <input type="number" id="edad" placeholder="Ej: 5" />
-      <button id="start-game">¡Comenzar Juego!</button>
+  <!-- Meta tags para evitar la caché -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <!-- Agregar un query string a los recursos para forzar que se recarguen -->
+  <link rel="stylesheet" type="text/css" href="style.css?v=1.2" />
+  <script defer src="background.js?v=1.2"></script>
+  <script defer src="tm.js?v=1.2"></script>
+</head>
+
+<body>
+  <!-- ¡NUEVO! Lienzo dedicado para el fondo dinámico -->
+  <canvas id="background-canvas"></canvas>
+
+  <!-- Overlay compartido para menús modales -->
+  <div id="menu-overlay"></div>
+
+  <!-- Botón de Ajustes (Rueda) -->
+  <button id="settings-icon" onclick="toggleMenu('settings-menu')"><span>⚙️</span></button>
+
+  <div id="popup-message"
+    style="position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.8); color: #fff; padding: 10px 15px; border-radius: 5px; display: none; z-index: 10000; font-family: sans-serif; font-size: 0.9rem;">
+  </div>
+
+  <!-- Menú de configuración -->
+  <div class="menu-container">
+    <h1>Configura tu Tamagotchi</h1>
+    <label for="nombre">Nombre:</label>
+    <input type="text" id="nombre" placeholder="Ingresa un nombre" />
+    <label for="trabajo">Futuro Trabajo:</label>
+    <select id="trabajo"
+      style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: 1px solid #ddd;">
+      <option value="flappy">Flappygocho</option>
+    </select>
+    <label for="edad">Edad de inicio:</label>
+    <input type="number" id="edad" placeholder="Ej: 5" />
+    <button id="start-game">¡Comenzar Juego!</button>
+  </div>
+
+  <!-- Área del juego -->
+  <div class="tamagochi-container">
+    <!-- Menús existentes -->
+    <!-- MENÚ DE ALIMENTACIÓN -->
+    <div id="food-menu" class="action-modal">
+      <div class="modal-header">
+        <h2>🍔 Alimentación</h2>
+        <button class="close-modal-btn" onclick="toggleMenu('food-menu')">×</button>
+      </div>
+      <div class="modal-body">
+        <!-- Contenido dinámico -->
+      </div>
     </div>
 
-    <!-- Área del juego -->
-    <div class="tamagochi-container">
-      <!-- Menús existentes -->
-      <!-- MENÚ DE ALIMENTACIÓN: se rellenará dinámicamente -->
-      <div id="food-menu"></div>
-      <div id="clean-menu">
-        <button id="juego-ducha">Ducha Minijuego</button>
+    <!-- MENÚ DE LIMPIEZA -->
+    <div id="clean-menu" class="action-modal">
+      <div class="modal-header">
+        <h2>🚿 Higiene</h2>
+        <button class="close-modal-btn" onclick="toggleMenu('clean-menu')">×</button>
       </div>
-      <div id="game-menu">
-        <button id="juego-saltar">Juego Saltar</button>
-        <button id="juego-reaccion">Juego Reacción</button>
+      <div class="modal-body">
+        <button id="juego-ducha">
+          <span class="icon">🧼</span>
+          <span>Ducha Minijuego</span>
+        </button>
       </div>
-      <div id="sleep-menu">
-        <button id="btn-dormir-largo">Dormir</button>
-        <button id="btn-siesta">Siesta</button>
-      </div>
-      <div id="work-menu">
-        <!-- Botón de cierre en la esquina superior derecha -->
-        <button id="close-work-menu" class="close-btn">×</button>
-        <button id="btn-medico">Ir al médico (170 monedas)</button>
-        <button id="btn-paseo">Salir de Paseo</button>
-        <p>¡Hoy vas a trabajar en: <strong>Flappy Bird</strong>!</p>
-        <button id="btn-flappy">Ir a trabajar</button>
-        <button id="btn-requisitos">Requisitos para ascender</button>
-        <div id="requisitos-display" style="margin-top: 10px;"></div>
-      </div>
+    </div>
 
-      <div id="minijuego-container">
-        <div id="minijuego-gamearea">
-          <div id="game-character">(*_*)</div>
-        </div>
-        <div id="minijuego-instructions">
-          ¡Presiona el botón cuando sea tu turno!
-        </div>
-        <button id="boton-saltar">Saltar</button>
+    <!-- MENÚ DE JUEGO -->
+    <div id="game-menu" class="action-modal">
+      <div class="modal-header">
+        <h2>🎮 Diversión</h2>
+        <button class="close-modal-btn" onclick="toggleMenu('game-menu')">×</button>
       </div>
+      <div class="modal-body">
+        <button id="juego-saltar">
+          <span class="icon">🏃</span>
+          <span>Saltar Obstáculos</span>
+        </button>
+        <button id="juego-reaccion">
+          <span class="icon">⚡</span>
+          <span>Prueba de Reacción</span>
+        </button>
+      </div>
+    </div>
 
-      <!-- Contenedor superior: Muñeco y notificaciones -->
-      <div class="top-container">
-        <div id="muñeco-container">
-          <pre id="tamagochi-feliz">
+    <!-- MENÚ DE SUEÑO -->
+    <div id="sleep-menu" class="action-modal">
+      <div class="modal-header">
+        <h2>💤 Descanso</h2>
+        <button class="close-modal-btn" onclick="toggleMenu('sleep-menu')">×</button>
+      </div>
+      <div class="modal-body">
+        <button id="btn-dormir-largo">
+          <span class="icon">🌙</span>
+          <span>Dormir (Largo)</span>
+        </button>
+        <button id="btn-siesta">
+          <span class="icon">🛌</span>
+          <span>Siesta (Corta)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- MENU DE TRABAJO (No modificado a modal nuevo por complejidad, pero se mantiene) -->
+    <!-- MENÚ DE TRABAJO (Rediseñado) -->
+    <div id="work-menu" class="action-modal">
+      <div class="modal-header">
+        <h2>💼 Trabajo & Ciudad</h2>
+        <button class="close-modal-btn" onclick="toggleMenu('work-menu')">×</button>
+      </div>
+      <div class="modal-body">
+        <button id="btn-medico">
+          <span class="icon">🩺</span>
+          <span>Ir al médico (170$)</span>
+        </button>
+        <button id="btn-paseo">
+          <span class="icon">🏞️</span>
+          <span>Salir de Paseo</span>
+        </button>
+
+        <!-- Sección de trabajo especial -->
+        <div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; margin-top: 5px;">
+          <p style="margin: 0 0 10px 0; font-size: 0.9rem; color: #ccc;">Trabajo actual: <strong
+              id="current-job-display">...</strong>
+          </p>
+          <button id="btn-work-action">
+            <span class="icon">💼</span>
+            <span>Ir a trabajar</span>
+          </button>
+        </div>
+
+        <button id="btn-requisitos">
+          <span class="icon">📈</span>
+          <span>Requisitos Ascenso</span>
+        </button>
+        <!-- Contenedor para mostrar requisitos dinámicamente -->
+        <div id="requisitos-display" style="margin-top: 5px; font-size: 0.85rem; color: #eee; line-height: 1.4;"></div>
+      </div>
+    </div>
+
+    <div id="minijuego-container">
+      <div id="minijuego-gamearea">
+        <div id="game-character">(*_*)</div>
+      </div>
+      <div id="minijuego-instructions">
+        ¡Presiona el botón cuando sea tu turno!
+      </div>
+      <button id="boton-saltar">Saltar</button>
+    </div>
+
+    <!-- Contenedor superior: Muñeco y notificaciones -->
+    <div class="top-container">
+      <div id="muñeco-container">
+        <!-- Personaje en modo Moderno (CSS) -->
+        <div id="modern-character" style="display: none;">
+          <div class="character-body">
+            <div class="face">
+              <div class="eyes">
+                <div class="eye left"></div>
+                <div class="eye right"></div>
+              </div>
+              <div class="cheeks">
+                <div class="cheek"></div>
+                <div class="cheek"></div>
+              </div>
+              <div class="mouth"></div>
+              <div class="zzz-container">
+                <span>Z</span>
+                <span>Z</span>
+                <span>Z</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <pre id="tamagochi-feliz">
 (\_/)
 ( ^_^)
 (>   <)
           </pre>
-          <pre id="tamagochi-feliz-caca">
+        <pre id="tamagochi-feliz-caca">
 (\_/)
 ( ⚆_⚆ )
 (>💩<)
           </pre>
-          <pre id="tamagochi">
+        <pre id="tamagochi">
 (\_/)
 ( °_° )
 (>   <)
           </pre>
-          <pre id="tamagochi-domir">
+        <pre id="tamagochi-domir">
 (\_/)
     ( -_-) Zzz
 (>  <)
           </pre>
-          <pre id="tamagochi_caca">
+        <pre id="tamagochi_caca">
 (\_/)
 ( ⚆_⚆ )
 (>💩<)
           </pre>
-          <pre id="tamagochi_caca-domir">
+        <pre id="tamagochi_caca-domir">
 (\_/)
      ( -_-) Zzz
 (>💩<)
           </pre>
-          <pre id="tamagochi_sueño">
+        <pre id="tamagochi_sueño">
    (\_/) zZz
 ( °_°)
 (>  <)
           </pre>
-          <pre id="tamagochi_sueño_caca">
+        <pre id="tamagochi_sueño_caca">
    (\_/) zZz
 ( °_°)
 (>💩<)
           </pre>
-          <pre id="tamagochi_aburrido">
+        <pre id="tamagochi_aburrido">
 (\_/)
 ( °~° )
 <(   )>
           </pre>
-          <pre id="tamagochi_aburrido_caca">
+        <pre id="tamagochi_aburrido_caca">
 (\_/)
 ( °~° )
 <(💩)>
           </pre>
-          <pre id="tamagochi_hambriento">
+        <pre id="tamagochi_hambriento">
      (\_/) ~ 🍕
 ( °﹃° )
 <(   )>
           </pre>
-          <pre id="tamagochi_hambriento_caca">
+        <pre id="tamagochi_hambriento_caca">
 (\_/)
 ( °﹃° )
 <(💩)>
           </pre>
-          <pre id="tamagochi_muerto">
+        <pre id="tamagochi_muerto">
   ⚰️
 (\_/)
 ( x_x )
 <(   )>
           </pre>
+      </div>
+      <div id="notification-container"></div>
+    </div>
+
+    <!-- Información y controles -->
+    <div id="info-container"></div>
+    <div class="buttons-container">
+      <!-- Control Card: Hambre -->
+      <div class="control-card">
+        <div class="stat-label">
+          <span class="stat-icon">🍖</span> Hambre
         </div>
-        <div id="notification-container"></div>
-      </div>
-
-      <!-- Información y controles -->
-      <div id="info-container"></div>
-      <div class="buttons-container">
-        <div class="stat">
-          Hambre
-          <div class="progress">
-            <div class="progress-bar" id="progress-hambre"></div>
-          </div>
+        <div class="progress">
+          <div class="progress-bar" id="progress-hambre"></div>
         </div>
-        <button id="btn-hambre">Alimentar</button>
-        <div class="stat">
-          Aburrimiento
-          <div class="progress">
-            <div class="progress-bar" id="progress-aburrimiento"></div>
-          </div>
+        <button id="btn-hambre" class="action-btn">Alimentar</button>
+      </div>
+
+      <!-- Control Card: Aburrimiento -->
+      <div class="control-card">
+        <div class="stat-label">
+          <span class="stat-icon">🎮</span> Aburrimiento
         </div>
-        <button id="btn-aburrimiento">Jugar</button>
-        <div class="stat">
-          Sueño
-          <div class="progress">
-            <div class="progress-bar" id="progress-sueno"></div>
-          </div>
+        <div class="progress">
+          <div class="progress-bar" id="progress-aburrimiento"></div>
         </div>
-        <button id="btn-sueno">Dormir</button>
-        <div class="stat">
-          Higiene
-          <div class="progress">
-            <div class="progress-bar" id="progress-higiene"></div>
-          </div>
+        <button id="btn-aburrimiento" class="action-btn">Jugar</button>
+      </div>
+
+      <!-- Control Card: Sueño -->
+      <div class="control-card">
+        <div class="stat-label">
+          <span class="stat-icon">💤</span> Sueño
         </div>
-        <button id="btn-higiene">Limpiar</button>
+        <div class="progress">
+          <div class="progress-bar" id="progress-sueno"></div>
+        </div>
+        <button id="btn-sueno" class="action-btn">Dormir</button>
       </div>
-    </div>
 
-    <!-- Juego Flappy Bird a pantalla completa -->
-    <div id="flappy-game">
-      <div id="flappy-game-area">
-        <div id="flappy-bird">(*_*)</div>
+      <!-- Control Card: Higiene -->
+      <div class="control-card">
+        <div class="stat-label">
+          <span class="stat-icon">🚿</span> Higiene
+        </div>
+        <div class="progress">
+          <div class="progress-bar" id="progress-higiene"></div>
+        </div>
+        <button id="btn-higiene" class="action-btn">Limpiar</button>
       </div>
-      <div id="flappy-start-overlay">Click to start</div>
-    </div>
-
-<!-- Icono para abrir la tienda -->
-<div id="store-icon">🛒</div>
-
-<!-- Overlay de la tienda -->
-<div id="store-overlay" style="display: none;">
-  <div id="store-book">
-    <!-- Botón de cierre -->
-    <button id="close-store-btn" class="close-book-button">×</button>
-
-    <!-- Página 1: Comida Sana -->
-    <div class="store-page" data-page-id="healthy-food">
-      <h2>Comida Sana</h2>
-      <div class="store-item-grid">
-        <div class="store-item"><span class="item-name">Smoothie</span><span class="item-price">150 monedas</span><button class="buy-btn">Comprar</button></div>
-        <div class="store-item"><span class="item-name">Ensalada</span><span class="item-price">120 monedas</span><button class="buy-btn">Comprar</button></div>
-        <div class="store-item"><span class="item-name">Yogurt</span><span class="item-price">110 monedas</span><button class="buy-btn">Comprar</button></div>
-        <div class="store-item"><span class="item-name">Manzana</span><span class="item-price">100 monedas</span><button class="buy-btn">Comprar</button></div>
-        <div class="store-item"><span class="item-name">Zanahoria</span><span class="item-price">80 monedas</span><button class="buy-btn">Comprar</button></div>
-      </div>
-    </div>
-
-    <!-- Página 2: Comida Rápida -->
-    <div class="store-page" data-page-id="fast-food">
-      <h2>Comida Rápida</h2>
-      <div class="store-item-grid">
-        <div class="store-item"><span class="item-name">Pizza</span><span class="item-price">500 monedas</span><button class="buy-btn">Comprar</button></div>
-        <div class="store-item"><span class="item-name">Hamburguesa</span><span class="item-price">250 monedas</span><button class="buy-btn">Comprar</button></div>
-        <div class="store-item"><span class="item-name">Papas Fritas</span><span class="item-price">160 monedas</span><button class="buy-btn">Comprar</button></div>
-        <div class="store-item"><span class="item-name">Helado</span><span class="item-price">160 monedas</span><button class="buy-btn">Comprar</button></div>
-        <div class="store-item"><span class="item-name">Refresco</span><span class="item-price">140 monedas</span><button class="buy-btn">Comprar</button></div>
-      </div>
-    </div>
-
-    <!-- Página 3: Medicinas -->
-    <div class="store-page" data-page-id="medicines">
-      <h2>Medicinas</h2>
-      <div class="store-item-grid">
-        <div class="store-item"><span class="item-name">Pastilla</span><span class="item-price">250 monedas</span><button class="buy-btn">Comprar</button></div>
-        <div class="store-item"><span class="item-name">Jeringuilla</span><span class="item-price">600 monedas</span><button class="buy-btn">Comprar</button></div>
-        <div class="store-item" id="store-item-insulina"><span class="item-name">Insulina</span><span class="item-price">350 monedas</span><button class="buy-btn">Comprar</button></div>
-      </div>
-    </div>
-
-    <!-- Página 4: Objetos -->
-    <div class="store-page" data-page-id="objects">
-      <h2>Objetos</h2>
-      <div class="store-item-grid" id="store-objects-grid">
-        <div class="store-item" data-item-type="movil"><span class="item-name"></span><span class="item-price"></span><button class="buy-btn">Comprar</button></div>
-        <div class="store-item" data-item-type="habitacion"><span class="item-name"></span><span class="item-price"></span><button class="buy-btn">Comprar</button></div>
-        <div class="store-item" data-item-type="bicicleta"><span class="item-name"></span><span class="item-price"></span><button class="buy-btn">Comprar</button></div>
-        <div class="store-item" data-item-type="portatil"><span class="item-name"></span><span class="item-price"></span><button class="buy-btn">Comprar</button></div>
-        <div class="store-item" data-item-type="auriculares"><span class="item-name"></span><span class="item-price"></span><button class="buy-btn">Comprar</button></div>
-      </div>
-    </div>
-    
-    <!-- Controles del libro de la tienda -->
-    <div id="store-controls">
-      <button id="store-prev-page">‹ Anterior</button>
-      <button id="store-next-page">Siguiente ›</button>
     </div>
   </div>
-</div>
 
-<div id="inventory-icon">📦</div>
-<!-- Overlay de Inventario en Full Screen -->
-<div id="inventory-overlay" style="display: none;">
-  <div id="inventory-book">
-    <!-- Botón de cierre -->
-    <button id="close-inventory-btn" class="close-book-button">×</button>
-    <!-- Páginas del libro -->
-    <div class="inventory-page" data-page-id="store">
-      <h2>Propiedades</h2>
-      <div class="item-grid" id="inventory-store-list"></div>
+  <!-- Juego Flappy Bird a pantalla completa -->
+  <div id="flappy-game">
+    <div id="flappy-game-area">
+      <div id="flappy-bird">(*_*)</div>
     </div>
-    <div class="inventory-page" data-page-id="common">
-      <h2>Tesoros Comunes</h2>
-      <div class="item-grid" id="inventory-common-list"></div>
-    </div>
-    <div class="inventory-page" data-page-id="uncommon">
-      <h2>Tesoros Poco Comunes</h2>
-      <div class="item-grid" id="inventory-uncommon-list"></div>
-    </div>
-    <div class="inventory-page" data-page-id="rare">
-      <h2>Tesoros Raros</h2>
-      <div class="item-grid" id="inventory-rare-list"></div>
-    </div>
-
-    <!-- Controles del libro -->
-    <div id="inventory-controls">
-      <button id="prev-page">‹ Anterior</button>
-      <button id="open-museum-btn">Museo de Duplicados</button>
-      <button id="next-page">Siguiente ›</button>
-    </div>
+    <div id="flappy-start-overlay">Click to start</div>
   </div>
-</div>
 
+  <!-- Icono para abrir la tienda -->
+  <div id="store-icon">🛒</div>
 
-  
+  <!-- Overlay de la tienda -->
+  <div id="store-overlay" style="display: none;">
+    <div id="store-book">
+      <!-- Botón de cierre -->
+      <button id="close-store-btn" class="close-book-button">×</button>
 
-<!-- ¡NUEVO! Overlay del Museo de Duplicados -->
-<div id="museum-overlay" style="display: none;">
-  <div id="museum-book">
-    <!-- Botón de cierre -->
-    <button id="close-museum-btn" class="close-book-button">×</button>
-    
-    <!-- Páginas del libro del museo -->
-    <div class="museum-page" data-page-id="common">
-      <h2>Tesoros Comunes</h2>
-      <div class="item-grid" id="museum-common-list"></div>
-    </div>
-    <div class="museum-page" data-page-id="uncommon">
-      <h2>Tesoros Poco Comunes</h2>
-      <div class="item-grid" id="museum-uncommon-list"></div>
-    </div>
-    <div class="museum-page" data-page-id="rare">
-      <h2>Tesoros Raros</h2>
-      <div class="item-grid" id="museum-rare-list"></div>
-    </div>
-
-    <!-- Controles del libro del museo -->
-    <div id="museum-controls">
-      <button id="museum-prev-page">‹ Anterior</button>
-      <button id="museum-next-page">Siguiente ›</button>
-    </div>
-  </div>
-</div>
-
-    <div id="admin-overlay">
-      <div id="admin-menu">
-        <button id="admin-close">×</button>
-        <h2>Admin Menu</h2>
-        <!-- Paginación de Objetos para Añadir -->
-        <div id="admin-item-book">
-          <div class="admin-item-page" data-page-id="common">
-            <h4>Tesoros Comunes</h4>
-            <div class="admin-item-grid" id="admin-common-list"></div>
-          </div>
-          <div class="admin-item-page" data-page-id="uncommon">
-            <h4>Tesoros Poco Comunes</h4>
-            <div class="admin-item-grid" id="admin-uncommon-list"></div>
-          </div>
-          <div class="admin-item-page" data-page-id="rare">
-            <h4>Tesoros Raros</h4>
-            <div class="admin-item-grid" id="admin-rare-list"></div>
-          </div>
-          <div id="admin-item-controls">
-            <button id="admin-prev-page">‹ Ant</button>
-            <button id="admin-next-page">Sig ›</button>
-          </div>
+      <!-- Página 1: Comida Sana -->
+      <div class="store-page" data-page-id="healthy-food">
+        <h2>Comida Sana</h2>
+        <div class="store-item-grid">
+          <div class="store-item"><span class="item-name">Smoothie</span><span class="item-price">150
+              monedas</span><button class="buy-btn">Comprar</button></div>
+          <div class="store-item"><span class="item-name">Ensalada</span><span class="item-price">120
+              monedas</span><button class="buy-btn">Comprar</button></div>
+          <div class="store-item"><span class="item-name">Yogurt</span><span class="item-price">110
+              monedas</span><button class="buy-btn">Comprar</button></div>
+          <div class="store-item"><span class="item-name">Manzana</span><span class="item-price">100
+              monedas</span><button class="buy-btn">Comprar</button></div>
+          <div class="store-item"><span class="item-name">Zanahoria</span><span class="item-price">80
+              monedas</span><button class="buy-btn">Comprar</button></div>
         </div>
-        <div class="admin-actions">
-          <button id="admin-reset-character">Resetear Personaje</button>
-          <button id="reset-stats">Resetear Stats a 0</button>
+      </div>
+
+      <!-- Página 2: Comida Rápida -->
+      <div class="store-page" data-page-id="fast-food">
+        <h2>Comida Rápida</h2>
+        <div class="store-item-grid">
+          <div class="store-item"><span class="item-name">Pizza</span><span class="item-price">500 monedas</span><button
+              class="buy-btn">Comprar</button></div>
+          <div class="store-item"><span class="item-name">Hamburguesa</span><span class="item-price">250
+              monedas</span><button class="buy-btn">Comprar</button></div>
+          <div class="store-item"><span class="item-name">Papas Fritas</span><span class="item-price">160
+              monedas</span><button class="buy-btn">Comprar</button></div>
+          <div class="store-item"><span class="item-name">Helado</span><span class="item-price">160
+              monedas</span><button class="buy-btn">Comprar</button></div>
+          <div class="store-item"><span class="item-name">Refresco</span><span class="item-price">140
+              monedas</span><button class="buy-btn">Comprar</button></div>
         </div>
-        <div class="admin-form">
-          <div class="form-group">
-            <label for="admin-work-position">Puesto de trabajo:</label>
-            <select id="admin-work-position">
-              <option value="0">Pasante</option>
-              <option value="1">Empleado Junior</option>
-              <option value="2">Empleado Senior</option>
-              <option value="3">Supervisor</option>
-              <option value="4">Coordinador</option>
-              <option value="5">Gerente</option>
-              <option value="6">Director</option>
-              <option value="7">CEO</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Vida Interna actual: <span id="admin-vida-actual">0</span></label>
-            <input type="number" id="admin-edad-interna" placeholder="Nueva vida interna" />
-          </div>
-          <div class="form-group"><label for="admin-dinero">Dinero:</label><input type="number" id="admin-dinero" placeholder="Nuevo dinero" /></div>
-          <div class="form-group"><label for="admin-flappy">Récord Flappy Bird:</label><input type="number" id="admin-flappy" placeholder="Nuevo récord" /></div>
-          <div class="form-group"><label for="admin-peso">Peso (kg):</label><input type="number" id="admin-peso" placeholder="Nuevo peso" step="0.1" /></div>
+      </div>
+
+      <!-- Página 3: Medicinas -->
+      <div class="store-page" data-page-id="medicines">
+        <h2>Medicinas</h2>
+        <div class="store-item-grid">
+          <div class="store-item"><span class="item-name">Pastilla</span><span class="item-price">250
+              monedas</span><button class="buy-btn">Comprar</button></div>
+          <div class="store-item"><span class="item-name">Jeringuilla</span><span class="item-price">600
+              monedas</span><button class="buy-btn">Comprar</button></div>
+          <div class="store-item" id="store-item-insulina"><span class="item-name">Insulina</span><span
+              class="item-price">350 monedas</span><button class="buy-btn">Comprar</button></div>
         </div>
-        <button id="admin-edad-aceptar">Aplicar Cambios</button>
+      </div>
+
+      <!-- Página 4: Objetos -->
+      <div class="store-page" data-page-id="objects">
+        <h2>Objetos</h2>
+        <div class="store-item-grid" id="store-objects-grid">
+          <div class="store-item" data-item-type="movil"><span class="item-name"></span><span
+              class="item-price"></span><button class="buy-btn">Comprar</button></div>
+          <div class="store-item" data-item-type="habitacion"><span class="item-name"></span><span
+              class="item-price"></span><button class="buy-btn">Comprar</button></div>
+          <div class="store-item" data-item-type="bicicleta"><span class="item-name"></span><span
+              class="item-price"></span><button class="buy-btn">Comprar</button></div>
+          <div class="store-item" data-item-type="portatil"><span class="item-name"></span><span
+              class="item-price"></span><button class="buy-btn">Comprar</button></div>
+          <div class="store-item" data-item-type="auriculares"><span class="item-name"></span><span
+              class="item-price"></span><button class="buy-btn">Comprar</button></div>
+        </div>
+      </div>
+
+      <!-- Controles del libro de la tienda -->
+      <div id="store-controls">
+        <button id="store-prev-page">‹ Anterior</button>
+        <button id="store-next-page">Siguiente ›</button>
       </div>
     </div>
-    
-    <!-- ¡NUEVO! Overlay para eventos de pantalla completa (como el abandono del paseo) -->
-    <div id="event-overlay">
-      <div id="event-character">
-        <!-- El personaje del evento se cargará aquí -->
-      </div>
-      <div id="event-dialog"></div>
-    </div>
+  </div>
 
-      
-      
-  </body>
+  <div id="inventory-icon">🏛️</div>
+  <!-- Overlay de Inventario en Full Screen -->
+  <div id="inventory-overlay" style="display: none;">
+    <div id="inventory-book">
+      <!-- Botón de cierre -->
+      <button id="close-inventory-btn" class="close-book-button">×</button>
+      <!-- Páginas del libro -->
+      <div class="inventory-page" data-page-id="store">
+        <h2>Propiedades</h2>
+        <div class="item-grid" id="inventory-store-list"></div>
+      </div>
+      <div class="inventory-page" data-page-id="common">
+        <h2>Tesoros Comunes</h2>
+        <div class="item-grid" id="inventory-common-list"></div>
+      </div>
+      <div class="inventory-page" data-page-id="uncommon">
+        <h2>Tesoros Poco Comunes</h2>
+        <div class="item-grid" id="inventory-uncommon-list"></div>
+      </div>
+      <div class="inventory-page" data-page-id="rare">
+        <h2>Tesoros Raros</h2>
+        <div class="item-grid" id="inventory-rare-list"></div>
+      </div>
+
+      <!-- Controles del libro -->
+      <div id="inventory-controls">
+        <button id="prev-page">‹ Anterior</button>
+        <button id="open-museum-btn">Museo de Duplicados</button>
+        <button id="next-page">Siguiente ›</button>
+      </div>
+    </div>
+  </div>
+
+
+
+
+  <!-- ¡NUEVO! Overlay del Museo de Duplicados -->
+  <div id="museum-overlay" style="display: none;">
+    <div id="museum-book">
+      <!-- Botón de cierre -->
+      <button id="close-museum-btn" class="close-book-button">×</button>
+
+      <!-- Páginas del libro del museo -->
+      <div class="museum-page" data-page-id="common">
+        <h2>Tesoros Comunes</h2>
+        <div class="item-grid" id="museum-common-list"></div>
+      </div>
+      <div class="museum-page" data-page-id="uncommon">
+        <h2>Tesoros Poco Comunes</h2>
+        <div class="item-grid" id="museum-uncommon-list"></div>
+      </div>
+      <div class="museum-page" data-page-id="rare">
+        <h2>Tesoros Raros</h2>
+        <div class="item-grid" id="museum-rare-list"></div>
+      </div>
+
+      <!-- Controles del libro del museo -->
+      <div id="museum-controls">
+        <button id="museum-prev-page">‹ Anterior</button>
+        <button id="museum-next-page">Siguiente ›</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MENU ADMIN REDISEÑADO -->
+  <div id="admin-menu" class="action-modal">
+    <div class="modal-header">
+      <h2>🛠️ Admin Menu</h2>
+      <button class="close-modal-btn" onclick="toggleMenu('admin-menu')">×</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Paginación de Objetos para Añadir -->
+      <div id="admin-item-book" style="margin-bottom: 20px;">
+        <div class="admin-item-page" data-page-id="common">
+          <h4 style="color: #eee; border-bottom: 1px solid rgba(255,255,255,0.1);">Tesoros Comunes</h4>
+          <div class="admin-item-grid" id="admin-common-list"></div>
+        </div>
+        <div class="admin-item-page" data-page-id="uncommon">
+          <h4 style="color: #eee; border-bottom: 1px solid rgba(255,255,255,0.1);">Tesoros Poco Comunes</h4>
+          <div class="admin-item-grid" id="admin-uncommon-list"></div>
+        </div>
+        <div class="admin-item-page" data-page-id="rare">
+          <h4 style="color: #eee; border-bottom: 1px solid rgba(255,255,255,0.1);">Tesoros Raros</h4>
+          <div class="admin-item-grid" id="admin-rare-list"></div>
+        </div>
+        <div id="admin-item-controls" style="margin-top: 10px;">
+          <button id="admin-prev-page" style="width: auto; display: inline-block;">‹ Ant</button>
+          <button id="admin-next-page" style="width: auto; display: inline-block;">Sig ›</button>
+        </div>
+      </div>
+
+      <div class="admin-actions">
+        <button id="admin-reset-character">Resetear Personaje</button>
+        <button id="reset-stats">Resetear Stats a 0</button>
+      </div>
+
+      <div class="admin-form">
+        <div class="form-group">
+          <label for="admin-work-position">Puesto de trabajo:</label>
+          <select id="admin-work-position">
+            <option value="0">Pasante</option>
+            <option value="1">Empleado Junior</option>
+            <option value="2">Empleado Senior</option>
+            <option value="3">Supervisor</option>
+            <option value="4">Coordinador</option>
+            <option value="5">Gerente</option>
+            <option value="6">Director</option>
+            <option value="7">CEO</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Vida Interna actual: <span id="admin-vida-actual">0</span></label>
+          <input type="number" id="admin-edad-interna" placeholder="Nueva vida interna" />
+        </div>
+        <div class="form-group"><label for="admin-dinero">Dinero:</label><input type="number" id="admin-dinero"
+            placeholder="Nuevo dinero" /></div>
+        <div class="form-group"><label for="admin-flappy">Récord Flappy Bird:</label><input type="number"
+            id="admin-flappy" placeholder="Nuevo récord" /></div>
+        <div class="form-group"><label for="admin-peso">Peso (kg):</label><input type="number" id="admin-peso"
+            placeholder="Nuevo peso" step="0.1" /></div>
+      </div>
+      <button id="admin-edad-aceptar">Aplicar Cambios</button>
+    </div>
+  </div>
+
+  <!-- ¡NUEVO! Overlay para eventos de pantalla completa (como el abandono del paseo) -->
+  <div id="event-overlay">
+    <div id="event-character">
+      <!-- El personaje del evento se cargará aquí -->
+    </div>
+    <div id="event-dialog"></div>
+  </div>
+
+  <!-- MENU DE AJUSTES (Settings) -->
+  <div id="settings-menu" class="action-modal">
+    <div class="modal-header">
+      <h2>⚙️ Ajustes</h2>
+      <button class="close-modal-btn" onclick="toggleMenu('settings-menu')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="setting-item">
+        <label>Modo de Personaje:</label>
+        <div class="toggle-container">
+          <button id="btn-mode-arcade" class="mode-btn active" onclick="setGameMode('arcade')">Arcade</button>
+          <button id="btn-mode-modern" class="mode-btn" onclick="setGameMode('modern')">Moderno</button>
+        </div>
+      </div>
+
+      <div class="setting-item" style="margin-top: 15px;">
+        <label>Calidad Gráfica:</label>
+        <div class="toggle-container">
+          <button id="btn-graphics-saver" class="mode-btn active" onclick="setGraphicsMode('saver')">Ahorro</button>
+          <button id="btn-graphics-high" class="mode-btn" onclick="setGraphicsMode('high')">Alta Calidad</button>
+        </div>
+        <small style="color: #aaa; font-size: 0.75rem; display: block; margin-top: 5px;">
+          "Ahorro" es el modo clásico. "Alta Calidad" añade detalles y animaciones fluidas.
+        </small>
+      </div>
+    </div>
+  </div>
+
+
+
+</body>
+
 </html>

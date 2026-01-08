@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -8,7 +9,8 @@
         body {
             margin: 0;
             display: grid;
-            grid-template-rows: auto auto 1fr; /* Título, Panel de Texto, Escena */
+            grid-template-rows: auto auto 1fr;
+            /* Título, Panel de Texto, Escena */
             justify-content: center;
             align-items: center;
             height: 100vh;
@@ -22,30 +24,38 @@
 
         /* --- MODIFICADO: El contenedor principal se elimina, los estilos se aplican a los elementos directamente --- */
         #walk-container {
-            display: contents; /* Este elemento ya no actúa como contenedor visual */
+            display: contents;
+            /* Este elemento ya no actúa como contenedor visual */
         }
 
         /* --- MODIFICADO: El panel ahora está en la parte superior --- */
         #top-panel {
-            grid-row: 2; /* El panel de texto va en la segunda fila */
+            grid-row: 2;
+            /* El panel de texto va en la segunda fila */
             width: 95%;
             max-width: 600px;
-            margin: 0 auto; /* Centrar el panel inferior */
-            background: rgba(0, 0, 0, 0.3); /* FONDO SEMITRANSPARENTE */
+            margin: 0 auto;
+            /* Centrar el panel inferior */
+            background: rgba(0, 0, 0, 0.3);
+            /* FONDO SEMITRANSPARENTE */
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 15px;
             padding: 15px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
             text-align: center;
             display: flex;
             flex-direction: column;
-            margin-bottom: 20px; /* Espacio entre el panel y la escena */
+            margin-bottom: 20px;
+            /* Espacio entre el panel y la escena */
         }
 
         h1 {
-            grid-row: 1; /* El título va en la primera fila del grid del body */
-            color: #fff; /* TEXTO BLANCO */
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.7); /* SOMBRA PARA LEGIBILIDAD */
+            grid-row: 1;
+            /* El título va en la primera fila del grid del body */
+            color: #fff;
+            /* TEXTO BLANCO */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+            /* SOMBRA PARA LEGIBILIDAD */
             border-bottom: 1px solid rgba(255, 255, 255, 0.3);
             padding-bottom: 10px;
             margin-top: 0;
@@ -54,22 +64,32 @@
         }
 
         #scene-container {
-            grid-row: 3; /* La escena ahora ocupa la tercera fila (inferior) */
+            grid-row: 3;
+            /* La escena ahora ocupa la tercera fila (inferior) */
             position: relative;
             width: 100%;
-            background-color: transparent; /* SIN FONDO DE COLOR */
+            background-color: transparent;
+            /* SIN FONDO DE COLOR */
             overflow: hidden;
             display: flex;
             justify-content: center;
-            align-items: flex-end; /* ALINEA EL PERSONAJE ABAJO */
+            align-items: flex-end;
+            /* ALINEA EL PERSONAJE ABAJO */
         }
-        
+
         /* --- MODIFICADO: Se elimina la animación de nubes redundante --- */
-      
+
 
         @keyframes scroll-background {
-            from { background-position: 0 0; }
-            to { background-position: -800px 0; } /* Coincide con el ancho del SVG */
+            from {
+                background-position: 0 0;
+            }
+
+            to {
+                background-position: -800px 0;
+            }
+
+            /* Coincide con el ancho del SVG */
         }
 
         /* Animación de caminata para el personaje */
@@ -82,16 +102,21 @@
             white-space: pre;
             line-height: 1.2;
             z-index: 10;
-            padding-bottom: 20px; /* Un poco de espacio desde el borde inferior */
+            padding-bottom: 20px;
+            /* Un poco de espacio desde el borde inferior */
             transition: transform 0.5s ease;
-            color: rgba(255, 255, 255, 0.85); /* Personaje siempre blanco */
-            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7); /* Sombra para mejorar legibilidad */
+            color: rgba(255, 255, 255, 0.85);
+            /* Personaje siempre blanco */
+            text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
+            /* Sombra para mejorar legibilidad */
         }
 
         #dialog-box {
-            width: 100%; /* Ocupa todo el ancho del panel inferior */
+            width: 100%;
+            /* Ocupa todo el ancho del panel inferior */
             border: 1px solid rgba(255, 255, 255, 0.2);
-            background-color: rgba(0, 0, 0, 0.4); /* FONDO SEMITRANSPARENTE */
+            background-color: rgba(0, 0, 0, 0.4);
+            /* FONDO SEMITRANSPARENTE */
             border-radius: 8px;
             padding: 15px;
             min-height: 120px;
@@ -101,14 +126,16 @@
 
         #event-description {
             font-style: italic;
-            color: #ccc; /* TEXTO MÁS CLARO */
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            color: #ccc;
+            /* TEXTO MÁS CLARO */
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
         }
 
         #character-dialog {
             font-weight: bold;
-            color: #fff; /* TEXTO BLANCO */
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+            color: #fff;
+            /* TEXTO BLANCO */
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
         }
 
         #choices-container {
@@ -116,7 +143,8 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            min-height: 50px; /* Espacio reservado para botones */
+            min-height: 50px;
+            /* Espacio reservado para botones */
         }
 
         .choice-btn {
@@ -155,7 +183,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            pointer-events: none; /* Para que no interfiera con los clics */
+            pointer-events: none;
+            /* Para que no interfiera con los clics */
             overflow: hidden;
             z-index: 20;
         }
@@ -164,29 +193,57 @@
             position: absolute;
             font-size: 1.3rem;
             font-weight: bold;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
             animation: float-up 2.5s ease-out forwards;
         }
 
-        .stat-change.positive { color: #4CAF50; } /* Verde para mejoras */
-        .stat-change.negative { color: #F44336; } /* Rojo para empeoramientos */
-        .stat-change.neutral { color: #2196F3; }  /* Azul para cambios neutrales como monedas */
+        .stat-change.positive {
+            color: #4CAF50;
+        }
+
+        /* Verde para mejoras */
+        .stat-change.negative {
+            color: #F44336;
+        }
+
+        /* Rojo para empeoramientos */
+        .stat-change.neutral {
+            color: #2196F3;
+        }
+
+        /* Azul para cambios neutrales como monedas */
 
         @keyframes float-up {
-            0% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-60px); }
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(-60px);
+            }
         }
+
         /* --- Fin de nuevos estilos --- */
 
         /* --- ¡NUEVO! Animación de balanceo al caminar --- */
         @keyframes walk-bob {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-8px);
+            }
         }
 
         /* --- ¡NUEVO! Estilos para la alerta de estado crítico --- */
         #critical-warning-container {
-            background-color: #F44336; /* Rojo */
+            background-color: #F44336;
+            /* Rojo */
             color: white;
             padding: 10px;
             border-radius: 5px;
@@ -194,14 +251,24 @@
             font-weight: bold;
             text-align: center;
             animation: pulse-bg 1.5s infinite;
-            display: none; /* Oculto por defecto */
+            display: none;
+            /* Oculto por defecto */
         }
 
         @keyframes pulse-bg {
-            0% { background-color: #F44336; }
-            50% { background-color: #c62828; }
-            100% { background-color: #F44336; }
+            0% {
+                background-color: #F44336;
+            }
+
+            50% {
+                background-color: #c62828;
+            }
+
+            100% {
+                background-color: #F44336;
+            }
         }
+
         /* --- Fin de nuevos estilos --- */
 
 
@@ -210,9 +277,11 @@
             #character-display {
                 font-size: 2rem;
             }
+
             h1 {
                 font-size: 1.5rem;
             }
+
             #dialog-box {
                 font-size: 1rem;
             }
@@ -228,7 +297,8 @@
             height: 100%;
             background-color: #111;
             color: white;
-            display: none; /* Oculto por defecto */
+            display: none;
+            /* Oculto por defecto */
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -256,10 +326,13 @@
         }
 
         @keyframes blink {
-            50% { opacity: 0; }
+            50% {
+                opacity: 0;
+            }
         }
     </style>
 </head>
+
 <body>
 
     <!-- ¡NUEVO! Lienzo para el fondo dinámico -->
@@ -281,7 +354,9 @@
     <!-- Escena principal (personaje) -->
     <div id="scene-container">
         <div id="stat-changes-container"></div>
-        <div id="walk-coin-display" class="hidden" style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); color: white; padding: 5px 10px; border-radius: 5px; font-size: 0.9rem;">Paseo: 0 🪙</div>
+        <div id="walk-coin-display" class="hidden"
+            style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5); color: white; padding: 5px 10px; border-radius: 5px; font-size: 0.9rem;">
+            Paseo: 0 🪙</div>
         <div id="character-display">
             <!-- El personaje se cargará aquí -->
         </div>
@@ -301,7 +376,7 @@
             <button id="start-walk-btn" class="choice-btn">Empezar Paseo</button>
             <button id="exit-btn" class="choice-btn secondary hidden">Terminar Paseo y Volver</button>
         </div>
-    </div>    
+    </div>
 
     <link rel="stylesheet" type="text/css" href="style.css?v=1.2" />
     <script defer src="background.js?v=1.2"></script>
@@ -364,7 +439,7 @@
             function showMuggingScene() {
                 const charDisplay = document.getElementById('abandonment-character');
                 const dialogDisplay = document.getElementById('abandonment-dialog');
-                
+
                 charDisplay.innerHTML = `<pre> >:( </pre>`; // Cara de atracador
                 const muggerDialog = "¡Quieto ahí! Dame todo lo que has conseguido en el paseo...";
 
@@ -412,32 +487,32 @@
             let pumpkinHint = null; // <-- ¡NUEVO! Para guardar la pista de la calabaza.
 
             const mercadilloObjects = {
-              common: [
-                { id: 'reloj_casio', name: 'Reloj Casio', value: [50, 100] },
-                { id: 'taza_cafe', name: 'Taza de café', value: [50, 100] },
-                { id: 'libro_viejo', name: 'Libro viejo', value: [50, 100] },
-                { id: 'poster_pelicula', name: 'Póster de película', value: [50, 100] },
-                { id: 'planta_plastico', name: 'Planta de plástico', value: [50, 100] },
-                { id: 'figura_accion', name: 'Figura de acción', value: [50, 100] },
-                { id: 'gorra', name: 'Gorra', value: [50, 100] },
-                { id: 'gafas_sol', name: 'Gafas de sol', value: [50, 100] },
-                { id: 'llavero', name: 'Llavero', value: [50, 100] },
-                { id: 'comic', name: 'Cómic', value: [50, 100] }
-              ],
-              uncommon: [
-                { id: 'vinilo_antiguo', name: 'Vinilo antiguo', value: [200, 400] },
-                { id: 'camara_fotos', name: 'Cámara de fotos', value: [200, 400] },
-                { id: 'walkman', name: 'Walkman', value: [200, 400] },
-                { id: 'consola_retro', name: 'Consola retro', value: [200, 400] },
-                { id: 'maquina_escribir', name: 'Máquina de escribir', value: [200, 400] },
-                { id: 'telefono_antiguo', name: 'Teléfono antiguo', value: [200, 400] },
-                { id: 'mapa_antiguo', name: 'Mapa antiguo', value: [200, 400] },
-                { id: 'joya_plata', name: 'Joya de plata', value: [200, 400] }
-              ],
-              rare: [
-                { id: 'pepita_oro', name: 'Pepita de oro', value: [4000, 6000] },
-                { id: 'diamante', name: 'Diamante', value: [4000, 6000] }
-              ]
+                common: [
+                    { id: 'reloj_casio', name: 'Reloj Casio', value: [50, 100] },
+                    { id: 'taza_cafe', name: 'Taza de café', value: [50, 100] },
+                    { id: 'libro_viejo', name: 'Libro viejo', value: [50, 100] },
+                    { id: 'poster_pelicula', name: 'Póster de película', value: [50, 100] },
+                    { id: 'planta_plastico', name: 'Planta de plástico', value: [50, 100] },
+                    { id: 'figura_accion', name: 'Figura de acción', value: [50, 100] },
+                    { id: 'gorra', name: 'Gorra', value: [50, 100] },
+                    { id: 'gafas_sol', name: 'Gafas de sol', value: [50, 100] },
+                    { id: 'llavero', name: 'Llavero', value: [50, 100] },
+                    { id: 'comic', name: 'Cómic', value: [50, 100] }
+                ],
+                uncommon: [
+                    { id: 'vinilo_antiguo', name: 'Vinilo antiguo', value: [200, 400] },
+                    { id: 'camara_fotos', name: 'Cámara de fotos', value: [200, 400] },
+                    { id: 'walkman', name: 'Walkman', value: [200, 400] },
+                    { id: 'consola_retro', name: 'Consola retro', value: [200, 400] },
+                    { id: 'maquina_escribir', name: 'Máquina de escribir', value: [200, 400] },
+                    { id: 'telefono_antiguo', name: 'Teléfono antiguo', value: [200, 400] },
+                    { id: 'mapa_antiguo', name: 'Mapa antiguo', value: [200, 400] },
+                    { id: 'joya_plata', name: 'Joya de plata', value: [200, 400] }
+                ],
+                rare: [
+                    { id: 'pepita_oro', name: 'Pepita de oro', value: [4000, 6000] },
+                    { id: 'diamante', name: 'Diamante', value: [4000, 6000] }
+                ]
             };
 
             // --- ¡NUEVO! Eventos exclusivos de la Feria ---
@@ -838,7 +913,7 @@
                     id: "mercado_cafe",
                     description: "El aroma a café recién molido te guía a un pequeño puesto de café artesanal.",
                     characterDialog: "Uhm... ese olor me está despertando. ¿Probamos un café?",
-                    choices: [ { text: "Tomar un café (25 monedas)", action: "drink" }, { text: "No, demasiado nervioso", action: "skip" } ],
+                    choices: [{ text: "Tomar un café (25 monedas)", action: "drink" }, { text: "No, demasiado nervioso", action: "skip" }],
                     consequences: {
                         drink: (data) => {
                             if (data.coins < 25) return { description: "No tienes 25 monedas para el café.", characterDialog: "Bueno, solo con olerlo ya casi he despertado." };
@@ -854,7 +929,7 @@
                     id: "mercado_ayuda_granjero",
                     description: "Un viejo granjero lucha por cargar unas cajas pesadas de verduras en su camioneta.",
                     characterDialog: "Parece que necesita ayuda. ¿Le echamos una mano?",
-                    choices: [ { text: "Ayudar al granjero", action: "help" }, { text: "No es nuestro problema", action: "ignore" } ],
+                    choices: [{ text: "Ayudar al granjero", action: "help" }, { text: "No es nuestro problema", action: "ignore" }],
                     consequences: {
                         help: (data) => {
                             data.karma = Math.min(10, (data.karma || 0) + 2);
@@ -962,655 +1037,655 @@
             // --- DEFINICIÓN DE EVENTOS ---
             // --- ¡NUEVO! Eventos clasificados por momento del día ---
             const timeBasedEvents = {
-              // Eventos que pueden ocurrir en cualquier momento
-              anytime: [
-                {
-                    id: "rain_event",
-                    description: "De repente, el cielo se nubla y empieza a llover.",
-                    condition: (data) => !data.hasUmbrella, // Solo si NO tienes paraguas
-                    characterDialog: "¡Oh no, lluvia! ¡Odio mojarme! Cerca hay una tienda...",
-                    sceneChange: { backgroundColor: '#708090' },
-                    choices: [
-                        { text: "Comprar paraguas (50 monedas)", action: "buy_umbrella" },
-                        { text: "No importa, seguir andando", action: "ignore_rain" }
-                    ],
-                    consequences: {
-                        buy_umbrella: (data) => {
-                            if (data.coins >= 50) {
-                                data.hasUmbrella = true; // Marcamos que ya lo tiene
-                                data.coins -= 50;
-                                data.karma = Math.min(10, (data.karma || 0) + 1); // Pequeña buena acción (previsión)
-                                updateWalkCoins(-50);
-                                data.aburrimiento = Math.max(0, data.aburrimiento - 1.5);
-                                return { description: "Con el paraguas nuevo, la lluvia ya no es un problema.", characterDialog: "¡Menos mal! Ahora puedo seguir disfrutando." };
-                            } else {
-                                data.higiene = Math.min(10, data.higiene + 1.5);
-                                data.aburrimiento = Math.min(10, data.aburrimiento + 1);
-                                return { description: "No tienes suficiente dinero. Te estás empapando.", characterDialog: "¡Buah, qué mala suerte! Estoy calado hasta los huesos." };
-                            }
-                        },
-                        ignore_rain: (data) => {
-                            data.higiene = Math.min(10, data.higiene + 2);
-                            data.aburrimiento = Math.min(10, data.aburrimiento + 0.5);
-                            return { description: "Decides ignorar la lluvia y seguir tu camino.", characterDialog: "Brrr, ¡qué frío! Y qué sucio me estoy poniendo." };
-                        }
-                    }
-                },
-                {
-                    id: "find_coin",
-                    description: "¡Brilla algo en el suelo! Es una moneda.",
-                    characterDialog: "¡Ooh, dinero gratis!",
-                    consequences: {
-                        proceed: (data) => {
-                            data.coins += 5;
-                            updateWalkCoins(5);
-                            return { description: "La recoges y la guardas en tu bolsillo. No es mucho, pero todo suma.", characterDialog: "¡Día de suerte!" };
-                        }
-                    }
-                }
-              ],
-              morning: [ // De 06:00 a 11:59
-                {
-                    id: "mercado_entrance",
-                    description: "A lo lejos, ves los puestos y el bullicio de un mercado de agricultores.",
-                    condition: (data) => !mercadoAlreadyVisited,
-                    characterDialog: "¡Un mercado! ¡Seguro que hay cosas frescas y ricas! ¿Vamos a echar un vistazo?",
-                    choices: [
-                        { text: "Entrar al mercado", action: "enter_mercado" },
-                        { text: "No, prefiero un paseo tranquilo", action: "ignore_mercado" }
-                    ],
-                    consequences: {
-                        enter_mercado: (data) => {
-                            mercadoAlreadyVisited = true;
-                            mercadoOneTimeEventsVisited = [];
-                            return showMercadoHub(data);
-                        },
-                        ignore_mercado: (data) => {
-                            return { description: "Decides que hoy no te apetece el ajetreo del mercado y sigues tu camino.", characterDialog: "Quizás otro día. Hoy busco paz y tranquilidad." };
-                        }
-                    }
-                },
-                {
-                    id: "rain_with_umbrella_event",
-                    description: "Empieza a llover, pero por suerte llevas tu paraguas.",
-                    condition: (data) => data.hasUmbrella, // Solo si SÍ tienes paraguas
-                    characterDialog: "¡Menos mal que fui previsor! Ahora puedo disfrutar del sonido de la lluvia.",
-                    sceneChange: { backgroundColor: '#708090' },
-                    consequences: {
-                        proceed: (data) => {
-                            data.aburrimiento = Math.max(0, data.aburrimiento - 1.5); // Baja el aburrimiento
-                            return { description: "Abres tu paraguas y sigues el paseo tranquilamente, escuchando las gotas caer.", characterDialog: "¡Me encanta este sonido! Es muy relajante." };
-                        }
-                    }
-                },
-                {
-                    id: "smell_bakery",
-                    description: "Pasáis por delante de una panadería y un delicioso olor a pan recién hecho inunda el aire.",
-                    characterDialog: "Mmmm, ¡qué bien huele! De repente me ha entrado un poco de hambre.",
-                    consequences: {
-                        proceed: (data) => {
-                            data.hambre = Math.min(10, data.hambre + 0.5);
-                            return { description: "El olor es tentador, pero decidís seguir con vuestro paseo.", characterDialog: "Me comeria una barra entera ahora mismo." };
-                        }
-                    }
-                },
-                {
-                    id: "kids_playing",
-                    description: "Veis a un grupo de niños jugando alegremente en un parque.",
-                    characterDialog: "¡Mira cómo se divierten! Me recuerdan a cuando yo era pequeño.",
-                    consequences: {
-                        proceed: (data) => {
-                            data.aburrimiento = Math.max(0, data.aburrimiento - 0.5);
-                            return { description: "La risa de los niños es contagiosa y os saca una sonrisa.", characterDialog: "La vida es para jugar y ser feliz." };
-                        }
-                    }
-                },
-                {
-                    id: "flower_garden",
-                    description: "Pasáis junto a un jardín lleno de flores de todos los colores. El aroma es embriagador.",
-                    characterDialog: "¡Cuántas flores! ¡Y qué bien huelen!",
-                    consequences: {
-                        proceed: (data) => {
-                            data.aburrimiento = Math.max(0, data.aburrimiento - 0.5);
-                            return { description: "Os detenéis un momento para admirar la belleza y el perfume de las flores.", characterDialog: "La naturaleza es increíble." };
-                        }
-                    }
-                },
-                {
-                    id: "charity_donation",
-                    description: "Un puesto de caridad pide donaciones para el refugio de Tamagotchis.",
-                    characterDialog: "Parece una buena causa. ¿Deberíamos ayudar?",
-                    choices: [
-                        { text: "Donar generosamente (100)", action: "donate_generous" },
-                        { text: "Donar un poco (20)", action: "donate_small" },
-                        { text: "Decir que no tienes dinero", action: "no_donate" }
-                    ],
-                    consequences: {
-                        donate_generous: (data) => {
-                            if (data.coins >= 100) {
-                                data.coins -= 100;
-                                updateWalkCoins(-100);
-                                data.karma = Math.min(10, (data.karma || 0) + 4);
-                                return { description: "Donas 100 monedas. El voluntario te lo agradece enormemente.", characterDialog: "¡Me siento genial por haber ayudado tanto!" };
-                            }
-                            return { description: "Quieres donar, pero no tienes 100 monedas.", characterDialog: "¡Oh! Quería ser más generoso..." };
-                        },
-                        donate_small: (data) => {
-                            if (data.coins >= 20) {
-                                data.coins -= 20;
-                                updateWalkCoins(-20);
-                                data.karma = Math.min(10, (data.karma || 0) + 2);
-                                return { description: "Donas 20 monedas. Todo ayuda.", characterDialog: "¡Espero que sirva de algo!" };
-                            }
-                            return { description: "Ni siquiera tienes 20 monedas para donar.", characterDialog: "Qué vergüenza... no tengo nada." };
-                        },
-                        no_donate: (data) => {
-                            return { description: "Pasas de largo del puesto de caridad.", characterDialog: "Hoy no me siento generoso." };
-                        }
-                    }
-                }
-              ],
-              afternoon: [ // De 12:00 a 18:59
-                {
-                    id: "ice_cream_truck",
-                    description: "¡Un camión de helados! La música suena alegremente y huele a dulce.",
-                    characterDialog: "¡Helado! ¡Quiero uno, porfa, porfa, porfa! ¿Me compras uno?",
-                    choices: [
-                        { text: "Claro, elige uno (30 monedas)", action: "buy_ice_cream" },
-                        { text: "No, es demasiado azúcar", action: "refuse_ice_cream" }
-                    ],
-                    consequences: {
-                        buy_ice_cream: (data) => {
-                            if (data.coins >= 30) {
-                                data.coins -= 30;
-                                // Comprar un helado no tiene un gran impacto kármico, es neutral.
-                                updateWalkCoins(-30);
-                                data.aburrimiento = Math.max(0, data.aburrimiento - 2);
-                                data.hambre = Math.max(0, data.hambre - 0.5);
-                                return { description: "Disfrutáis de un delicioso helado bajo el sol.", characterDialog: "¡Yummy! ¡El mejor paseo de la historia!" };
-                            } else {
+                // Eventos que pueden ocurrir en cualquier momento
+                anytime: [
+                    {
+                        id: "rain_event",
+                        description: "De repente, el cielo se nubla y empieza a llover.",
+                        condition: (data) => !data.hasUmbrella, // Solo si NO tienes paraguas
+                        characterDialog: "¡Oh no, lluvia! ¡Odio mojarme! Cerca hay una tienda...",
+                        sceneChange: { backgroundColor: '#708090' },
+                        choices: [
+                            { text: "Comprar paraguas (50 monedas)", action: "buy_umbrella" },
+                            { text: "No importa, seguir andando", action: "ignore_rain" }
+                        ],
+                        consequences: {
+                            buy_umbrella: (data) => {
+                                if (data.coins >= 50) {
+                                    data.hasUmbrella = true; // Marcamos que ya lo tiene
+                                    data.coins -= 50;
+                                    data.karma = Math.min(10, (data.karma || 0) + 1); // Pequeña buena acción (previsión)
+                                    updateWalkCoins(-50);
+                                    data.aburrimiento = Math.max(0, data.aburrimiento - 1.5);
+                                    return { description: "Con el paraguas nuevo, la lluvia ya no es un problema.", characterDialog: "¡Menos mal! Ahora puedo seguir disfrutando." };
+                                } else {
+                                    data.higiene = Math.min(10, data.higiene + 1.5);
+                                    data.aburrimiento = Math.min(10, data.aburrimiento + 1);
+                                    return { description: "No tienes suficiente dinero. Te estás empapando.", characterDialog: "¡Buah, qué mala suerte! Estoy calado hasta los huesos." };
+                                }
+                            },
+                            ignore_rain: (data) => {
+                                data.higiene = Math.min(10, data.higiene + 2);
                                 data.aburrimiento = Math.min(10, data.aburrimiento + 0.5);
-                                data.hambre = Math.min(10, data.hambre + 0.5); // Aumenta el hambre al no poder comprar
-                                return { description: "Miras tu cartera... no hay suficiente dinero. El antojo te ha dejado con más hambre.", characterDialog: "Oh... bueno, no pasa nada. Otro día será... y ahora tengo más hambre." };
+                                return { description: "Decides ignorar la lluvia y seguir tu camino.", characterDialog: "Brrr, ¡qué frío! Y qué sucio me estoy poniendo." };
                             }
-                        },
-                        refuse_ice_cream: (data) => {
-                            data.aburrimiento = Math.min(10, data.aburrimiento + 0.5);
-                            return { description: "Le explicas que no es bueno tomar tanto dulce y seguís andando.", characterDialog: "Jo... pero es que apetecía mucho..." };
                         }
-                    }
-                },
-                {
-                    id: "lost_puppy",
-                    description: "Ves un pequeño cachorro perdido, lloriqueando en una esquina.",
-                    characterDialog: "¡Oh, pobrecito! Parece asustado. ¿Qué hacemos?",
-                    choices: [
-                        { text: "Intentar calmarlo y buscar a su dueño", action: "help_puppy" },
-                        { text: "Ignorarlo y seguir andando", action: "ignore_puppy" }
-                    ],
-                    consequences: {
-                        help_puppy: (data) => {
-                            data.coins += 20;
-                            data.karma = Math.min(10, (data.karma || 0) + 2); // Buena acción
-                            updateWalkCoins(20);
-                            data.aburrimiento = Math.max(0, data.aburrimiento - 1.5);
-                            return { description: "Tras un rato buscando, encuentras a su dueña, que te da una pequeña recompensa. ¡Qué buena acción!", characterDialog: "¡Me alegro de haber ayudado! Y además, ¡monedas!" };
-                        },
-                        ignore_puppy: (data) => {
-                            data.karma = Math.max(-10, (data.karma || 0) - 1); // Pequeña mala acción
-                            data.aburrimiento = Math.min(10, data.aburrimiento + 1);
-                            return { description: "Decides seguir tu camino, dejando al cachorro atrás.", characterDialog: "Espero que alguien lo ayude... Me siento un poco mal." };
-                        }
-                    }
-                },
-                {
-                    id: "lost_wallet",
-                    description: "En el suelo, ves una cartera de cuero bastante abultada.",
-                    characterDialog: "¡Mira! ¡Alguien ha perdido su cartera! ¿La cogemos?",
-                    choices: [
-                        { text: "Cogerla y llevarla a la policía", action: "return_wallet" },
-                        { text: "Coger el dinero y dejar la cartera", action: "steal_money" },
-                        { text: "Dejarla donde está", action: "ignore_wallet" }
-                    ],
-                    consequences: {
-                        return_wallet: (data) => {
-                            data.coins += 50;
-                            data.karma = Math.min(10, (data.karma || 0) + 3); // Gran buena acción
-                            updateWalkCoins(50);
-                            data.aburrimiento = Math.max(0, data.aburrimiento - 0.5);
-                            return { description: "Lleváis la cartera a la comisaría. El dueño aparece y os da una recompensa por vuestra honestidad.", characterDialog: "¡Hacer lo correcto tiene premio!" };
-                        },
-                        steal_money: (data) => {
-                            data.coins += 200;
-                            data.karma = Math.max(-10, (data.karma || 0) - 4); // Gran mala acción
-                            updateWalkCoins(200);
-                            data.aburrimiento = Math.min(10, data.aburrimiento + 1.5);
-                            return { description: "Miras a ambos lados, coges el dinero y dejas la cartera. No había nadie.", characterDialog: "¡Cuántas monedas! Pero... no me siento del todo bien." };
-                        },
-                        ignore_wallet: (data) => {
-                            // Ignorar no es bueno ni malo en este caso.
-                            return { description: "Decides que no es asunto tuyo y sigues caminando.", characterDialog: "Mejor no buscarse problemas. Sigamos." };
-                        }
-                    }
-                },
-                {
-                    id: "street_performer",
-                    description: "Un músico callejero toca una melodía preciosa con su guitarra.",
-                    characterDialog: "¡Qué bien suena! ¿Nos quedamos un rato a escuchar?",
-                    choices: [
-                        { text: "Sí, y darle una propina (10 monedas)", action: "tip_musician" },
-                        { text: "Escuchar un poco y seguir", action: "listen_briefly" },
-                        { text: "No tenemos tiempo para esto", action: "ignore_musician" }
-                    ],
-                    consequences: {
-                        tip_musician: (data) => {
-                            if (data.coins >= 10) {
-                                data.coins -= 10;
-                                data.karma = Math.min(10, (data.karma || 0) + 1); // Pequeña buena acción
-                                updateWalkCoins(-10);
-                                data.aburrimiento = Math.max(0, data.aburrimiento - 2.5);
-                                return { description: "Disfrutáis de la música y le dejas una propina. El músico os sonríe agradecido.", characterDialog: "¡Ha sido mágico! ¡Me siento superrelajado!" };
-                            } else {
-                                data.aburrimiento = Math.max(0, data.aburrimiento - 1.5);
-                                return { description: "Te gustaría darle propina, pero no tienes monedas. Aun así, disfrutáis de la canción.", characterDialog: "¡Qué bonito! Lástima no tener dinero para darle." };
-                            }
-                        },
-                        listen_briefly: (data) => {
-                            data.aburrimiento = Math.max(0, data.aburrimiento - 1.5);
-                            return { description: "Os paráis un momento a disfrutar de la melodía antes de continuar vuestro paseo.", characterDialog: "Me ha gustado mucho. ¡Continuemos!" };
-                        },
-                        ignore_musician: (data) => {
-                            data.karma = Math.max(-10, (data.karma || 0) - 1); // Pequeña mala acción (ser un poco borde)
-                            data.aburrimiento = Math.min(10, data.aburrimiento + 0.5);
-                            return { description: "Decides que no es momento para conciertos y sigues de largo.", characterDialog: "Vaya... bueno, a lo nuestro." };
-                        }
-                    }
-                },
-                {
-                    id: "puddle_splash",
-                    description: "Un coche pasa a toda velocidad y os salpica con un charco.",
-                    characterDialog: "¡Agggh! ¡Estoy todo sucio y mojado! ¡Qué asco!",
-                    choices: [
-                        { text: "Volver a casa a limpiarse", action: "go_home" },
-                        { text: "Secarse un poco y continuar", action: "continue_dirty" }
-                    ],
-                    consequences: {
-                        go_home: (data, endWalkFn) => {
-                            data.higiene = Math.min(10, data.higiene + 2.5);
-                            endWalkFn(true);
-                            return { description: "Decidís que es mejor volver a casa para una buena ducha.", characterDialog: "¡Se acabó el paseo por hoy! Necesito un baño." };
-                        },
-                        continue_dirty: (data) => {
-                            data.higiene = Math.min(10, data.higiene + 1.5);
-                            data.aburrimiento = Math.min(10, data.aburrimiento + 0.5);
-                            return { description: "Usas un pañuelo para secarlo un poco, pero sigue bastante sucio.", characterDialog: "Ugh, me siento pegajoso. Ya no disfruto tanto del paseo." };
-                        }
-                    }
-                },
-                {
-                    id: "beautiful_sunset",
-                    description: "El sol comienza a ponerse, tiñendo el cielo de colores naranjas y rosas.",
-                    characterDialog: "¡Wow, mira qué atardecer! Es precioso...",
-                    sceneChange: { backgroundColor: '#FFB6C1' }, /* Rosa claro */
-                    consequences: {
-                        proceed: (data) => {
-                            data.aburrimiento = Math.max(0, data.aburrimiento - 1);
-                            return { description: "Os paráis un momento en silencio, simplemente admirando la vista.", characterDialog: "Momentos así hacen que todo valga la pena." };
-                        }
-                    }
-                },
-                {
-                    id: "bully_event",
-                    description: "Ves a un Tamagotchi grande molestando a uno más pequeño.",
-                    characterDialog: "¡Déjale en paz! O... ¿quizás debería unirme a él?",
-                    choices: [
-                        { text: "Intervenir y defender", action: "intervene" },
-                        { text: "Unirte al matón", action: "join_bully" },
-                        { text: "Ignorar la situación", action: "ignore_bully" }
-                    ],
-                    consequences: {
-                        intervene: (data) => {
-                            data.karma = Math.min(10, (data.karma || 0) + 3);
-                            if (Math.random() < 0.25) { // 25% de probabilidad de perder dinero
-                                const lostCoins = Math.min(data.coins, 50);
-                                data.coins -= lostCoins;
-                                updateWalkCoins(-lostCoins);
-                                return { description: "Intervienes y el matón se enfada. Tras un forcejeo, se va, pero te ha quitado algo de dinero.", characterDialog: "¡Al menos el pequeño está bien! Aunque mi cartera no tanto..." };
-                            }
-                            return { description: "Te enfrentas al matón y, sorprendentemente, se disculpa y se va. El pequeño te lo agradece.", characterDialog: "¡Nadie se mete con los débiles cuando yo estoy cerca!" };
-                        },
-                        join_bully: (data) => {
-                            data.karma = Math.max(-10, (data.karma || 0) - 5);
-                            data.coins += 30;
-                            updateWalkCoins(30);
-                            return { description: "Te unes al matón para reírte del pequeño. El matón te da unas monedas por tu 'lealtad'.", characterDialog: "Jeje... bueno, unas monedas son unas monedas." };
-                        },
-                        ignore_bully: (data) => {
-                            data.karma = Math.max(-10, (data.karma || 0) - 2);
-                            return { description: "Miras para otro lado y aceleras el paso. No es tu problema.", characterDialog: "Mejor no meterse en líos. Espero que no le pase nada grave." };
-                        }
-                    }
-                },
-                {
-                    id: "street_market",
-                    description: "Os topáis con un mercadillo lleno de puestos con antigüedades y curiosidades.",
-                    characterDialog: "¡Cuántas cosas! Hay de todo... ¿compramos algo de recuerdo?",
-                    choices: [
-                        { text: "Comprar objeto misterioso (75)", action: "buy_common" },
-                        { text: "Comprar objeto raro (300)", action: "buy_uncommon" },
-                        { text: "Solo mirar y seguir", action: "just_look" },
-                        { text: "Volver a la plaza", action: "back_to_hub" } // Opción para volver
-                    ],
-                    consequences: {
-                        buy_common: (data) => {
-                            if (data.coins >= 75) {
-                                data.coins -= 75;
-                                updateWalkCoins(-75);
-                                const item = buyMercadilloObject(75);
-                                oneTimeEventsVisited.push('street_market'); // Marcar como visitado
-                                return { description: `Compras un ${item.name} por 75 monedas.`, characterDialog: "¡Qué chulo! Lo guardaré en mi inventario." };
-                            }
-                            return { description: "Te encanta el objeto, pero no tienes 75 monedas.", characterDialog: "Lástima, era muy bonito..." };
-                        },
-                        buy_uncommon: (data) => {
-                            if (data.coins >= 300) {
-                                data.coins -= 300;
-                                updateWalkCoins(-300);
-                                const item = buyMercadilloObject(300);
-                                oneTimeEventsVisited.push('street_market'); // Marcar como visitado
-                                return { description: `Pagas 300 monedas por un ${item.name}.`, characterDialog: "¡Espero que sea auténtico!" };
-                            }
-                            return { description: "El objeto es demasiado caro. No puedes permitírtelo.", characterDialog: "300 monedas... ¡se han pasado un poco!" };
-                        },
-                        just_look: (data) => {
-                            data.aburrimiento = Math.max(0, data.aburrimiento - 0.5);
-                            oneTimeEventsVisited.push('street_market'); // Marcar como visitado aunque solo mire
-                            return { description: "Dais una vuelta por el mercadillo sin comprar nada y continuáis el paseo.", characterDialog: "Había cosas interesantes, pero mejor ahorrar." };
-                        },
-                        back_to_hub: (data) => {
-                            return showFeriaHub(data); // Vuelve al hub sin hacer nada
-                        }
-                    }
-                }
-              ],
-              night: [ // De 19:00 a 05:59
-                {
-                    id: "feria_entrance",
-                    description: "A lo lejos, ves las luces y oyes la música de una feria ambulante.",
-                    condition: (data) => !feriaAlreadyVisited, // Solo si no se ha visitado la feria en este paseo
-                    characterDialog: "¡Una feria! ¡Por favor, vamos! ¡Tiene que ser super divertido!",
-                    choices: [
-                        { text: "Entrar a la feria (cuesta 10 monedas)", action: "enter_feria" },
-                        { text: "Mejor no, parece cara", action: "ignore_feria" }
-                    ],
-                    consequences: {
-                        enter_feria: (data) => {
-                            if (data.coins >= 10) {
-                                oneTimeEventsVisited = []; // Resetea los eventos de un solo uso al entrar
-                                feriaAlreadyVisited = true; // Marca que ya hemos estado aquí
-                                data.feriaEasterEggStep = 0; // Inicializa el contador del easter egg
-                                data.coins -= 10;
-                                updateWalkCoins(-10);
-                                // En lugar de iniciar un modo, mostramos el "hub" de la feria
-                                return showFeriaHub(data);
-                            }
-                            return { description: "No tienes ni 10 monedas para la entrada. Pasáis de largo con pena.", characterDialog: "Jo... con las ganas que tenía de ir." };
-                        },
-                        ignore_feria: (data) => {
-                            inFeria = false; // Asegurarse de que no estamos en la feria
-                            data.aburrimiento = Math.min(10, data.aburrimiento + 0.5);
-                            return { description: "Decides seguir con el paseo y no entrar en la feria.", characterDialog: "Seguro que era aburrida de todas formas..." };
-                        }
-                    }
-                },
-                {
-                    id: "friendly_cat",
-                    description: "Un gato amigable se acerca y se frota contra tus piernas, ronroneando.",
-                    characterDialog: "¡Hola, gatito! ¡Qué suave eres!",
-                    consequences: {
-                        proceed: (data) => {
-                            data.aburrimiento = Math.max(0, data.aburrimiento - 1.5);
-                            return { description: "Le das unas caricias al gato antes de que siga su camino.", characterDialog: "¡Me encantan los animales! Me ha alegrado el día." };
-                        }
-                    }
-                },
-                {
-                    id: "nice_breeze",
-                    description: "Una suave y fresca brisa sopla, aliviando el calor del día.",
-                    characterDialog: "Ahhh, qué maravilla de brisa. Se está genial.",
-                    consequences: {
-                        proceed: (data) => {
-                            data.aburrimiento = Math.max(0, data.aburrimiento - 0.5);
-                            return { description: "Cierras los ojos un instante para disfrutar del momento.", characterDialog: "¡Esto es vida!" };
-                        }
-                    }
-                },
-                {
-                    id: "airplane_sky",
-                    description: "Un avión surca el cielo, dejando una estela blanca a su paso.",
-                    characterDialog: "¿A dónde irá? Me pregunto qué se sentirá al volar tan alto.",
-                    consequences: {
-                        proceed: (data) => {
-                            return { description: "Seguís al avión con la mirada hasta que desaparece en la distancia.", characterDialog: "Algún día me gustaría viajar por todo el mundo." };
-                        }
-                    }
-                },
-                {
-                    id: "sudden_trip",
-                    description: "¡Cuidado! Tropiezas con una baldosa suelta, pero consigues mantener el equilibrio.",
-                    characterDialog: "¡Uf, por los pelos! Casi me caigo de bruces.",
-                    consequences: {
-                        proceed: (data) => {
-                            data.higiene = Math.min(10, data.higiene + 0.5);
-                            return { description: "Te sacudes el polvo de las manos y sigues con más cuidado.", characterDialog: "Hay que mirar por dónde se pisa." };
-                        }
-                    }
-                },
-                {
-                    id: "restaurant_dinner",
-                    description: "Pasáis por delante de un restaurante elegante con un menú atractivo.",
-                    condition: (data) => {
-                        const currentHour = new Date().getHours();
-                        return currentHour >= 22 && currentHour < 23; // Solo entre las 22:00 y las 23:00
                     },
-                    characterDialog: "¡Qué hambre me ha entrado! ¿Cenamos aquí? ¡Mira qué pinta tienen los platos!",
-                    choices: [
-                        { text: "Menú del Chef (150 monedas)", action: "menu_chef" },
-                        { text: "Menú Marinero (200 monedas)", action: "menu_marinero" },
-                        { text: "Menú Vegetariano (120 monedas)", action: "menu_vegetariano" },
-                        { text: "Menú Rápido (80 monedas)", action: "menu_rapido" },
-                        { text: "No, mejor seguimos", action: "skip_dinner" }
-                    ],
-                    consequences: {
-                        menu_chef: (data) => {
-                            if (data.coins >= 150) {
-                                data.coins -= 150;
-                                updateWalkCoins(-150);
-                                data.hambre = Math.max(0, data.hambre - 4); // Buena reducción de hambre
-                                data.peso = Math.min(100, data.peso + 0.8); // Ligero aumento de peso
-                                return { description: "Disfrutáis de un exquisito menú del chef: Sopa de calabaza y Solomillo con patatas. ¡Delicioso!", characterDialog: "¡Qué cena tan rica! ¡Estoy lleno y feliz!" };
+                    {
+                        id: "find_coin",
+                        description: "¡Brilla algo en el suelo! Es una moneda.",
+                        characterDialog: "¡Ooh, dinero gratis!",
+                        consequences: {
+                            proceed: (data) => {
+                                data.coins += 5;
+                                updateWalkCoins(5);
+                                return { description: "La recoges y la guardas en tu bolsillo. No es mucho, pero todo suma.", characterDialog: "¡Día de suerte!" };
                             }
-                            return { description: "No tienes 150 monedas para el Menú del Chef.", characterDialog: "Qué pena, tenía muy buena pinta..." };
-                        },
-                        menu_marinero: (data) => {
-                            if (data.coins >= 200) {
-                                data.coins -= 200;
-                                updateWalkCoins(-200);
-                                data.hambre = Math.max(0, data.hambre - 5); // Mejor reducción de hambre
-                                data.peso = Math.min(100, data.peso + 0.5); // Menor aumento de peso, más saludable
-                                return { description: "Optáis por el Menú Marinero: Cóctel de gambas y Salmón a la plancha. ¡Una delicia del mar!", characterDialog: "¡El marisco y el pescado son mis favoritos! ¡Qué festín!" };
-                            }
-                            return { description: "No tienes 200 monedas para el Menú Marinero.", characterDialog: "Uf, es un poco caro para mi bolsillo." };
-                        },
-                        menu_vegetariano: (data) => {
-                            if (data.coins >= 120) {
-                                data.coins -= 120;
-                                updateWalkCoins(-120);
-                                data.hambre = Math.max(0, data.hambre - 3); // Reducción de hambre moderada
-                                data.peso = Math.min(100, data.peso + 0.3); // Mínimo aumento de peso
-                                return { description: "Elegís el Menú Vegetariano: Ensalada de quinoa y Lasaña de verduras. ¡Ligero y sabroso!", characterDialog: "¡Me siento ligero y con energía! ¡Qué buena elección!" };
-                            }
-                            return { description: "No tienes 120 monedas para el Menú Vegetariano.", characterDialog: "Bueno, la verdura es sana, pero no me apetece tanto." };
-                        },
-                        menu_rapido: (data) => {
-                            if (data.coins >= 80) {
-                                data.coins -= 80;
-                                updateWalkCoins(-80);
-                                data.hambre = Math.max(0, data.hambre - 2); // Menor reducción de hambre
-                                data.peso = Math.min(100, data.peso + 1.2); // Mayor aumento de peso, comida rápida
-                                return { description: "Pedís el Menú Rápido: Patatas fritas y Hamburguesa con queso. ¡Rápido y contundente!", characterDialog: "¡Esto es lo que necesitaba! ¡Aunque no es lo más sano!" };
-                            }
-                            return { description: "No tienes 80 monedas para el Menú Rápido.", characterDialog: "Ni para un menú rápido... ¡qué desastre!" };
-                        },
-                        skip_dinner: (data) => {
-                            data.hambre = Math.min(10, data.hambre + 1); // El hambre aumenta ligeramente por saltarse la cena
-                            return { description: "Decides que es demasiado caro o no te apetece y sigues el paseo con el estómago vacío.", characterDialog: "Mejor me espero a llegar a casa. Pero tengo un poco más de hambre." };
                         }
                     }
-                },
-                {
-                    id: "dark_alley",
-                    description: "Ves un callejón oscuro que parece un atajo.",
-                    characterDialog: "Podríamos ahorrar tiempo por ahí... pero da un poco de miedo.",
-                    choices: [
-                        { text: "Tomar el atajo", action: "take_shortcut" },
-                        { text: "Seguir por el camino principal", action: "main_road" }
-                    ],
-                    consequences: {
-                        take_shortcut: (data) => {
-                            if (Math.random() < 0.5) {
+                ],
+                morning: [ // De 06:00 a 11:59
+                    {
+                        id: "mercado_entrance",
+                        description: "A lo lejos, ves los puestos y el bullicio de un mercado de agricultores.",
+                        condition: (data) => !mercadoAlreadyVisited,
+                        characterDialog: "¡Un mercado! ¡Seguro que hay cosas frescas y ricas! ¿Vamos a echar un vistazo?",
+                        choices: [
+                            { text: "Entrar al mercado", action: "enter_mercado" },
+                            { text: "No, prefiero un paseo tranquilo", action: "ignore_mercado" }
+                        ],
+                        consequences: {
+                            enter_mercado: (data) => {
+                                mercadoAlreadyVisited = true;
+                                mercadoOneTimeEventsVisited = [];
+                                return showMercadoHub(data);
+                            },
+                            ignore_mercado: (data) => {
+                                return { description: "Decides que hoy no te apetece el ajetreo del mercado y sigues tu camino.", characterDialog: "Quizás otro día. Hoy busco paz y tranquilidad." };
+                            }
+                        }
+                    },
+                    {
+                        id: "rain_with_umbrella_event",
+                        description: "Empieza a llover, pero por suerte llevas tu paraguas.",
+                        condition: (data) => data.hasUmbrella, // Solo si SÍ tienes paraguas
+                        characterDialog: "¡Menos mal que fui previsor! Ahora puedo disfrutar del sonido de la lluvia.",
+                        sceneChange: { backgroundColor: '#708090' },
+                        consequences: {
+                            proceed: (data) => {
+                                data.aburrimiento = Math.max(0, data.aburrimiento - 1.5); // Baja el aburrimiento
+                                return { description: "Abres tu paraguas y sigues el paseo tranquilamente, escuchando las gotas caer.", characterDialog: "¡Me encanta este sonido! Es muy relajante." };
+                            }
+                        }
+                    },
+                    {
+                        id: "smell_bakery",
+                        description: "Pasáis por delante de una panadería y un delicioso olor a pan recién hecho inunda el aire.",
+                        characterDialog: "Mmmm, ¡qué bien huele! De repente me ha entrado un poco de hambre.",
+                        consequences: {
+                            proceed: (data) => {
+                                data.hambre = Math.min(10, data.hambre + 0.5);
+                                return { description: "El olor es tentador, pero decidís seguir con vuestro paseo.", characterDialog: "Me comeria una barra entera ahora mismo." };
+                            }
+                        }
+                    },
+                    {
+                        id: "kids_playing",
+                        description: "Veis a un grupo de niños jugando alegremente en un parque.",
+                        characterDialog: "¡Mira cómo se divierten! Me recuerdan a cuando yo era pequeño.",
+                        consequences: {
+                            proceed: (data) => {
+                                data.aburrimiento = Math.max(0, data.aburrimiento - 0.5);
+                                return { description: "La risa de los niños es contagiosa y os saca una sonrisa.", characterDialog: "La vida es para jugar y ser feliz." };
+                            }
+                        }
+                    },
+                    {
+                        id: "flower_garden",
+                        description: "Pasáis junto a un jardín lleno de flores de todos los colores. El aroma es embriagador.",
+                        characterDialog: "¡Cuántas flores! ¡Y qué bien huelen!",
+                        consequences: {
+                            proceed: (data) => {
+                                data.aburrimiento = Math.max(0, data.aburrimiento - 0.5);
+                                return { description: "Os detenéis un momento para admirar la belleza y el perfume de las flores.", characterDialog: "La naturaleza es increíble." };
+                            }
+                        }
+                    },
+                    {
+                        id: "charity_donation",
+                        description: "Un puesto de caridad pide donaciones para el refugio de Tamagotchis.",
+                        characterDialog: "Parece una buena causa. ¿Deberíamos ayudar?",
+                        choices: [
+                            { text: "Donar generosamente (100)", action: "donate_generous" },
+                            { text: "Donar un poco (20)", action: "donate_small" },
+                            { text: "Decir que no tienes dinero", action: "no_donate" }
+                        ],
+                        consequences: {
+                            donate_generous: (data) => {
+                                if (data.coins >= 100) {
+                                    data.coins -= 100;
+                                    updateWalkCoins(-100);
+                                    data.karma = Math.min(10, (data.karma || 0) + 4);
+                                    return { description: "Donas 100 monedas. El voluntario te lo agradece enormemente.", characterDialog: "¡Me siento genial por haber ayudado tanto!" };
+                                }
+                                return { description: "Quieres donar, pero no tienes 100 monedas.", characterDialog: "¡Oh! Quería ser más generoso..." };
+                            },
+                            donate_small: (data) => {
+                                if (data.coins >= 20) {
+                                    data.coins -= 20;
+                                    updateWalkCoins(-20);
+                                    data.karma = Math.min(10, (data.karma || 0) + 2);
+                                    return { description: "Donas 20 monedas. Todo ayuda.", characterDialog: "¡Espero que sirva de algo!" };
+                                }
+                                return { description: "Ni siquiera tienes 20 monedas para donar.", characterDialog: "Qué vergüenza... no tengo nada." };
+                            },
+                            no_donate: (data) => {
+                                return { description: "Pasas de largo del puesto de caridad.", characterDialog: "Hoy no me siento generoso." };
+                            }
+                        }
+                    }
+                ],
+                afternoon: [ // De 12:00 a 18:59
+                    {
+                        id: "ice_cream_truck",
+                        description: "¡Un camión de helados! La música suena alegremente y huele a dulce.",
+                        characterDialog: "¡Helado! ¡Quiero uno, porfa, porfa, porfa! ¿Me compras uno?",
+                        choices: [
+                            { text: "Claro, elige uno (30 monedas)", action: "buy_ice_cream" },
+                            { text: "No, es demasiado azúcar", action: "refuse_ice_cream" }
+                        ],
+                        consequences: {
+                            buy_ice_cream: (data) => {
+                                if (data.coins >= 30) {
+                                    data.coins -= 30;
+                                    // Comprar un helado no tiene un gran impacto kármico, es neutral.
+                                    updateWalkCoins(-30);
+                                    data.aburrimiento = Math.max(0, data.aburrimiento - 2);
+                                    data.hambre = Math.max(0, data.hambre - 0.5);
+                                    return { description: "Disfrutáis de un delicioso helado bajo el sol.", characterDialog: "¡Yummy! ¡El mejor paseo de la historia!" };
+                                } else {
+                                    data.aburrimiento = Math.min(10, data.aburrimiento + 0.5);
+                                    data.hambre = Math.min(10, data.hambre + 0.5); // Aumenta el hambre al no poder comprar
+                                    return { description: "Miras tu cartera... no hay suficiente dinero. El antojo te ha dejado con más hambre.", characterDialog: "Oh... bueno, no pasa nada. Otro día será... y ahora tengo más hambre." };
+                                }
+                            },
+                            refuse_ice_cream: (data) => {
+                                data.aburrimiento = Math.min(10, data.aburrimiento + 0.5);
+                                return { description: "Le explicas que no es bueno tomar tanto dulce y seguís andando.", characterDialog: "Jo... pero es que apetecía mucho..." };
+                            }
+                        }
+                    },
+                    {
+                        id: "lost_puppy",
+                        description: "Ves un pequeño cachorro perdido, lloriqueando en una esquina.",
+                        characterDialog: "¡Oh, pobrecito! Parece asustado. ¿Qué hacemos?",
+                        choices: [
+                            { text: "Intentar calmarlo y buscar a su dueño", action: "help_puppy" },
+                            { text: "Ignorarlo y seguir andando", action: "ignore_puppy" }
+                        ],
+                        consequences: {
+                            help_puppy: (data) => {
+                                data.coins += 20;
+                                data.karma = Math.min(10, (data.karma || 0) + 2); // Buena acción
+                                updateWalkCoins(20);
+                                data.aburrimiento = Math.max(0, data.aburrimiento - 1.5);
+                                return { description: "Tras un rato buscando, encuentras a su dueña, que te da una pequeña recompensa. ¡Qué buena acción!", characterDialog: "¡Me alegro de haber ayudado! Y además, ¡monedas!" };
+                            },
+                            ignore_puppy: (data) => {
+                                data.karma = Math.max(-10, (data.karma || 0) - 1); // Pequeña mala acción
+                                data.aburrimiento = Math.min(10, data.aburrimiento + 1);
+                                return { description: "Decides seguir tu camino, dejando al cachorro atrás.", characterDialog: "Espero que alguien lo ayude... Me siento un poco mal." };
+                            }
+                        }
+                    },
+                    {
+                        id: "lost_wallet",
+                        description: "En el suelo, ves una cartera de cuero bastante abultada.",
+                        characterDialog: "¡Mira! ¡Alguien ha perdido su cartera! ¿La cogemos?",
+                        choices: [
+                            { text: "Cogerla y llevarla a la policía", action: "return_wallet" },
+                            { text: "Coger el dinero y dejar la cartera", action: "steal_money" },
+                            { text: "Dejarla donde está", action: "ignore_wallet" }
+                        ],
+                        consequences: {
+                            return_wallet: (data) => {
                                 data.coins += 50;
+                                data.karma = Math.min(10, (data.karma || 0) + 3); // Gran buena acción
                                 updateWalkCoins(50);
-                                return { description: "¡Qué suerte! Encuentras 50 monedas en el suelo del callejón.", characterDialog: "¡Quien no arriesga, no gana!" };
+                                data.aburrimiento = Math.max(0, data.aburrimiento - 0.5);
+                                return { description: "Lleváis la cartera a la comisaría. El dueño aparece y os da una recompensa por vuestra honestidad.", characterDialog: "¡Hacer lo correcto tiene premio!" };
+                            },
+                            steal_money: (data) => {
+                                data.coins += 200;
+                                data.karma = Math.max(-10, (data.karma || 0) - 4); // Gran mala acción
+                                updateWalkCoins(200);
+                                data.aburrimiento = Math.min(10, data.aburrimiento + 1.5);
+                                return { description: "Miras a ambos lados, coges el dinero y dejas la cartera. No había nadie.", characterDialog: "¡Cuántas monedas! Pero... no me siento del todo bien." };
+                            },
+                            ignore_wallet: (data) => {
+                                // Ignorar no es bueno ni malo en este caso.
+                                return { description: "Decides que no es asunto tuyo y sigues caminando.", characterDialog: "Mejor no buscarse problemas. Sigamos." };
                             }
-                            data.aburrimiento = Math.min(10, data.aburrimiento + 1);
-                            return { description: "Un ruido fuerte te asusta y sales corriendo del callejón. No has ahorrado tiempo.", characterDialog: "¡Ay, qué susto! ¡Nunca más!" };
+                        }
+                    },
+                    {
+                        id: "street_performer",
+                        description: "Un músico callejero toca una melodía preciosa con su guitarra.",
+                        characterDialog: "¡Qué bien suena! ¿Nos quedamos un rato a escuchar?",
+                        choices: [
+                            { text: "Sí, y darle una propina (10 monedas)", action: "tip_musician" },
+                            { text: "Escuchar un poco y seguir", action: "listen_briefly" },
+                            { text: "No tenemos tiempo para esto", action: "ignore_musician" }
+                        ],
+                        consequences: {
+                            tip_musician: (data) => {
+                                if (data.coins >= 10) {
+                                    data.coins -= 10;
+                                    data.karma = Math.min(10, (data.karma || 0) + 1); // Pequeña buena acción
+                                    updateWalkCoins(-10);
+                                    data.aburrimiento = Math.max(0, data.aburrimiento - 2.5);
+                                    return { description: "Disfrutáis de la música y le dejas una propina. El músico os sonríe agradecido.", characterDialog: "¡Ha sido mágico! ¡Me siento superrelajado!" };
+                                } else {
+                                    data.aburrimiento = Math.max(0, data.aburrimiento - 1.5);
+                                    return { description: "Te gustaría darle propina, pero no tienes monedas. Aun así, disfrutáis de la canción.", characterDialog: "¡Qué bonito! Lástima no tener dinero para darle." };
+                                }
+                            },
+                            listen_briefly: (data) => {
+                                data.aburrimiento = Math.max(0, data.aburrimiento - 1.5);
+                                return { description: "Os paráis un momento a disfrutar de la melodía antes de continuar vuestro paseo.", characterDialog: "Me ha gustado mucho. ¡Continuemos!" };
+                            },
+                            ignore_musician: (data) => {
+                                data.karma = Math.max(-10, (data.karma || 0) - 1); // Pequeña mala acción (ser un poco borde)
+                                data.aburrimiento = Math.min(10, data.aburrimiento + 0.5);
+                                return { description: "Decides que no es momento para conciertos y sigues de largo.", characterDialog: "Vaya... bueno, a lo nuestro." };
+                            }
+                        }
+                    },
+                    {
+                        id: "puddle_splash",
+                        description: "Un coche pasa a toda velocidad y os salpica con un charco.",
+                        characterDialog: "¡Agggh! ¡Estoy todo sucio y mojado! ¡Qué asco!",
+                        choices: [
+                            { text: "Volver a casa a limpiarse", action: "go_home" },
+                            { text: "Secarse un poco y continuar", action: "continue_dirty" }
+                        ],
+                        consequences: {
+                            go_home: (data, endWalkFn) => {
+                                data.higiene = Math.min(10, data.higiene + 2.5);
+                                endWalkFn(true);
+                                return { description: "Decidís que es mejor volver a casa para una buena ducha.", characterDialog: "¡Se acabó el paseo por hoy! Necesito un baño." };
+                            },
+                            continue_dirty: (data) => {
+                                data.higiene = Math.min(10, data.higiene + 1.5);
+                                data.aburrimiento = Math.min(10, data.aburrimiento + 0.5);
+                                return { description: "Usas un pañuelo para secarlo un poco, pero sigue bastante sucio.", characterDialog: "Ugh, me siento pegajoso. Ya no disfruto tanto del paseo." };
+                            }
+                        }
+                    },
+                    {
+                        id: "beautiful_sunset",
+                        description: "El sol comienza a ponerse, tiñendo el cielo de colores naranjas y rosas.",
+                        characterDialog: "¡Wow, mira qué atardecer! Es precioso...",
+                        sceneChange: { backgroundColor: '#FFB6C1' }, /* Rosa claro */
+                        consequences: {
+                            proceed: (data) => {
+                                data.aburrimiento = Math.max(0, data.aburrimiento - 1);
+                                return { description: "Os paráis un momento en silencio, simplemente admirando la vista.", characterDialog: "Momentos así hacen que todo valga la pena." };
+                            }
+                        }
+                    },
+                    {
+                        id: "bully_event",
+                        description: "Ves a un Tamagotchi grande molestando a uno más pequeño.",
+                        characterDialog: "¡Déjale en paz! O... ¿quizás debería unirme a él?",
+                        choices: [
+                            { text: "Intervenir y defender", action: "intervene" },
+                            { text: "Unirte al matón", action: "join_bully" },
+                            { text: "Ignorar la situación", action: "ignore_bully" }
+                        ],
+                        consequences: {
+                            intervene: (data) => {
+                                data.karma = Math.min(10, (data.karma || 0) + 3);
+                                if (Math.random() < 0.25) { // 25% de probabilidad de perder dinero
+                                    const lostCoins = Math.min(data.coins, 50);
+                                    data.coins -= lostCoins;
+                                    updateWalkCoins(-lostCoins);
+                                    return { description: "Intervienes y el matón se enfada. Tras un forcejeo, se va, pero te ha quitado algo de dinero.", characterDialog: "¡Al menos el pequeño está bien! Aunque mi cartera no tanto..." };
+                                }
+                                return { description: "Te enfrentas al matón y, sorprendentemente, se disculpa y se va. El pequeño te lo agradece.", characterDialog: "¡Nadie se mete con los débiles cuando yo estoy cerca!" };
+                            },
+                            join_bully: (data) => {
+                                data.karma = Math.max(-10, (data.karma || 0) - 5);
+                                data.coins += 30;
+                                updateWalkCoins(30);
+                                return { description: "Te unes al matón para reírte del pequeño. El matón te da unas monedas por tu 'lealtad'.", characterDialog: "Jeje... bueno, unas monedas son unas monedas." };
+                            },
+                            ignore_bully: (data) => {
+                                data.karma = Math.max(-10, (data.karma || 0) - 2);
+                                return { description: "Miras para otro lado y aceleras el paso. No es tu problema.", characterDialog: "Mejor no meterse en líos. Espero que no le pase nada grave." };
+                            }
+                        }
+                    },
+                    {
+                        id: "street_market",
+                        description: "Os topáis con un mercadillo lleno de puestos con antigüedades y curiosidades.",
+                        characterDialog: "¡Cuántas cosas! Hay de todo... ¿compramos algo de recuerdo?",
+                        choices: [
+                            { text: "Comprar objeto misterioso (75)", action: "buy_common" },
+                            { text: "Comprar objeto raro (300)", action: "buy_uncommon" },
+                            { text: "Solo mirar y seguir", action: "just_look" },
+                            { text: "Volver a la plaza", action: "back_to_hub" } // Opción para volver
+                        ],
+                        consequences: {
+                            buy_common: (data) => {
+                                if (data.coins >= 75) {
+                                    data.coins -= 75;
+                                    updateWalkCoins(-75);
+                                    const item = buyMercadilloObject(75);
+                                    oneTimeEventsVisited.push('street_market'); // Marcar como visitado
+                                    return { description: `Compras un ${item.name} por 75 monedas.`, characterDialog: "¡Qué chulo! Lo guardaré en mi inventario." };
+                                }
+                                return { description: "Te encanta el objeto, pero no tienes 75 monedas.", characterDialog: "Lástima, era muy bonito..." };
+                            },
+                            buy_uncommon: (data) => {
+                                if (data.coins >= 300) {
+                                    data.coins -= 300;
+                                    updateWalkCoins(-300);
+                                    const item = buyMercadilloObject(300);
+                                    oneTimeEventsVisited.push('street_market'); // Marcar como visitado
+                                    return { description: `Pagas 300 monedas por un ${item.name}.`, characterDialog: "¡Espero que sea auténtico!" };
+                                }
+                                return { description: "El objeto es demasiado caro. No puedes permitírtelo.", characterDialog: "300 monedas... ¡se han pasado un poco!" };
+                            },
+                            just_look: (data) => {
+                                data.aburrimiento = Math.max(0, data.aburrimiento - 0.5);
+                                oneTimeEventsVisited.push('street_market'); // Marcar como visitado aunque solo mire
+                                return { description: "Dais una vuelta por el mercadillo sin comprar nada y continuáis el paseo.", characterDialog: "Había cosas interesantes, pero mejor ahorrar." };
+                            },
+                            back_to_hub: (data) => {
+                                return showFeriaHub(data); // Vuelve al hub sin hacer nada
+                            }
+                        }
+                    }
+                ],
+                night: [ // De 19:00 a 05:59
+                    {
+                        id: "feria_entrance",
+                        description: "A lo lejos, ves las luces y oyes la música de una feria ambulante.",
+                        condition: (data) => !feriaAlreadyVisited, // Solo si no se ha visitado la feria en este paseo
+                        characterDialog: "¡Una feria! ¡Por favor, vamos! ¡Tiene que ser super divertido!",
+                        choices: [
+                            { text: "Entrar a la feria (cuesta 10 monedas)", action: "enter_feria" },
+                            { text: "Mejor no, parece cara", action: "ignore_feria" }
+                        ],
+                        consequences: {
+                            enter_feria: (data) => {
+                                if (data.coins >= 10) {
+                                    oneTimeEventsVisited = []; // Resetea los eventos de un solo uso al entrar
+                                    feriaAlreadyVisited = true; // Marca que ya hemos estado aquí
+                                    data.feriaEasterEggStep = 0; // Inicializa el contador del easter egg
+                                    data.coins -= 10;
+                                    updateWalkCoins(-10);
+                                    // En lugar de iniciar un modo, mostramos el "hub" de la feria
+                                    return showFeriaHub(data);
+                                }
+                                return { description: "No tienes ni 10 monedas para la entrada. Pasáis de largo con pena.", characterDialog: "Jo... con las ganas que tenía de ir." };
+                            },
+                            ignore_feria: (data) => {
+                                inFeria = false; // Asegurarse de que no estamos en la feria
+                                data.aburrimiento = Math.min(10, data.aburrimiento + 0.5);
+                                return { description: "Decides seguir con el paseo y no entrar en la feria.", characterDialog: "Seguro que era aburrida de todas formas..." };
+                            }
+                        }
+                    },
+                    {
+                        id: "friendly_cat",
+                        description: "Un gato amigable se acerca y se frota contra tus piernas, ronroneando.",
+                        characterDialog: "¡Hola, gatito! ¡Qué suave eres!",
+                        consequences: {
+                            proceed: (data) => {
+                                data.aburrimiento = Math.max(0, data.aburrimiento - 1.5);
+                                return { description: "Le das unas caricias al gato antes de que siga su camino.", characterDialog: "¡Me encantan los animales! Me ha alegrado el día." };
+                            }
+                        }
+                    },
+                    {
+                        id: "nice_breeze",
+                        description: "Una suave y fresca brisa sopla, aliviando el calor del día.",
+                        characterDialog: "Ahhh, qué maravilla de brisa. Se está genial.",
+                        consequences: {
+                            proceed: (data) => {
+                                data.aburrimiento = Math.max(0, data.aburrimiento - 0.5);
+                                return { description: "Cierras los ojos un instante para disfrutar del momento.", characterDialog: "¡Esto es vida!" };
+                            }
+                        }
+                    },
+                    {
+                        id: "airplane_sky",
+                        description: "Un avión surca el cielo, dejando una estela blanca a su paso.",
+                        characterDialog: "¿A dónde irá? Me pregunto qué se sentirá al volar tan alto.",
+                        consequences: {
+                            proceed: (data) => {
+                                return { description: "Seguís al avión con la mirada hasta que desaparece en la distancia.", characterDialog: "Algún día me gustaría viajar por todo el mundo." };
+                            }
+                        }
+                    },
+                    {
+                        id: "sudden_trip",
+                        description: "¡Cuidado! Tropiezas con una baldosa suelta, pero consigues mantener el equilibrio.",
+                        characterDialog: "¡Uf, por los pelos! Casi me caigo de bruces.",
+                        consequences: {
+                            proceed: (data) => {
+                                data.higiene = Math.min(10, data.higiene + 0.5);
+                                return { description: "Te sacudes el polvo de las manos y sigues con más cuidado.", characterDialog: "Hay que mirar por dónde se pisa." };
+                            }
+                        }
+                    },
+                    {
+                        id: "restaurant_dinner",
+                        description: "Pasáis por delante de un restaurante elegante con un menú atractivo.",
+                        condition: (data) => {
+                            const currentHour = new Date().getHours();
+                            return currentHour >= 22 && currentHour < 23; // Solo entre las 22:00 y las 23:00
                         },
-                        main_road: (data) => {
-                            return { description: "Decides que es mejor ir por lo seguro y sigues el camino iluminado.", characterDialog: "Más vale prevenir que curar." };
+                        characterDialog: "¡Qué hambre me ha entrado! ¿Cenamos aquí? ¡Mira qué pinta tienen los platos!",
+                        choices: [
+                            { text: "Menú del Chef (150 monedas)", action: "menu_chef" },
+                            { text: "Menú Marinero (200 monedas)", action: "menu_marinero" },
+                            { text: "Menú Vegetariano (120 monedas)", action: "menu_vegetariano" },
+                            { text: "Menú Rápido (80 monedas)", action: "menu_rapido" },
+                            { text: "No, mejor seguimos", action: "skip_dinner" }
+                        ],
+                        consequences: {
+                            menu_chef: (data) => {
+                                if (data.coins >= 150) {
+                                    data.coins -= 150;
+                                    updateWalkCoins(-150);
+                                    data.hambre = Math.max(0, data.hambre - 4); // Buena reducción de hambre
+                                    data.peso = Math.min(100, data.peso + 0.8); // Ligero aumento de peso
+                                    return { description: "Disfrutáis de un exquisito menú del chef: Sopa de calabaza y Solomillo con patatas. ¡Delicioso!", characterDialog: "¡Qué cena tan rica! ¡Estoy lleno y feliz!" };
+                                }
+                                return { description: "No tienes 150 monedas para el Menú del Chef.", characterDialog: "Qué pena, tenía muy buena pinta..." };
+                            },
+                            menu_marinero: (data) => {
+                                if (data.coins >= 200) {
+                                    data.coins -= 200;
+                                    updateWalkCoins(-200);
+                                    data.hambre = Math.max(0, data.hambre - 5); // Mejor reducción de hambre
+                                    data.peso = Math.min(100, data.peso + 0.5); // Menor aumento de peso, más saludable
+                                    return { description: "Optáis por el Menú Marinero: Cóctel de gambas y Salmón a la plancha. ¡Una delicia del mar!", characterDialog: "¡El marisco y el pescado son mis favoritos! ¡Qué festín!" };
+                                }
+                                return { description: "No tienes 200 monedas para el Menú Marinero.", characterDialog: "Uf, es un poco caro para mi bolsillo." };
+                            },
+                            menu_vegetariano: (data) => {
+                                if (data.coins >= 120) {
+                                    data.coins -= 120;
+                                    updateWalkCoins(-120);
+                                    data.hambre = Math.max(0, data.hambre - 3); // Reducción de hambre moderada
+                                    data.peso = Math.min(100, data.peso + 0.3); // Mínimo aumento de peso
+                                    return { description: "Elegís el Menú Vegetariano: Ensalada de quinoa y Lasaña de verduras. ¡Ligero y sabroso!", characterDialog: "¡Me siento ligero y con energía! ¡Qué buena elección!" };
+                                }
+                                return { description: "No tienes 120 monedas para el Menú Vegetariano.", characterDialog: "Bueno, la verdura es sana, pero no me apetece tanto." };
+                            },
+                            menu_rapido: (data) => {
+                                if (data.coins >= 80) {
+                                    data.coins -= 80;
+                                    updateWalkCoins(-80);
+                                    data.hambre = Math.max(0, data.hambre - 2); // Menor reducción de hambre
+                                    data.peso = Math.min(100, data.peso + 1.2); // Mayor aumento de peso, comida rápida
+                                    return { description: "Pedís el Menú Rápido: Patatas fritas y Hamburguesa con queso. ¡Rápido y contundente!", characterDialog: "¡Esto es lo que necesitaba! ¡Aunque no es lo más sano!" };
+                                }
+                                return { description: "No tienes 80 monedas para el Menú Rápido.", characterDialog: "Ni para un menú rápido... ¡qué desastre!" };
+                            },
+                            skip_dinner: (data) => {
+                                data.hambre = Math.min(10, data.hambre + 1); // El hambre aumenta ligeramente por saltarse la cena
+                                return { description: "Decides que es demasiado caro o no te apetece y sigues el paseo con el estómago vacío.", characterDialog: "Mejor me espero a llegar a casa. Pero tengo un poco más de hambre." };
+                            }
                         }
-                    }
-                },
-                {
-                    id: "verbal_fight",
-                    description: "Alguien te empuja sin querer y te grita como si fuera tu culpa.",
-                    characterDialog: "¡Pero bueno! ¡Qué modales! ¿Le digo algo?",
-                    choices: [
-                        { text: "Disculparse para evitar problemas", action: "apologize" },
-                        { text: "Responderle enfadado", action: "argue" },
-                        { text: "Ignorarlo y seguir", action: "ignore_fight" }
-                    ],
-                    consequences: {
-                        apologize: (data) => {
-                            data.karma = Math.min(10, (data.karma || 0) + 1);
-                            return { description: "Aunque no ha sido tu culpa, te disculpas. El otro Tamagotchi se calma y sigue su camino.", characterDialog: "No vale la pena discutir por estas cosas." };
-                        },
-                        argue: (data) => {
-                            data.karma = Math.max(-10, (data.karma || 0) - 1);
-                            data.aburrimiento = Math.min(10, data.aburrimiento + 1);
-                            return { description: "Le respondes enfadado y empezáis una discusión a gritos que no lleva a ninguna parte.", characterDialog: "¡Qué rabia! ¡Me ha fastidiado el paseo!" };
-                        },
-                        ignore_fight: (data) => {
-                            return { description: "Respiras hondo, lo ignoras y sigues tu camino.", characterDialog: "No voy a dejar que un maleducado me arruine el día." };
+                    },
+                    {
+                        id: "dark_alley",
+                        description: "Ves un callejón oscuro que parece un atajo.",
+                        characterDialog: "Podríamos ahorrar tiempo por ahí... pero da un poco de miedo.",
+                        choices: [
+                            { text: "Tomar el atajo", action: "take_shortcut" },
+                            { text: "Seguir por el camino principal", action: "main_road" }
+                        ],
+                        consequences: {
+                            take_shortcut: (data) => {
+                                if (Math.random() < 0.5) {
+                                    data.coins += 50;
+                                    updateWalkCoins(50);
+                                    return { description: "¡Qué suerte! Encuentras 50 monedas en el suelo del callejón.", characterDialog: "¡Quien no arriesga, no gana!" };
+                                }
+                                data.aburrimiento = Math.min(10, data.aburrimiento + 1);
+                                return { description: "Un ruido fuerte te asusta y sales corriendo del callejón. No has ahorrado tiempo.", characterDialog: "¡Ay, qué susto! ¡Nunca más!" };
+                            },
+                            main_road: (data) => {
+                                return { description: "Decides que es mejor ir por lo seguro y sigues el camino iluminado.", characterDialog: "Más vale prevenir que curar." };
+                            }
                         }
-                    }
-                },
-                {
-                    id: "surprise_parade",
-                    description: "De repente, un desfile lleno de música y color aparece en la calle.",
-                    characterDialog: "¡Qué divertido! ¡Me encanta la música!",
-                    consequences: {
-                        proceed: (data) => {
-                            data.aburrimiento = Math.max(0, data.aburrimiento - 2);
-                            return { description: "Os quedáis un rato viendo el desfile. ¡Qué sorpresa tan agradable!", characterDialog: "¡Esto sí que es un buen paseo!" };
+                    },
+                    {
+                        id: "verbal_fight",
+                        description: "Alguien te empuja sin querer y te grita como si fuera tu culpa.",
+                        characterDialog: "¡Pero bueno! ¡Qué modales! ¿Le digo algo?",
+                        choices: [
+                            { text: "Disculparse para evitar problemas", action: "apologize" },
+                            { text: "Responderle enfadado", action: "argue" },
+                            { text: "Ignorarlo y seguir", action: "ignore_fight" }
+                        ],
+                        consequences: {
+                            apologize: (data) => {
+                                data.karma = Math.min(10, (data.karma || 0) + 1);
+                                return { description: "Aunque no ha sido tu culpa, te disculpas. El otro Tamagotchi se calma y sigue su camino.", characterDialog: "No vale la pena discutir por estas cosas." };
+                            },
+                            argue: (data) => {
+                                data.karma = Math.max(-10, (data.karma || 0) - 1);
+                                data.aburrimiento = Math.min(10, data.aburrimiento + 1);
+                                return { description: "Le respondes enfadado y empezáis una discusión a gritos que no lleva a ninguna parte.", characterDialog: "¡Qué rabia! ¡Me ha fastidiado el paseo!" };
+                            },
+                            ignore_fight: (data) => {
+                                return { description: "Respiras hondo, lo ignoras y sigues tu camino.", characterDialog: "No voy a dejar que un maleducado me arruine el día." };
+                            }
                         }
-                    }
-                },
-                {
-                    id: "bakery_smell",
-                    description: "El delicioso olor de una pastelería cercana inunda el aire.",
-                    characterDialog: "Mmmm... ¡qué bien huele! Me ha entrado hambre.",
-                    consequences: {
-                        proceed: (data) => {
-                            data.hambre = Math.min(10, data.hambre + 1);
-                            return { description: "El olor es tan intenso que te ruge el estómago.", characterDialog: "¡Necesito comer algo, ya!" };
+                    },
+                    {
+                        id: "surprise_parade",
+                        description: "De repente, un desfile lleno de música y color aparece en la calle.",
+                        characterDialog: "¡Qué divertido! ¡Me encanta la música!",
+                        consequences: {
+                            proceed: (data) => {
+                                data.aburrimiento = Math.max(0, data.aburrimiento - 2);
+                                return { description: "Os quedáis un rato viendo el desfile. ¡Qué sorpresa tan agradable!", characterDialog: "¡Esto sí que es un buen paseo!" };
+                            }
                         }
-                    }
-                },
-                {
-                    id: "bird_flock",
-                    description: "Una gran bandada de pájaros levanta el vuelo a tu paso, creando un espectáculo en el cielo.",
-                    characterDialog: "¡Wow! ¡Cuántos pájaros!",
-                    consequences: {
-                        proceed: (data) => {
-                            data.aburrimiento = Math.max(0, data.aburrimiento - 0.5);
-                            return { description: "El movimiento coordinado de los pájaros es hipnótico.", characterDialog: "¡Ha sido impresionante!" };
+                    },
+                    {
+                        id: "bakery_smell",
+                        description: "El delicioso olor de una pastelería cercana inunda el aire.",
+                        characterDialog: "Mmmm... ¡qué bien huele! Me ha entrado hambre.",
+                        consequences: {
+                            proceed: (data) => {
+                                data.hambre = Math.min(10, data.hambre + 1);
+                                return { description: "El olor es tan intenso que te ruge el estómago.", characterDialog: "¡Necesito comer algo, ya!" };
+                            }
                         }
-                    }
-                },
-                {
-                    id: "muddy_puddle",
-                    description: "No ves un charco de barro y metes la pata hasta el fondo.",
-                    characterDialog: "¡Puaj! ¡Qué asco, estoy todo sucio!",
-                    consequences: {
-                        proceed: (data) => {
-                            data.higiene = Math.min(10, data.higiene + 2);
-                            return { description: "Te has llenado de barro. Definitivamente necesitas una ducha.", characterDialog: "¡Genial, ahora huelo a tierra mojada!" };
+                    },
+                    {
+                        id: "bird_flock",
+                        description: "Una gran bandada de pájaros levanta el vuelo a tu paso, creando un espectáculo en el cielo.",
+                        characterDialog: "¡Wow! ¡Cuántos pájaros!",
+                        consequences: {
+                            proceed: (data) => {
+                                data.aburrimiento = Math.max(0, data.aburrimiento - 0.5);
+                                return { description: "El movimiento coordinado de los pájaros es hipnótico.", characterDialog: "¡Ha sido impresionante!" };
+                            }
                         }
-                    }
-                },
-                {
-                    id: "starry_night",
-                    description: "El cielo está despejado y se pueden ver miles de estrellas.",
-                    characterDialog: "¡Wow! ¡Mira cuántas estrellas! Es como un manto de diamantes.",
-                    consequences: {
-                        proceed: (data) => {
-                            data.aburrimiento = Math.max(0, data.aburrimiento - 2);
-                            return { description: "Os tumbáis un rato en la hierba a contemplar la inmensidad del universo.", characterDialog: "Me siento tan pequeño... y a la vez, tan afortunado." };
+                    },
+                    {
+                        id: "muddy_puddle",
+                        description: "No ves un charco de barro y metes la pata hasta el fondo.",
+                        characterDialog: "¡Puaj! ¡Qué asco, estoy todo sucio!",
+                        consequences: {
+                            proceed: (data) => {
+                                data.higiene = Math.min(10, data.higiene + 2);
+                                return { description: "Te has llenado de barro. Definitivamente necesitas una ducha.", characterDialog: "¡Genial, ahora huelo a tierra mojada!" };
+                            }
                         }
-                    }
-                },
-                {
-                    id: "strange_noise",
-                    description: "Escuchas un ruido extraño proveniente de unos arbustos cercanos.",
-                    characterDialog: "¿Has oído eso? Me ha dado un poco de miedo...",
-                    consequences: {
-                        proceed: (data) => {
-                            data.aburrimiento = Math.min(10, data.aburrimiento + 0.5);
-                            return { description: "Aceleráis el paso, mirando de reojo hacia los arbustos. Probablemente no era nada.", characterDialog: "Mejor no tentar a la suerte. ¡Vámonos!" };
+                    },
+                    {
+                        id: "starry_night",
+                        description: "El cielo está despejado y se pueden ver miles de estrellas.",
+                        characterDialog: "¡Wow! ¡Mira cuántas estrellas! Es como un manto de diamantes.",
+                        consequences: {
+                            proceed: (data) => {
+                                data.aburrimiento = Math.max(0, data.aburrimiento - 2);
+                                return { description: "Os tumbáis un rato en la hierba a contemplar la inmensidad del universo.", characterDialog: "Me siento tan pequeño... y a la vez, tan afortunado." };
+                            }
                         }
-                    }
-                },
-              ]
+                    },
+                    {
+                        id: "strange_noise",
+                        description: "Escuchas un ruido extraño proveniente de unos arbustos cercanos.",
+                        characterDialog: "¿Has oído eso? Me ha dado un poco de miedo...",
+                        consequences: {
+                            proceed: (data) => {
+                                data.aburrimiento = Math.min(10, data.aburrimiento + 0.5);
+                                return { description: "Aceleráis el paso, mirando de reojo hacia los arbustos. Probablemente no era nada.", characterDialog: "Mejor no tentar a la suerte. ¡Vámonos!" };
+                            }
+                        }
+                    },
+                ]
             };
 
             function buyMercadilloObject(cost) {
-              if (!tamagotchiData) return;
+                if (!tamagotchiData) return;
 
-              let itemPool;
-              if (cost === 75) {
-                itemPool = mercadilloObjects.common;
-              } else if (cost === 300) {
-                // --- ¡NUEVO! Comprobación del truco secreto ---
-                const cheatActive = sessionStorage.getItem('secretMercadilloCheat') === 'true';
+                let itemPool;
+                if (cost === 75) {
+                    itemPool = mercadilloObjects.common;
+                } else if (cost === 300) {
+                    // --- ¡NUEVO! Comprobación del truco secreto ---
+                    const cheatActive = sessionStorage.getItem('secretMercadilloCheat') === 'true';
 
-                if (cheatActive) {
-                  itemPool = mercadilloObjects.rare; // 100% de probabilidad si el truco está activo
-                  sessionStorage.removeItem('secretMercadilloCheat'); // El truco se usa una vez
-                } else if (Math.random() < 0.01) {
-                  // 1% de probabilidad normal de obtener un objeto raro
-                  itemPool = mercadilloObjects.rare;
+                    if (cheatActive) {
+                        itemPool = mercadilloObjects.rare; // 100% de probabilidad si el truco está activo
+                        sessionStorage.removeItem('secretMercadilloCheat'); // El truco se usa una vez
+                    } else if (Math.random() < 0.01) {
+                        // 1% de probabilidad normal de obtener un objeto raro
+                        itemPool = mercadilloObjects.rare;
+                    } else {
+                        itemPool = mercadilloObjects.uncommon;
+                    }
                 } else {
-                  itemPool = mercadilloObjects.uncommon;
+                    return;
                 }
-              } else {
-                return;
-              }
 
-              const randomItem = itemPool[Math.floor(Math.random() * itemPool.length)];
+                const randomItem = itemPool[Math.floor(Math.random() * itemPool.length)];
 
-              walkMercadilloInventory.push(randomItem); // Añade al inventario temporal del paseo
-              return randomItem;
+                walkMercadilloInventory.push(randomItem); // Añade al inventario temporal del paseo
+                return randomItem;
             }
 
             // --- LÓGICA DE INICIALIZACIÓN ---
@@ -1649,7 +1724,7 @@
 
             function startWalk() {
                 if (!tamagotchiData) return;
-                
+
                 localStorage.setItem('walkInProgress', 'true');
                 walkInProgress = true;
 
@@ -1714,8 +1789,8 @@
                     // Si tiene condición, se evalúa.
                     return !event.condition || event.condition(tamagotchiData);
                 });
-                
-                const event = availableEvents[Math.floor(Math.random() * availableEvents.length)];                
+
+                const event = availableEvents[Math.floor(Math.random() * availableEvents.length)];
                 displayEvent(event);
             }
 
@@ -1825,7 +1900,7 @@
                 } else {
                     winner = ['a', 'b'][Math.floor(Math.random() * 2)]; // Si no, el ganador es aleatorio.
                 }
-                
+
                 if (choice === winner) {
                     if (checkOnly) return true;
                     data.coins -= 20; updateWalkCoins(-20);
@@ -1940,7 +2015,7 @@
                 clearInterval(feriaHubInterval); // Detiene el refresco de la feria al tomar cualquier decisión
 
                 choicesContainer.querySelectorAll('button').forEach(btn => btn.disabled = true);
-                
+
                 // --- ¡NUEVO! Lógica para el Easter Egg "El Secreto del Granjero" ---
                 const easterEggSequence = ['mercado_ayuda_granjero', 'mercado_concurso_calabaza', 'mercado_cafe', 'mercado_fuente_pueblo'];
                 const currentStep = tamagotchiData.mercadoEasterEggStep || 0;
@@ -1950,7 +2025,7 @@
                 if (eventId === easterEggSequence[currentStep]) {
                     // Caso especial para el concurso: solo avanza si se gana.
                     if (eventId === 'mercado_concurso_calabaza' && action.startsWith('bet_') && handleBet(tamagotchiData, action.slice(-1), true)) {
-                         tamagotchiData.mercadoEasterEggStep = currentStep + 1;
+                        tamagotchiData.mercadoEasterEggStep = currentStep + 1;
                     } else if (eventId !== 'mercado_concurso_calabaza') {
                         tamagotchiData.mercadoEasterEggStep = currentStep + 1;
                     }
@@ -1998,7 +2073,7 @@
 
                 if (consequence) {
                     const result = consequence(tamagotchiData);
-                    
+
                     // 2. Comparamos el estado nuevo con el viejo y mostramos los cambios
                     compareAndShowChanges(oldData, tamagotchiData);
 
@@ -2013,7 +2088,7 @@
                             eventDescription.textContent = result.description;
                             characterDialog.textContent = result.characterDialog;
                         }
-                        
+
                         setTimeout(() => {
                             // --- MODIFICADO: Si estábamos en la feria, volvemos al hub ---
                             if (inMercado) {
@@ -2084,11 +2159,11 @@
                     const diff = changes[stat];
                     if (Math.abs(diff) > 0.01) { // Usamos un umbral pequeño para evitar errores de flotantes
                         const sign = diff > 0 ? '+' : '';
-                        const type = (stat === 'hambre' || stat === 'aburrimiento' || stat === 'higiene' || stat === 'sueno') 
-                                     ? (diff > 0 ? 'negative' : 'positive')
-                                     : (stat === 'coins')
-                                     ? 'neutral'
-                                     : (diff > 0 ? 'positive' : 'negative');
+                        const type = (stat === 'hambre' || stat === 'aburrimiento' || stat === 'higiene' || stat === 'sueno')
+                            ? (diff > 0 ? 'negative' : 'positive')
+                            : (stat === 'coins')
+                                ? 'neutral'
+                                : (diff > 0 ? 'positive' : 'negative');
                         // Para monedas, no mostramos decimales
                         const valueString = (stat === 'coins') ? diff.toFixed(0) : diff.toFixed(1);
                         showStatChange(`${sign}${valueString} ${statNames[stat]}`, type);
@@ -2102,7 +2177,7 @@
                 if (!warningContainer || !tamagotchiData) return;
 
                 const warnings = [];
-                const threshold = 8.5;
+                const threshold = 6; // MODIFICADO: Umbral bajado al 60% (6/10)
 
                 if (tamagotchiData.hambre >= threshold) warnings.push(`${tamagotchiData.nombre} tiene muchísima hambre.`);
                 if (tamagotchiData.aburrimiento >= threshold) warnings.push(`${tamagotchiData.nombre} está extremadamente aburrido.`);
@@ -2143,7 +2218,7 @@
                     exitBtn.classList.add('hidden');
                     eventDescription.textContent = "De camino a casa, por una calle poco iluminada, un extraño te detiene...";
                     characterDialog.textContent = '"¡Esto es un atraco! ¡Dame todo lo que tienes!"';
-                    
+
                     // El ladrón te roba las monedas que has conseguido durante el paseo.
                     // Simplemente revertimos las ganancias/pérdidas del paseo.
                     tamagotchiData.coins -= walkCoins;
@@ -2208,4 +2283,5 @@
         });
     </script>
 </body>
+
 </html>

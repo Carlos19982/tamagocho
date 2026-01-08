@@ -14,8 +14,21 @@ let bg_animationFrameId;
 
 // Variables para la optimización
 let bg_lastFrameTime = 0;
-const BG_TARGET_FPS = 15;
-const BG_FRAME_INTERVAL = 1000 / BG_TARGET_FPS;
+let bg_targetFPS = 15; // Variable dinámica
+let bg_highQuality = false; // Estado del modo gráfico
+
+// --- ¡NUEVO! Función global para cambiar la calidad ---
+window.setHighQualityMode = function (isHigh) {
+    bg_highQuality = isHigh;
+    bg_targetFPS = isHigh ? 30 : 15;
+
+    // Reiniciar elementos para ajustar cantidad si es necesario
+    if (bg_canvas) {
+        initBackgroundElements();
+    }
+    // Forzar redibujado
+    bg_lastRenderedHour = -1;
+};
 
 // --- ¡NUEVO! Canvas para pre-renderizar el fondo estático (cielo y colinas) ---
 let bg_backgroundCacheCanvas = null;
@@ -32,12 +45,10 @@ let bg_sprites = {};
  * Inicia el motor del fondo. Busca el canvas y comienza el bucle de animación.
  * @param {string|null} collisionElementId - El ID del elemento con el que las nubes pueden colisionar.
  */
+
 function initBackgroundCanvas(collisionElementId = null) {
     bg_canvas = document.getElementById('background-canvas');
-    if (!bg_canvas) {
-        console.error("No se encontró el elemento canvas con id 'background-canvas'.");
-        return;
-    }
+    if (!bg_canvas) return;
     bg_ctx = bg_canvas.getContext('2d');
 
     // --- ¡NUEVO! Inicializar el canvas de caché ---
@@ -45,17 +56,23 @@ function initBackgroundCanvas(collisionElementId = null) {
     bg_backgroundCacheCtx = bg_backgroundCacheCanvas.getContext('2d');
     bg_lastRenderedHour = -1; // Forzar el primer renderizado
 
-    // --- ¡NUEVO! Guardar la referencia al elemento de colisión si se proporciona ---
     if (collisionElementId) {
         bg_collisionElement = document.getElementById(collisionElementId);
     }
 
-    // Desactiva el suavizado para un look pixel-perfect
     bg_ctx.imageSmoothingEnabled = false;
 
-    // Inicializar elementos del escenario
+    initBackgroundElements();
+    startBackgroundAnimation();
+}
+
+function initBackgroundElements() {
+    // Ajustar cantidades según calidad
+    const starCount = bg_highQuality ? 500 : 250;
+    const fireflyCount = bg_highQuality ? 50 : 20;
+
     bg_stars = [];
-    for (let i = 0; i < 250; i++) {
+    for (let i = 0; i < starCount; i++) {
         bg_stars.push({
             x: Math.random(),
             y: Math.random(),
@@ -65,7 +82,7 @@ function initBackgroundCanvas(collisionElementId = null) {
     }
 
     bg_fireflies = [];
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < fireflyCount; i++) {
         bg_fireflies.push({
             x: Math.random(),
             y: Math.random() * 0.2 + 0.75,
@@ -88,8 +105,6 @@ function initBackgroundCanvas(collisionElementId = null) {
             width: Math.random() * 100 + 50
         });
     }
-
-    startBackgroundAnimation();
 }
 
 /**
@@ -124,7 +139,8 @@ function animateBackground(timestamp) {
 
     bg_animationFrameId = requestAnimationFrame(animateBackground);
 
-    if (timestamp - bg_lastFrameTime < BG_FRAME_INTERVAL) {
+    const interval = 1000 / bg_targetFPS;
+    if (timestamp - bg_lastFrameTime < interval) {
         return;
     }
     bg_lastFrameTime = timestamp;
@@ -180,10 +196,10 @@ function drawCloud(ctx, cloud) {
     const h = bg_sprites.cloud.height;
 
     // Dibujamos el sprite varias veces, escalado y posicionado para formar la nube
-    ctx.drawImage(bg_sprites.cloud, cloud.x * bg_canvas.width - w*scale/2, cloud.y * bg_canvas.height - h*scale/2, w * scale, h * scale);
-    ctx.drawImage(bg_sprites.cloud, cloud.x * bg_canvas.width + baseRadius - w*scale*0.8/2, cloud.y * bg_canvas.height + baseRadius / 2 - h*scale*0.8/2, w * scale * 0.8, h * scale * 0.8);
-    ctx.drawImage(bg_sprites.cloud, cloud.x * bg_canvas.width - baseRadius - w*scale*0.9/2, cloud.y * bg_canvas.height + baseRadius / 3 - h*scale*0.9/2, w * scale * 0.9, h * scale * 0.9);
-    ctx.drawImage(bg_sprites.cloud, cloud.x * bg_canvas.width - w*scale*0.7/2, cloud.y * bg_canvas.height + baseRadius / 2 - h*scale*0.7/2, w * scale * 0.7, h * scale * 0.7);
+    ctx.drawImage(bg_sprites.cloud, cloud.x * bg_canvas.width - w * scale / 2, cloud.y * bg_canvas.height - h * scale / 2, w * scale, h * scale);
+    ctx.drawImage(bg_sprites.cloud, cloud.x * bg_canvas.width + baseRadius - w * scale * 0.8 / 2, cloud.y * bg_canvas.height + baseRadius / 2 - h * scale * 0.8 / 2, w * scale * 0.8, h * scale * 0.8);
+    ctx.drawImage(bg_sprites.cloud, cloud.x * bg_canvas.width - baseRadius - w * scale * 0.9 / 2, cloud.y * bg_canvas.height + baseRadius / 3 - h * scale * 0.9 / 2, w * scale * 0.9, h * scale * 0.9);
+    ctx.drawImage(bg_sprites.cloud, cloud.x * bg_canvas.width - w * scale * 0.7 / 2, cloud.y * bg_canvas.height + baseRadius / 2 - h * scale * 0.7 / 2, w * scale * 0.7, h * scale * 0.7);
 }
 
 // --- ¡NUEVO! Función para el efecto de "puff" al romperse una nube ---
@@ -224,25 +240,101 @@ function drawSun(ctx, x, y, radius, color) {
 }
 
 function drawLandscape(ctx, width, height, groundColor, hillColor1, hillColor2) {
+    if (bg_highQuality) {
+        drawDetailedLandscape(ctx, width, height, groundColor, hillColor1, hillColor2);
+    } else {
+        // Modo ahorro: Dibujo simple
+        ctx.fillStyle = hillColor1;
+        ctx.beginPath();
+        ctx.moveTo(0, height * 0.8);
+        ctx.bezierCurveTo(width * 0.2, height * 0.7, width * 0.3, height * 0.75, width * 0.5, height * 0.8);
+        ctx.bezierCurveTo(width * 0.7, height * 0.85, width * 0.8, height * 0.7, width, height * 0.75);
+        ctx.lineTo(width, height);
+        ctx.lineTo(0, height);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = hillColor2;
+        ctx.beginPath();
+        ctx.moveTo(0, height * 0.85);
+        ctx.bezierCurveTo(width * 0.3, height * 0.8, width * 0.4, height * 0.9, width * 0.7, height * 0.85);
+        ctx.bezierCurveTo(width * 0.9, height * 0.8, width, height * 0.9, width, height * 0.9);
+        ctx.lineTo(width, height);
+        ctx.lineTo(0, height);
+        ctx.closePath();
+        ctx.fill();
+    }
+}
+
+function drawDetailedLandscape(ctx, width, height, groundColor, hillColor1, hillColor2) {
+    // Función auxiliar para dibujar un árbol simple (estilo pixel art o geométrico)
+    function drawTree(ctx, x, y, scale = 1) {
+        const trunkW = 4 * scale;
+        const trunkH = 10 * scale;
+
+        // Tronco
+        ctx.fillStyle = '#4a3f37'; // Marrón oscuro
+        ctx.fillRect(x - trunkW / 2, y - trunkH, trunkW, trunkH);
+
+        // Copa (varios círculos)
+        ctx.fillStyle = '#2d5a27'; // Verde oscuro
+        ctx.beginPath(); ctx.arc(x, y - trunkH - 5 * scale, 8 * scale, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#3a7a34'; // Verde medio
+        ctx.beginPath(); ctx.arc(x - 4 * scale, y - trunkH - 2 * scale, 6 * scale, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x + 4 * scale, y - trunkH - 2 * scale, 6 * scale, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Colina trasera (más oscura/lejana)
     ctx.fillStyle = hillColor1;
     ctx.beginPath();
     ctx.moveTo(0, height * 0.8);
-    ctx.bezierCurveTo(width * 0.2, height * 0.7, width * 0.3, height * 0.75, width * 0.5, height * 0.8);
-    ctx.bezierCurveTo(width * 0.7, height * 0.85, width * 0.8, height * 0.7, width, height * 0.75);
+    // Curva suave
+    for (let x = 0; x <= width; x += 10) {
+        const y = height * 0.8 + Math.sin(x * 0.005) * (height * 0.05);
+        ctx.lineTo(x, y);
+    }
     ctx.lineTo(width, height);
     ctx.lineTo(0, height);
-    ctx.closePath();
     ctx.fill();
 
+    // Árboles en la colina trasera
+    // Usamos el generador pseudo-aleatorio basado en posición para consistencia
+    for (let x = 20; x < width; x += 60) {
+        if (Math.sin(x * 99) > 0.3) {
+            const groundY = height * 0.8 + Math.sin(x * 0.005) * (height * 0.05);
+            drawTree(ctx, x, groundY + 5, 0.6 + Math.sin(x) * 0.2); // +5 para "hundirlos" un poco
+        }
+    }
+
+    // Colina frontal (primer plano)
     ctx.fillStyle = hillColor2;
     ctx.beginPath();
-    ctx.moveTo(0, height * 0.85);
-    ctx.bezierCurveTo(width * 0.3, height * 0.8, width * 0.4, height * 0.9, width * 0.7, height * 0.85);
-    ctx.bezierCurveTo(width * 0.9, height * 0.8, width, height * 0.9, width, height * 0.9);
+    ctx.moveTo(0, height * 0.9);
+    for (let x = 0; x <= width; x += 10) {
+        const y = height * 0.85 + Math.sin(x * 0.008 + 2) * (height * 0.06);
+        ctx.lineTo(x, y);
+    }
     ctx.lineTo(width, height);
     ctx.lineTo(0, height);
-    ctx.closePath();
     ctx.fill();
+
+    // Hierba y detalles en primer plano
+    ctx.fillStyle = 'rgba(0,0,0,0.1)';
+    for (let x = 0; x < width; x += 15) {
+        const groundY = height * 0.85 + Math.sin(x * 0.008 + 2) * (height * 0.06);
+        // Pequeñas briznas de hierba
+        if (Math.random() > 0.3) {
+            ctx.fillRect(x, groundY, 2, -4 - Math.random() * 4);
+        }
+    }
+
+    // Árboles en primer plano
+    for (let x = 50; x < width; x += 120) {
+        if (Math.cos(x * 55) > 0.5) {
+            const groundY = height * 0.85 + Math.sin(x * 0.008 + 2) * (height * 0.06);
+            drawTree(ctx, x, groundY + 8, 1.2 + Math.cos(x) * 0.3);
+        }
+    }
 }
 
 function actualizarFondoDinamico(timestamp) {
@@ -266,10 +358,10 @@ function actualizarFondoDinamico(timestamp) {
     // --- MODIFICADO: Sistema de interpolación de colores para transiciones suaves ---
     // Las transiciones ahora duran 1 hora, empezando justo antes de la fase clave.
     const colorPalettes = [
-        { time: 0,  sky: ['#0c0a18', '#2c3e50'], sun: '#f4f4f4', ground: '#2b2f31', hill1: '#1c1e22', hill2: '#222629' }, // 00:00 - Noche Profunda
-        { time: 4,  sky: ['#0c0a18', '#2c3e50'], sun: '#f4f4f4', ground: '#2b2f31', hill1: '#1c1e22', hill2: '#222629' }, // 04:00 - Inicio transición amanecer
-        { time: 5,  sky: ['#2c3e50', '#e74c3c', '#f1c40f'], sun: '#ffd700', ground: '#38302b', hill1: '#4a3f37', hill2: '#5c4e44' }, // 05:00 - Amanecer
-        { time: 6,  sky: ['#87CEEB', '#a9dff3'], sun: '#FFDE00', ground: '#5d7a3c', hill1: '#4b6330', hill2: '#526e33' }, // 06:00 - Mañana
+        { time: 0, sky: ['#0c0a18', '#2c3e50'], sun: '#f4f4f4', ground: '#2b2f31', hill1: '#1c1e22', hill2: '#222629' }, // 00:00 - Noche Profunda
+        { time: 4, sky: ['#0c0a18', '#2c3e50'], sun: '#f4f4f4', ground: '#2b2f31', hill1: '#1c1e22', hill2: '#222629' }, // 04:00 - Inicio transición amanecer
+        { time: 5, sky: ['#2c3e50', '#e74c3c', '#f1c40f'], sun: '#ffd700', ground: '#38302b', hill1: '#4a3f37', hill2: '#5c4e44' }, // 05:00 - Amanecer
+        { time: 6, sky: ['#87CEEB', '#a9dff3'], sun: '#FFDE00', ground: '#5d7a3c', hill1: '#4b6330', hill2: '#526e33' }, // 06:00 - Mañana
         { time: 11, sky: ['#87CEEB', '#a9dff3'], sun: '#FFDE00', ground: '#5d7a3c', hill1: '#4b6330', hill2: '#526e33' }, // 11:00 - Inicio transición mediodía
         { time: 12, sky: ['#63a4ff', '#89bfff'], sun: '#FFEE88', ground: '#6b8c43', hill1: '#546e35', hill2: '#5b7a39' }, // 12:00 - Mediodía
         { time: 16, sky: ['#63a4ff', '#89bfff'], sun: '#FFEE88', ground: '#6b8c43', hill1: '#546e35', hill2: '#5b7a39' }, // 16:00 - Inicio transición atardecer
@@ -281,9 +373,9 @@ function actualizarFondoDinamico(timestamp) {
 
     let palette1, palette2;
     for (let i = 0; i < colorPalettes.length - 1; i++) {
-        if (horaDecimal >= colorPalettes[i].time && horaDecimal < colorPalettes[i+1].time) {
+        if (horaDecimal >= colorPalettes[i].time && horaDecimal < colorPalettes[i + 1].time) {
             palette1 = colorPalettes[i];
-            palette2 = colorPalettes[i+1];
+            palette2 = colorPalettes[i + 1];
             break;
         }
     }
@@ -324,7 +416,7 @@ function actualizarFondoDinamico(timestamp) {
     }
 
     // Forzar redibujado del caché en cada frame para la transición suave
-    let needsRedraw = true; 
+    let needsRedraw = true;
     let isNight, isSunset;
 
     if (needsRedraw) {
@@ -447,7 +539,7 @@ function actualizarFondoDinamico(timestamp) {
     } else {
         drawSun(bg_ctx, bg_sunMoonPos.x, bg_sunMoonPos.y, 25, sunColor);
     }
-    
+
     // --- ¡NUEVO! Lógica de colisión de nubes, ahora modular ---
     const charRect = bg_collisionElement ? bg_collisionElement.getBoundingClientRect() : null;
 

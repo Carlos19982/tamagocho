@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -53,11 +54,14 @@
         #character-display {
             font-family: monospace;
             font-size: 2rem;
-            color: #bbb; /* Un color gris claro para que no distraiga */
+            color: #bbb;
+            /* Un color gris claro para que no distraiga */
             text-align: center;
             white-space: pre;
-            position: absolute; /* Lo posicionamos para que esté de fondo */
-            z-index: 0; /* Lo ponemos detrás de la esponja y las manchas */
+            position: absolute;
+            /* Lo posicionamos para que esté de fondo */
+            z-index: 0;
+            /* Lo ponemos detrás de la esponja y las manchas */
             /* Evita que el texto sea seleccionable por el usuario */
             user-select: none;
             -webkit-user-select: none;
@@ -72,26 +76,38 @@
             background-image: radial-gradient(circle, #5d4037 30%, #8d6e63 80%);
             border-radius: 45% 55% 60% 40% / 50% 45% 55% 50%;
             opacity: 0.8;
-            z-index: 10; /* Aseguramos que esté sobre el personaje */
+            z-index: 10;
+            /* Aseguramos que esté sobre el personaje */
             transition: transform 0.2s, opacity 0.2s;
-            transform: rotate(calc(var(--r, 0) * 1deg)); /* Rotación aleatoria */
+            transform: rotate(calc(var(--r, 0) * 1deg));
+            /* Rotación aleatoria */
         }
 
         /* --- NUEVO: Estilo y animación para las burbujas --- */
         .bubble {
             position: absolute;
-            width: 25px; /* Más grandes */
-            height: 25px; /* Más grandes */
-            background: radial-gradient(circle at 30% 30%, rgba(255, 235, 255, 0.9), rgba(220, 230, 255, 0.7), rgba(255, 210, 240, 0.5)); /* Tono jabonoso iridiscente */
-            border: 1px solid rgba(255, 255, 255, 0.7); /* Borde más sutil */
+            width: 25px;
+            /* Más grandes */
+            height: 25px;
+            /* Más grandes */
+            background: radial-gradient(circle at 30% 30%, rgba(255, 235, 255, 0.9), rgba(220, 230, 255, 0.7), rgba(255, 210, 240, 0.5));
+            /* Tono jabonoso iridiscente */
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            /* Borde más sutil */
             border-radius: 50%;
-            pointer-events: none; /* Las burbujas no son interactivas */
-            z-index: 99; /* Debajo de la esponja */
-            animation: fadeAndShrink 2s forwards ease-out; /* Duran más tiempo */
+            pointer-events: none;
+            /* Las burbujas no son interactivas */
+            z-index: 99;
+            /* Debajo de la esponja */
+            animation: fadeAndShrink 2s forwards ease-out;
+            /* Duran más tiempo */
         }
 
         @keyframes fadeAndShrink {
-            to { transform: scale(0); opacity: 0; }
+            to {
+                transform: scale(0);
+                opacity: 0;
+            }
         }
 
         #sponge {
@@ -106,7 +122,8 @@
             cursor: grab;
             top: 50%;
             left: 50%;
-            pointer-events: auto; /* Por defecto, la esponja es clickeable */
+            pointer-events: auto;
+            /* Por defecto, la esponja es clickeable */
         }
 
         #sponge:active {
@@ -155,7 +172,7 @@
             padding: 30px;
             border-radius: 15px;
             text-align: center;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
         }
 
         #result-title {
@@ -178,6 +195,7 @@
         }
     </style>
 </head>
+
 <body>
     <!-- ¡NUEVO! Lienzo para el fondo dinámico -->
     <canvas id="background-canvas"></canvas>
@@ -185,9 +203,31 @@
     <div id="game-container">
         <h1>¡A limpiar!</h1>
         <p id="instructions">Haz clic y arrastra la esponja sobre las manchas para limpiarlas.</p>
-        
+
         <div id="game-area">
-            <!-- --- NUEVO: Personaje ASCII añadido como fondo --- -->
+            <!-- Personaje en modo Moderno (CSS) -->
+            <div id="modern-character" style="display: none;">
+                <div class="character-body">
+                    <div class="face">
+                        <div class="eyes">
+                            <div class="eye left"></div>
+                            <div class="eye right"></div>
+                        </div>
+                        <div class="cheeks">
+                            <div class="cheek"></div>
+                            <div class="cheek"></div>
+                        </div>
+                        <div class="mouth"></div>
+                        <div class="zzz-container">
+                            <span>Z</span>
+                            <span>Z</span>
+                            <span>Z</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- --- Personaje ASCII añadido como fondo --- -->
             <pre id="character-display">(\_/)
 ( °_° )
 (>   <)</pre>
@@ -222,8 +262,9 @@
             const resultTitle = document.getElementById("result-title");
             const resultMessage = document.getElementById("result-message");
             const characterDisplay = document.getElementById("character-display");
+            const modernChar = document.getElementById("modern-character");
             const backButton = document.getElementById("back-button");
-        
+
             // --- NUEVA CONFIGURACIÓN DEL JUEGO ---
             const GAME_DURATION = 25000; // Aumentamos la duración a 25 segundos
             const SPOTS_TO_WIN = 18; // El jugador debe limpiar 18 manchas para ganar
@@ -237,11 +278,54 @@
             let animationInterval; // Intervalo para la animación del personaje
             let gameFinished = false;
             let isDragging = false;
-        
+
             let lastBubbleTime = 0; // Para controlar la creación de burbujas
+
+            // Detectar modo de juego
+            const tamagotchiData = JSON.parse(localStorage.getItem("tamagotchiData"));
+            const gameMode = tamagotchiData ? tamagotchiData.mode : 'arcade';
+
+            function updateEmotion(count) {
+                const progress = count / SPOTS_TO_WIN;
+
+                if (gameMode === 'modern' && modernChar) {
+                    // Resetear estados emocionales
+                    modernChar.classList.remove('state-happy', 'state-sad', 'state-neutral', 'state-medium-happy');
+
+                    if (progress < 0.25) {
+                        modernChar.classList.add('state-sad');
+                    } else if (progress < 0.5) {
+                        modernChar.classList.add('state-neutral');
+                    } else if (progress < 0.75) {
+                        modernChar.classList.add('state-medium-happy');
+                    } else {
+                        modernChar.classList.add('state-happy');
+                    }
+                } else if (characterDisplay) {
+                    // Emociones para modo Arcade
+                    if (progress < 0.4) {
+                        characterDisplay.textContent = `(\\_/)\n( ._. )\n(>   <)`; // Triste
+                    } else if (progress < 0.8) {
+                        characterDisplay.textContent = `(\\_/)\n( °_° )\n(>   <)`; // Neutral
+                    } else {
+                        characterDisplay.textContent = `(\\_/)\n( ^_^ )\n(>   <)`; // Feliz
+                    }
+                }
+            }
+
             function initGame() {
+                // Configurar visibilidad según modo
+                if (gameMode === 'modern' && modernChar) {
+                    modernChar.style.display = "flex";
+                    characterDisplay.style.display = "none";
+                } else {
+                    if (modernChar) modernChar.style.display = "none";
+                    characterDisplay.style.display = "block";
+                }
+                updateEmotion(0); // Empezar triste en cualquier modo
+
                 // --- NUEVA LÓGICA DE APARICIÓN DE MANCHAS ---
-                
+
                 // Genera la primera oleada de manchas inmediatamente
                 const initialSpots = Math.min(SPOTS_PER_WAVE, SPOTS_TO_WIN);
                 for (let i = 0; i < initialSpots; i++) { createDirtSpot(); }
@@ -275,10 +359,20 @@
                 ];
                 let currentFrame = 0;
                 animationInterval = setInterval(() => {
-                    if (characterDisplay) {
-                        characterDisplay.textContent = animationFrames[currentFrame];
-                        currentFrame = (currentFrame + 1) % animationFrames.length;
+                    if (gameMode === 'modern' && modernChar) {
+                        // Efecto de parpadeo manual simple
+                        const eyes = modernChar.querySelectorAll('.eye');
+                        if (currentFrame % 8 === 0) {
+                            eyes.forEach(eye => eye.classList.add('blink'));
+                            setTimeout(() => eyes.forEach(eye => eye.classList.remove('blink')), 200);
+                        }
+                    } else if (characterDisplay) {
+                        // Solo animamos si ya está algo contento o en arcade puro, 
+                        // pero para no sobreescribir updateEmotion, vamos a ser cuidadosos.
+                        // Si queremos animaciones ASCII, deberíamos integrarlas en updateEmotion o usar estados.
+                        // Por ahora dejamos que updateEmotion mande sobre el texto base.
                     }
+                    currentFrame = (currentFrame + 1) % animationFrames.length;
                 }, 500); // Cambia la expresión cada 500ms
 
 
@@ -287,7 +381,7 @@
                 gameTimer = setInterval(() => {
                     const elapsedTime = Date.now() - startTime;
                     const remainingTime = GAME_DURATION - elapsedTime;
-                    
+
                     if (remainingTime <= 0) {
                         endGame(false);
                     } else {
@@ -353,6 +447,7 @@
                             ) {
                                 spot.remove();
                                 spotsCleaned++; // Incrementa el contador de limpiadas
+                                updateEmotion(spotsCleaned); // ACTUALIZAR EMOCIÓN
                                 // Comprueba si se ha alcanzado el objetivo
                                 if (spotsCleaned >= SPOTS_TO_WIN) {
                                     endGame(true);
@@ -372,11 +467,11 @@
                 document.addEventListener("touchend", handleDragEnd);
                 gameArea.addEventListener("touchmove", handleDragMove, { passive: false });
             }
-        
+
             function createDirtSpot() {
                 const spot = document.createElement("div");
                 spot.classList.add("dirt-spot");
-        
+
                 // --- CORRECCIÓN PARA VISIBILIDAD EN MÓVILES ---
                 // Usamos offsetWidth y offsetHeight que nos dan el tamaño real del área de juego.
                 const gameAreaWidth = gameArea.offsetWidth;
@@ -385,10 +480,10 @@
 
                 const x = Math.random() * (gameAreaWidth - spotSize);
                 const y = Math.random() * (gameAreaHeight - spotSize);
-        
+
                 spot.style.left = `${x}px`;
                 spot.style.top = `${y}px`;
-        
+
                 // El evento 'mouseover' se ha eliminado, la lógica de limpieza ahora está en handleDragMove.
                 gameArea.appendChild(spot);
             }
@@ -411,7 +506,7 @@
                     bubble.remove();
                 }, 2000); // AJUSTE: Coincide con la nueva duración de la animación
             }
-        
+
             function endGame(isWin) {
                 if (gameFinished) return;
                 gameFinished = true;
@@ -419,31 +514,42 @@
                 clearInterval(gameTimer);
                 clearInterval(spawnInterval); // Detiene la aparición de nuevas manchas
                 clearInterval(animationInterval); // Detiene la animación del personaje
-                
+
                 // Asegurarse de que la esponja vuelva a su estado normal
                 sponge.style.pointerEvents = 'auto';
                 sponge.style.cursor = 'grab';
-        
+
                 localStorage.setItem("showerGameResult", isWin ? "win" : "lose");
-        
+
                 if (isWin) {
                     resultTitle.textContent = "¡Limpieza completada!";
                     resultMessage.textContent = "¡Tu Tamagotchi está reluciente!";
-                    if (characterDisplay) characterDisplay.textContent = `(\\_/)\n( ^_^ )\n(>   <)`; // Cara feliz final
+                    if (gameMode === 'modern' && modernChar) {
+                        modernChar.classList.remove('state-sad', 'state-neutral', 'state-medium-happy', 'state-happy');
+                        modernChar.classList.add('state-happy');
+                    } else if (characterDisplay) {
+                        characterDisplay.textContent = `(\\_/)\n( ^_^ )\n(>   <)`; // Cara feliz final
+                    }
                 } else {
                     resultTitle.textContent = "¡Oh, no!";
                     resultMessage.textContent = "No lograste limpiarlo a tiempo.";
-                    if (characterDisplay) characterDisplay.textContent = `(\\_/)\n( ._. )\n(>   <)`; // Cara triste final
+                    if (gameMode === 'modern' && modernChar) {
+                        modernChar.classList.remove('state-sad', 'state-neutral', 'state-medium-happy', 'state-happy');
+                        modernChar.classList.add('state-sad');
+                    } else if (characterDisplay) {
+                        characterDisplay.textContent = `(\\_/)\n( ._. )\n(>   <)`; // Cara triste final
+                    }
                 }
                 resultOverlay.classList.remove("hidden");
             }
-        
+
             backButton.addEventListener("click", () => {
                 window.location.href = "index.html";
             });
-        
+
             initGame();
         });
     </script>
 </body>
+
 </html>

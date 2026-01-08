@@ -1,887 +1,1429 @@
 @keyframes moveObstacle {
-  from { left: 100%; }
-  to { left: -60px; }
+  from {
+    left: 100%;
+  }
+
+  to {
+    left: -60px;
+  }
 }
 
-      /* ==============================
+/* ==============================
          ESTILOS BASE Y GENERALES
       ============================== */
-      body {
-        background-color: #1c1d22; /* Color de fondo si el canvas falla */
-        transition: filter 0.5s ease, background-image 0.5s ease;
-        font-family: "Noto Sans", "Roboto", sans-serif;
-        margin: 0;
-        color: var(--color-text);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 20px;
-        min-height: 100vh;
-      }
-      body.sleeping, body.game-over {
-        background-color: black;
-        filter: grayscale(100%);
-      }
-      * {
-        user-select: none;
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-      }
-      @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap");
-      :root {
-        --color-bg: #f7f7f7;
-        --color-primary: #4a90e2;
-        --color-secondary: #50e3c2;
-        --color-accent: #e94e77;
-        --color-text: #333;
-        --color-input: rgba(255, 255, 255, 0.5);
-        --shadow: rgba(0, 0, 0, 0.1);
-      }
+body {
+  background-color: #1c1d22;
+  /* Color de fondo si el canvas falla */
+  transition: filter 0.5s ease, background-image 0.5s ease;
+  font-family: "Noto Sans", "Roboto", sans-serif;
+  margin: 0;
+  color: var(--color-text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  min-height: 100vh;
+}
 
-      /* --- ¡NUEVO! Estilos para el canvas de fondo --- */
-      #background-canvas {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        z-index: -1; /* Detrás de todo el contenido */
-        display: block;
-      }
+body.sleeping,
+body.game-over {
+  background-color: black;
+  filter: grayscale(100%);
+}
 
-      
-      * { box-sizing: border-box; }
-      h1 { font-weight: 700; margin-bottom: 10px; }
-      .menu-container,
-      .tamagochi-container {
-        width: 100%;
-        max-width: 600px;
-        background-color: transparent; /* Eliminado el fondo blanco semitransparente */
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 20px;
-        border: none; /* Eliminado el borde para una integración más limpia */
-      }
-      
-      /* Botón de cierre similar a los de un navegador */
-      .admin-close {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        background: none;
-        border: none;
-        font-size: 1.5rem;
-        cursor: pointer;
-      }
-      .store-section.objects {
-        display: flex;
-        flex-direction: column;
-        align-items: center; /* Centra horizontalmente los elementos */
-        text-align: center;  /* Centra el texto dentro de cada línea */
-      }
-      
-      .store-section.objects .store-item {
-        display: flex;
-        flex-direction: column; /* Elementos uno debajo del otro */
-        align-items: center;    /* Centrar horizontalmente */
-        justify-content: center;
-        padding: 10px;
-        margin: 10px 0;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        background-color: white;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-      }
-      
-      .store-section.objects .store-item span {
-        font-size: 1rem;
-        margin-bottom: 8px; /* Separación entre texto y botón */
-        text-align: center;
-      }
-      
-      .store-section.objects .store-item button {
-        padding: 8px 16px;
-        font-weight: bold;
-        background-color: #4a90e2;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: background-color 0.2s ease;
-      }
-      
-      .store-section.objects .store-item button:hover {
-        background-color: #3a78c2;
-      }
-      #inventory-icon {
-        position: fixed;   /* Fijo en la pantalla */
-        top: 20px;         /* Separación desde el tope */
-        right: 20px;       /* Separación desde la derecha */
-        z-index: 10001;    /* Por encima del museo, pero por debajo de admin/tienda */
-        background: rgba(0,0,0,0.7);
-        color: #fff;
-        padding: 10px 15px;
-        border-radius: 8px;
-        font-size: 1.5rem;
-        cursor: pointer;
-        user-select: none;
-        transition: background 0.3s ease, opacity 0.3s ease;
-      }
-      
-      #inventory-icon:hover {
-        background: rgba(0,0,0,0.9);
-      }
-      /* ==============================
+* {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap");
+
+:root {
+  --color-bg: #f7f7f7;
+  --color-primary: #4a90e2;
+  --color-secondary: #50e3c2;
+  --color-accent: #e94e77;
+  --color-text: #333;
+  --color-input: rgba(255, 255, 255, 0.5);
+  --shadow: rgba(0, 0, 0, 0.1);
+}
+
+/* --- ¡NUEVO! Estilos para el canvas de fondo --- */
+#background-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  /* Detrás de todo el contenido */
+  display: block;
+}
+
+
+* {
+  box-sizing: border-box;
+}
+
+h1 {
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.menu-container,
+.tamagochi-container {
+  width: 100%;
+  max-width: 600px;
+  background-color: transparent;
+  /* Eliminado el fondo blanco semitransparente */
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: none;
+  /* Eliminado el borde para una integración más limpia */
+}
+
+/* Botón de cierre similar a los de un navegador */
+.admin-close {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.store-section.objects {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Centra horizontalmente los elementos */
+  text-align: center;
+  /* Centra el texto dentro de cada línea */
+}
+
+.store-section.objects .store-item {
+  display: flex;
+  flex-direction: column;
+  /* Elementos uno debajo del otro */
+  align-items: center;
+  /* Centrar horizontalmente */
+  justify-content: center;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.store-section.objects .store-item span {
+  font-size: 1rem;
+  margin-bottom: 8px;
+  /* Separación entre texto y botón */
+  text-align: center;
+}
+
+.store-section.objects .store-item button {
+  padding: 8px 16px;
+  font-weight: bold;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.store-section.objects .store-item button:hover {
+  background-color: #3a78c2;
+}
+
+#inventory-icon {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10001;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 1.8rem;
+  cursor: pointer;
+  user-select: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+#inventory-icon:hover {
+  transform: scale(1.1);
+}
+
+/* ==============================
          NUEVO: ESTILOS DEL LIBRO DE INVENTARIO
       ============================== */
-      #inventory-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.7);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-        display: none; /* Oculto por defecto */
-      }
+#inventory-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  display: none;
+  /* Oculto por defecto */
+}
 
-      #inventory-book {
-        width: 90vw;
-        max-width: 800px;
-        height: 80vh;
-        max-height: 600px;
-        background: #fdfaf1; /* Color pergamino */
-        border: 3px solid #8B4513; /* Borde de cuero */
-        border-radius: 10px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        padding: 15px;
-      }
+#inventory-book {
+  width: 90vw;
+  max-width: 800px;
+  height: 80vh;
+  max-height: 600px;
+  background: #fdfaf1;
+  /* Color pergamino */
+  border: 3px solid #8B4513;
+  /* Borde de cuero */
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+}
 
-      .inventory-page {
-        display: none; /* Ocultas por defecto */
-        height: calc(100% - 60px); /* Altura total menos los controles */
-        overflow-y: auto;
-      }
+.inventory-page {
+  display: none;
+  /* Ocultas por defecto */
+  height: calc(100% - 60px);
+  /* Altura total menos los controles */
+  overflow-y: auto;
+}
 
-      .inventory-page.active {
-        display: block;
-      }
+.inventory-page.active {
+  display: block;
+}
 
-      .inventory-page h2 {
-        text-align: center;
-        font-family: 'Georgia', serif;
-        color: #5a3a1a;
-        border-bottom: 2px solid #d4c0a1;
-        padding-bottom: 10px;
-      }
+.inventory-page h2 {
+  text-align: center;
+  font-family: 'Georgia', serif;
+  color: #5a3a1a;
+  border-bottom: 2px solid #d4c0a1;
+  padding-bottom: 10px;
+}
 
-      .item-grid, .museum-item-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 15px;
-        padding: 10px;
-      }
+.item-grid,
+.museum-item-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 15px;
+  padding: 10px;
+}
 
-      .inventory-item {
-        background: #f5efde;
-        border: 1px solid #d4c0a1;
-        border-radius: 8px;
-        padding: 10px;
-        font-size: 0.9rem;
-        position: relative; /* Para el botón de vender */
-        /* --- ¡MODIFICADO! Usar Flexbox para alinear contenido --- */
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        align-items: center;
-        gap: 8px; /* Espacio entre el nombre y el botón */
-        text-align: center;
-      }
+.inventory-item {
+  background: #f5efde;
+  border: 1px solid #d4c0a1;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 0.9rem;
+  position: relative;
+  /* Para el botón de vender */
+  /* --- ¡MODIFICADO! Usar Flexbox para alinear contenido --- */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  /* Espacio entre el nombre y el botón */
+  text-align: center;
+}
 
-      /* --- ¡NUEVO! Estilo para el botón de venta en el museo --- */
-      .museum-sell-btn {
-        width: auto;
-        padding: 4px 12px;
-        font-size: 0.8rem;
-        font-weight: bold;
-        background-color: #e53e3e;
-        color: white;
-        border-radius: 5px;
-        cursor: pointer;
-      }
+/* --- ¡NUEVO! Estilo para el botón de venta en el museo --- */
+.museum-sell-btn {
+  width: auto;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  background-color: #e53e3e;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
 
-      /* --- ¡NUEVO! Estilos para objetos descubiertos vs. no descubiertos --- */
-      .inventory-item.locked {
-        background-color: #e0d5c1; /* Un fondo más oscuro */
-        color: #9e8a70; /* Texto más apagado */
-        font-style: italic;
-      }
+/* --- ¡NUEVO! Estilos para objetos descubiertos vs. no descubiertos --- */
+.inventory-item.locked {
+  background-color: #e0d5c1;
+  /* Un fondo más oscuro */
+  color: #9e8a70;
+  /* Texto más apagado */
+  font-style: italic;
+}
 
-      .inventory-item.owned {
-        background-color: #f5efde; /* Fondo normal */
-        color: #5a3a1a; /* Texto normal */
-        font-weight: bold; /* Resaltar los objetos conseguidos */
-      }
-      /* --- Fin de nuevos estilos --- */
+.inventory-item.owned {
+  background-color: #f5efde;
+  /* Fondo normal */
+  color: #5a3a1a;
+  /* Texto normal */
+  font-weight: bold;
+  /* Resaltar los objetos conseguidos */
+}
 
-      #inventory-controls {
-        position: absolute;
-        bottom: 10px;
-        left: 0;
-        width: 100%;
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-      }
+/* --- Fin de nuevos estilos --- */
 
-      #inventory-controls button {
-        width: auto;
-        padding: 8px 16px;
-      }
+#inventory-controls {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
 
-      /* --- ¡NUEVO! Adaptación para móviles --- */
-      @media (max-width: 600px) {
-        #inventory-book {
-          width: 95vw; /* Más ancho en pantallas pequeñas */
-          height: 85vh; /* Un poco más alto */
-          padding: 10px;
-        }
+#inventory-controls button {
+  width: auto;
+  padding: 8px 16px;
+}
 
-        .item-grid {
-          /* Reduce el tamaño mínimo para que quepan más columnas si es posible */
-          grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-          gap: 10px;
-        }
+/* --- ¡NUEVO! Adaptación para móviles --- */
+@media (max-width: 600px) {
+  #inventory-book {
+    width: 95vw;
+    /* Más ancho en pantallas pequeñas */
+    height: 85vh;
+    /* Un poco más alto */
+    padding: 10px;
+  }
 
-        #inventory-controls button {
-          padding: 10px 12px; /* Botones un poco más grandes para el tacto */
-          font-size: 0.9rem;
-        }
-      }
+  .item-grid {
+    /* Reduce el tamaño mínimo para que quepan más columnas si es posible */
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+  }
 
-      /* ==============================
+  #inventory-controls button {
+    padding: 10px 12px;
+    /* Botones un poco más grandes para el tacto */
+    font-size: 0.9rem;
+  }
+}
+
+/* ==============================
          NUEVO: ESTILOS DEL MUSEO
       ============================== */
-      #museum-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.7);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 10000; /* Por encima del inventario */
-        display: none; /* Oculto por defecto */
-      }
+#museum-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  /* Por encima del inventario */
+  display: none;
+  /* Oculto por defecto */
+}
 
-      #museum-book {
-        width: 90vw;
-        max-width: 800px;
-        height: 80vh;
-        max-height: 600px;
-        background: #fdfaf1; /* Color pergamino */
-        border: 3px solid #8B4513; /* Borde de cuero */
-        border-radius: 10px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        padding: 15px;
-      }
+#museum-book {
+  width: 90vw;
+  max-width: 800px;
+  height: 80vh;
+  max-height: 600px;
+  background: #fdfaf1;
+  /* Color pergamino */
+  border: 3px solid #8B4513;
+  /* Borde de cuero */
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+}
 
-      .close-book-button {
-        position: absolute;
-        top: 5px;
-        right: 10px;
-        font-size: 2rem;
-        background: none;
-        border: none;
-        color: #5a3a1a;
-        cursor: pointer;
-        z-index: 10;
-        width: auto; /* Reset width */
-      }
+.close-book-button {
+  position: absolute;
+  top: 5px;
+  right: 10px;
+  font-size: 2rem;
+  background: none;
+  border: none;
+  color: #5a3a1a;
+  cursor: pointer;
+  z-index: 10;
+  width: auto;
+  /* Reset width */
+}
 
-      /* --- ¡CORRECCIÓN! El botón del museo no tenía esta clase asignada antes --- */
-      
-      .museum-page {
-        display: none; /* Ocultas por defecto */
-        height: calc(100% - 60px); /* Altura total menos los controles */
-        overflow-y: auto;
-      }
+/* --- ¡CORRECCIÓN! El botón del museo no tenía esta clase asignada antes --- */
 
-      .museum-page.active {
-        display: block;
-      }
+.museum-page {
+  display: none;
+  /* Ocultas por defecto */
+  height: calc(100% - 60px);
+  /* Altura total menos los controles */
+  overflow-y: auto;
+}
 
-      #museum-controls {
-        position: absolute;
-        bottom: 10px;
-        left: 0;
-        width: 100%;
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-      }
-      
-      /* ==============================
+.museum-page.active {
+  display: block;
+}
+
+#museum-controls {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+/* ==============================
          NUEVO: ESTILOS DEL MENÚ ADMIN
       ============================== */
-      #admin-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.7);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 10003; /* Prioridad máxima para el menú de admin */
-        display: none; /* Oculto por defecto */
-        padding: 20px; /* Añade un poco de espacio en los bordes en móvil */
-      }
+/* ==============================
+         NUEVO: ESTILOS DEL MENÚ ADMIN (REDISEÑADO)
+      ============================== */
 
-      #admin-menu {
-        width: 90vw;
-        max-width: 500px;
-        max-height: 90vh;
-        background: #fdfaf1; /* Color pergamino */
-        border: 3px solid #8B4513; /* Borde de cuero */
-        border-radius: 10px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        padding: 20px;
-        gap: 20px; /* Espacio entre secciones */
-        overflow-y: auto; /* Scroll si el contenido es muy alto */
-      }
+/* El #admin-menu ahora usa la clase .action-modal, 
+   por lo que hereda el fondo Glassmorphism y la estructura.
+   Aquí definimos solo los overrides específicos. */
 
-      #admin-menu h2 {
-        text-align: center;
-        font-family: 'Georgia', serif;
-        color: #5a3a1a;
-        border-bottom: 2px solid #d4c0a1;
-        padding-bottom: 10px;
-        margin-top: 0;
-      }
+#admin-menu {
+  max-width: 500px;
+  /* Un poco más ancho que los menús normales */
+}
 
-      .admin-actions {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-      }
+/* Ajustes para el libro de items dentro del modo oscuro */
+#admin-item-book {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 10px;
+  position: relative;
+  height: 250px;
+  display: flex;
+  flex-direction: column;
+}
 
-      .admin-actions button {
-        width: 100%;
-        margin: 0;
-        font-size: 0.9rem;
-      }
+.admin-item-page {
+  display: none;
+  height: calc(100% - 40px);
+  overflow-y: auto;
+}
 
-      #admin-reset-character { background-color: #e53e3e; color: white; }
-      #admin-add-random-item { background-color: #3182ce; color: white; }
-      #reset-stats { background-color: #dd6b20; color: white; grid-column: span 2; }
+.admin-item-page.active {
+  display: block;
+}
 
-      .admin-form { display: flex; flex-direction: column; gap: 15px; }
-      .form-group { display: flex; flex-direction: column; gap: 5px; }
-      .form-group label { font-weight: bold; color: #654321; }
-      .form-group input, .form-group select {
-        background: #f5efde;
-        border: 1px solid #d4c0a1;
-        border-radius: 6px;
-        padding: 8px;
-      }
+.admin-item-page h4 {
+  text-align: center;
+  margin: 5px 0 10px;
+  color: #fff;
+  font-family: sans-serif;
+  /* Quitamos la serif */
+  font-weight: 600;
+}
 
-      #admin-edad-aceptar { background-color: #2f855a; color: white; font-weight: bold; }
+.admin-item-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+}
 
-      @media (max-width: 600px) {
-        .admin-actions { grid-template-columns: 1fr; }
-        #reset-stats { grid-column: auto; }
-      }
+.admin-item {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  text-align: center;
+  gap: 5px;
+  color: #eee;
+  transition: background 0.2s;
+}
 
-      /* --- MODIFICADO: Estilo para el botón de cierre dentro del menú admin --- */
-      #admin-close {
-        position: absolute;
-        top: 5px;
-        right: 10px;
-        background: none;
-        border: none;
-        font-size: 2.2rem;
-        color: #a0522d; /* Un color sepia que encaja con el diseño */
-        cursor: pointer;
-        transition: color 0.2s, transform 0.2s;
-        width: auto; /* Resetea el width: 100% de los botones generales */
-      }
-      #admin-close:hover {
-        color: #d2691e; /* Un color más brillante al pasar el ratón */
-        transform: scale(1.1);
-      }
+.admin-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
 
-      /* --- ¡NUEVO! Estilos para la paginación de objetos en el menú admin --- */
-      #admin-item-book {
-        background: #f5efde;
-        border: 1px solid #d4c0a1;
-        border-radius: 8px;
-        padding: 10px;
-        position: relative;
-        height: 250px; /* Altura fija para el contenedor del libro */
-        display: flex;
-        flex-direction: column;
-      }
+.admin-add-btn {
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  background: linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: auto;
+  /* Empujar al fondo */
+}
 
-      .admin-item-page {
-        display: none;
-        height: calc(100% - 40px); /* Altura menos los controles */
-        overflow-y: auto;
-      }
+.admin-add-btn:hover {
+  background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+}
 
-      .admin-item-page.active {
-        display: block;
-      }
+#admin-item-controls {
+  display: flex;
+  justify-content: space-around;
+  padding-top: 10px;
+}
 
-      .admin-item-page h4 {
-        text-align: center;
-        margin: 5px 0 10px;
-        color: #5a3a1a;
-        font-family: 'Georgia', serif;
-      }
+#admin-item-controls button {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  padding: 5px 15px !important;
+  font-size: 0.9rem;
+  width: auto;
+}
 
-      .admin-item-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 10px;
-      }
+#admin-item-controls button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
 
-      .admin-item {
-        background: #fdfaf1;
-        border: 1px solid #d4c0a1;
-        border-radius: 6px;
-        padding: 8px;
-        font-size: 0.8rem;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        align-items: center;
-        text-align: center;
-        gap: 5px;
-      }
+.admin-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
 
-      .admin-add-btn {
-        width: 100%;
-        padding: 4px 8px;
-        font-size: 0.8rem;
-        background-color: #3182ce;
-        color: white;
-      }
+.admin-actions button {
+  width: 100%;
+  margin: 0;
+  font-size: 0.9rem;
+  padding: 10px;
+}
 
-      #admin-item-controls {
-        display: flex;
-        justify-content: space-around;
-        padding-top: 10px;
-      }
-      .menu-container { text-align: center; }
-      label { display: block; font-size: 1rem; margin: 10px 0 5px; }
-      input[type="text"],
-      input[type="number"] {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        font-size: 1rem;
-        margin-bottom: 10px;
-      }
-      button {
-        width: 100%;
-        padding: 12px;
-        margin: 10px 0;
-        border: none;
-        border-radius: 8px;
-        font-size: 1rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-      }
-      button:hover { opacity: 0.9; }
-      #start-game { background-color: var(--color-primary); color: #fff; }
-      .tamagochi-container {
-        display: none;
-        flex-direction: column;
-        justify-content: space-around; /* Cambiado para centrar mejor el contenido verticalmente */
-        min-height: 400px;
-        position: relative;
-      }
-      /* ==============================
+#admin-reset-character {
+  background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+  color: white;
+  border: none;
+}
+
+#admin-reset-character:hover {
+  background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+}
+
+#reset-stats {
+  background: linear-gradient(135deg, #dd6b20 0%, #c05621 100%);
+  color: white;
+  border: none;
+  grid-column: span 2;
+}
+
+#reset-stats:hover {
+  background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+}
+
+.admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #ccc;
+  /* Texto claro */
+  font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group select {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.5);
+}
+
+#admin-edad-aceptar {
+  background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+  color: white;
+  font-weight: bold;
+  margin-top: 20px;
+}
+
+#admin-edad-aceptar:hover {
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+}
+
+@media (max-width: 600px) {
+  .admin-actions {
+    grid-template-columns: 1fr;
+  }
+
+  #reset-stats {
+    grid-column: auto;
+  }
+}
+
+/* Eliminamos estilos viejos de #admin-close ya que usamos .close-modal-btn */
+
+.admin-add-btn {
+  width: 100%;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  background-color: #3182ce;
+  color: white;
+}
+
+#admin-item-controls {
+  display: flex;
+  justify-content: space-around;
+  padding-top: 10px;
+}
+
+.menu-container {
+  text-align: center;
+}
+
+label {
+  display: block;
+  font-size: 1rem;
+  margin: 10px 0 5px;
+}
+
+input[type="text"],
+input[type="number"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+#start-game {
+  background-color: var(--color-primary);
+  color: #fff;
+}
+
+.tamagochi-container {
+  display: none;
+  flex-direction: column;
+  justify-content: space-around;
+  /* Cambiado para centrar mejor el contenido verticalmente */
+  min-height: 400px;
+  position: relative;
+}
+
+/* ==============================
          MENÚS EXISTENTES (comida, limpieza, juegos, trabajo, minijuego)
       ============================== */
-      /* MENÚ DE ALIMENTACIÓN se rellenará dinámicamente */
-      #food-menu {
-        display: none;
-        position: absolute;
-        top: 50%; left: 50%;
-        transform: translate(-50%, -50%);
-        background-color: var(--color-input);
-        padding: 10px;
-        border: 1px solid var(--color-primary);
-        border-radius: 8px;
-        box-shadow: 0 4px 10px var(--shadow);
-        z-index: 10;
-      }
-      .overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0); /* invisible, pero bloquea clicks */
-        z-index: 9;
-      }
-  
-        
-      #clean-menu,
-      #game-menu,
-      #sleep-menu,
-      #work-menu {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background-color: var(--color-input);
-        padding: 10px;
-        border: 1px solid var(--color-primary);
-        border-radius: 8px;
-        box-shadow: 0 4px 10px var(--shadow);
-        z-index: 10;
-      }
-      
-      .close-btn {
-        position: absolute;
-        top: -25px;
-        right: -140px;
-        background: none;
-        border: none;
-        font-size: 1.5rem;
-        font-weight: bold;
-        cursor: pointer;
-        color: var(--color-text); /* Usa tu variable o el color que prefieras */
-        transition: color 0.3s ease;
-      }
-      
-      .close-btn:hover {
-        color: var(--color-accent); /* Cambia a tu color de acento o el que prefieras */
-      }
-      @media (max-width: 600px) {
-        #work-menu .close-btn {
-          right: -75px; /* Ajusta este valor según lo que necesites para móviles */
-        }
-      }
-      #game-menu button,
-      #clean-menu button,
-      #game-menu button {
-        width: 100%;
-        margin: 5px 0;
-        font-size: 0.9rem;
-        text-align: center;
-      }
-      /* Overlay del minijuego (para otros juegos) */
-      #minijuego-container {
-        display: none;
-        position: absolute;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background-color: rgba(0, 0, 0, 0.6);
-        z-index: 20;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        color: #fff;
-      }
-      #minijuego-gamearea {
-        position: relative;
-        width: 90%;
-        max-width: 400px;
-        height: 200px;
-        background-color: rgba(0, 0, 0, 0.3);
-        margin-bottom: 20px;
-        overflow: hidden;
-        border-radius: 8px;
-      }
-      #game-character {
-        position: absolute;
-        bottom: 0; left: 50%;
-        transform: translateX(-50%);
-        font-size: 2rem;
-      }
-      .droplet {
-        border-radius: 50%;
-        background-color: #00f;
-        width: 20px; height: 20px;
-        position: absolute;
-        cursor: pointer;
-      }
-      .obstacle {
-        position: absolute;
-        width: 60px;
-        background-color: green;
-      }
-      .jump { animation: jump 0.5s ease; }
-      @keyframes jump { 0% { bottom: 0; } 50% { bottom: 100px; } 100% { bottom: 0; } }
-      @media (max-width: 600px) {
-        .tamagochi-container { max-width: 100%; padding: 10px; }
-        .top-container { flex-direction: column; align-items: center; }
-        #muñeco-container pre { max-width: 100%; overflow-wrap: break-word; }
-        #muñeco-container { margin-top: 33px; transform: translateX(-13%); }
-      }
-      @keyframes pulsate { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-      @keyframes swing { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(5deg); } 75% { transform: rotate(-5deg); } }
-      @keyframes sleeping { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
-      @keyframes happyBounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-      @keyframes rotateEffect { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-      @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
-      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+/* ==============================
+         NUEVO: SISTEMA DE MODALES (Action Modals)
+      ============================== */
 
-      /* --- NUEVO: Animaciones específicas para la transición de la ducha --- */
-      @keyframes fadeOutAnimation {
-        from { opacity: 1; transform: scale(1); }
-        to { opacity: 0; transform: scale(0.8); }
-      }
-      @keyframes fadeInAnimation {
-        from { opacity: 0; transform: scale(0.8); }
-        to { opacity: 1; transform: scale(1); }
-      }
-      .top-container {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 20px;
-      }
-      #muñeco-container {
-        flex: 1;
-        text-align: center;
-        min-height: 150px;
-        min-height: 220px; /* Aumentado de 150px a 220px para un área pulsable mayor */
-        cursor: pointer;
-      }
-      #notification-container {
-        margin-left: 10px;
-        max-width: 150px;
-        background-color: #007bff;
-        border-radius: 8px;
-        padding: 10px;
-        color: #fff;
-        display: none;
-        text-align: center;
-      }
-      #info-container {
-        display: none;
-        background-color: var(--color-input);
-        border: 1px solid var(--color-primary);
-        border-radius: 8px;
-        padding: 10px;
-        margin: 10px 0;
-        text-align: center;
-        font-size: 1rem;
-        box-shadow: 0 4px 10px var(--shadow);
-      }
-      pre { margin: 0; transition: transform 0.3s ease; }
-      /* Estados del Tamagotchi */
-      #tamagochi-feliz,
-      #tamagochi-feliz-caca,
-      #tamagochi,
-      #tamagochi-domir,
-      #tamagochi_caca,
-      #tamagochi_caca-domir,
-      #tamagochi_sueño,
-      #tamagochi_sueño_caca,
-      #tamagochi_aburrido,
-      #tamagochi_aburrido_caca,
-      #tamagochi_hambriento,
-      #tamagochi_hambriento_caca,
-      #tamagochi_muerto { display: none; }
-      .buttons-container { display: flex; flex-direction: column; gap: 10px; }
-      .stat { font-size: 1.2rem; font-weight: 700; margin: 5px 0; }
-      .progress { width: 100%; background-color: #eee; border-radius: 4px; overflow: hidden; height: 10px; margin-top: 5px; }
-      .progress-bar { height: 100%; width: 0%; transition: width 0.3s ease, background-color 0.3s ease; }
-      .verde { background-color: #4caf50; }
-      .naranja { background-color: #ff9800; }
-      .rojo { background-color: #f44336; }
-      #btn-hambre { background-color: var(--color-primary); color: #fff; }
-      #btn-aburrimiento { background-color: var(--color-accent); color: #fff; }
-      #btn-sueno { background-color: var(--color-secondary); color: #fff; }
-      #btn-higiene { background-color: #8e44ad; color: #fff; }
+/* Fondo oscuro compartido para todos los menús */
+#menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(3px);
+  z-index: 9998;
+  /* Justo debajo de los modales (9999) */
+  display: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
 
-      /* ==============================
+#menu-overlay.active {
+  opacity: 1;
+}
+
+/* Estilo base para los modales de acción (Comida, Juego, Sueño, etc.) */
+.action-modal {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  width: 90%;
+  max-width: 400px;
+  background: rgba(30, 30, 35, 0.85);
+  /* Fondo oscuro elegante */
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  z-index: 9999;
+  flex-direction: column;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  opacity: 0;
+  padding: 0;
+  /* El padding lo manejan los hijos */
+}
+
+.action-modal.active {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+
+/* Cabecera del modal */
+.modal-header {
+  display: flex !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  padding: 15px 20px !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  position: relative !important;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #fff;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.close-modal-btn {
+  position: absolute !important;
+  top: 3px !important;
+  right: 12px !important;
+  background: none !important;
+  border: none !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-size: 1.6rem !important;
+  cursor: pointer !important;
+  z-index: 10000 !important;
+  width: 30px !important;
+  height: 30px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  line-height: normal !important;
+}
+
+.close-modal-btn:hover {
+  color: #fff !important;
+  transform: scale(1.1);
+}
+
+/* Cuerpo del modal */
+.modal-body {
+  padding: 20px;
+  display: grid;
+  gap: 12px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.modal-body button {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  padding: 12px 15px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-align: left;
+  margin: 0;
+}
+
+.modal-body button:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.modal-body button:active {
+  transform: translateY(0);
+}
+
+.close-btn {
+  position: absolute;
+  top: -25px;
+  right: -140px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  color: var(--color-text);
+  /* Usa tu variable o el color que prefieras */
+  transition: color 0.3s ease;
+}
+
+.close-btn:hover {
+  color: var(--color-accent);
+  /* Cambia a tu color de acento o el que prefieras */
+}
+
+@media (max-width: 600px) {
+  #work-menu .close-btn {
+    right: -75px;
+    /* Ajusta este valor según lo que necesites para móviles */
+  }
+}
+
+#game-menu button,
+#clean-menu button,
+#game-menu button {
+  width: 100%;
+  margin: 5px 0;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* Overlay del minijuego (para otros juegos) */
+#minijuego-container {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 20;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+}
+
+#minijuego-gamearea {
+  position: relative;
+  width: 90%;
+  max-width: 400px;
+  height: 200px;
+  background-color: rgba(0, 0, 0, 0.3);
+  margin-bottom: 20px;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+#game-character {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 2rem;
+}
+
+.droplet {
+  border-radius: 50%;
+  background-color: #00f;
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  cursor: pointer;
+}
+
+.obstacle {
+  position: absolute;
+  width: 60px;
+  background-color: green;
+}
+
+.jump {
+  animation: jump 0.5s ease;
+}
+
+@keyframes jump {
+  0% {
+    bottom: 0;
+  }
+
+  50% {
+    bottom: 100px;
+  }
+
+  100% {
+    bottom: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .tamagochi-container {
+    max-width: 100%;
+    padding: 10px;
+  }
+
+  .top-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #muñeco-container pre {
+    max-width: 100%;
+    overflow-wrap: break-word;
+  }
+
+  #muñeco-container {
+    margin-top: 33px;
+    transform: translateX(-13%);
+  }
+}
+
+@keyframes pulsate {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes swing {
+
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(5deg);
+  }
+
+  75% {
+    transform: rotate(-5deg);
+  }
+}
+
+@keyframes sleeping {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(5px);
+  }
+}
+
+@keyframes happyBounce {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes rotateEffect {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* --- NUEVO: Animaciones específicas para la transición de la ducha --- */
+@keyframes fadeOutAnimation {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+@keyframes fadeInAnimation {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.top-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+#muñeco-container {
+  flex: 1;
+  text-align: center;
+  min-height: 150px;
+  min-height: 220px;
+  /* Aumentado de 150px a 220px para un área pulsable mayor */
+  cursor: pointer;
+}
+
+#notification-container {
+  margin-left: 10px;
+  max-width: 150px;
+  background-color: #007bff;
+  border-radius: 8px;
+  padding: 10px;
+  color: #fff;
+  display: none;
+  text-align: center;
+}
+
+#info-container {
+  display: none;
+  background-color: var(--color-input);
+  border: 1px solid var(--color-primary);
+  border-radius: 8px;
+  padding: 10px;
+  margin: 10px 0;
+  text-align: center;
+  font-size: 1rem;
+  box-shadow: 0 4px 10px var(--shadow);
+}
+
+pre {
+  margin: 0;
+  transition: transform 0.3s ease;
+}
+
+/* Estados del Tamagotchi */
+#tamagochi-feliz,
+#tamagochi-feliz-caca,
+#tamagochi,
+#tamagochi-domir,
+#tamagochi_caca,
+#tamagochi_caca-domir,
+#tamagochi_sueño,
+#tamagochi_sueño_caca,
+#tamagochi_aburrido,
+#tamagochi_aburrido_caca,
+#tamagochi_hambriento,
+#tamagochi_hambriento_caca,
+#tamagochi_muerto {
+  display: none;
+}
+
+.buttons-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.control-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  padding: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s ease;
+}
+
+/* Hover sutil para la tarjeta en desktop */
+.control-card:hover {
+  transform: translateY(-2px);
+}
+
+.stat-label {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #444;
+}
+
+.stat-icon {
+  font-size: 1.2rem;
+}
+
+.progress {
+  width: 100%;
+  background-color: #e0e0e0;
+  border-radius: 10px;
+  /* Bordes más redondeados */
+  overflow: hidden;
+  height: 12px;
+  /* Un poco más alto */
+  margin-bottom: 12px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  border-radius: 10px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
+  background-color: #4caf50;
+  /* Color por defecto */
+  min-width: 2px;
+  /* Asegura que se vea algo si el valor es muy bajo pero no cero */
+}
+
+.action-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: #fff;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+  /* Override general button margin */
+}
+
+
+.action-btn:active {
+  transform: scale(0.96);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Colores específicos para los botones */
+#btn-hambre {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+#btn-hambre:hover {
+  box-shadow: 0 6px 12px rgba(0, 242, 254, 0.3);
+}
+
+#btn-aburrimiento {
+  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
+  background: linear-gradient(135deg, #F06292 0%, #FF80AB 100%);
+  /* Ajustado para mejor contraste */
+}
+
+#btn-aburrimiento:hover {
+  box-shadow: 0 6px 12px rgba(240, 98, 146, 0.3);
+}
+
+#btn-sueno {
+  background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+}
+
+#btn-sueno:hover {
+  box-shadow: 0 6px 12px rgba(161, 140, 209, 0.3);
+}
+
+#btn-higiene {
+  background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+  color: #2c3e50;
+  /* Texto oscuro para mejor contraste en este fondo */
+}
+
+#btn-higiene:hover {
+  box-shadow: 0 6px 12px rgba(132, 250, 176, 0.3);
+}
+
+/* Ajuste responsive para móviles: que sigan siendo 2 columnas pero con menos gap si es necesario, 
+         o 1 columna si es muy estrecho. Por ahora 2 es standard. */
+@media (max-width: 400px) {
+  .buttons-container {
+    gap: 10px;
+  }
+
+  .control-card {
+    padding: 10px;
+  }
+
+  .action-btn {
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+}
+
+.verde {
+  background-color: #4caf50;
+}
+
+.naranja {
+  background-color: #ff9800;
+}
+
+.rojo {
+  background-color: #f44336;
+}
+
+/* ==============================
          ESTILOS PARA FLAPPY BIRD
       ============================== */
-      #flappy-game {
-        display: none;
-        position: fixed;
-        top: 0; left: 0;
-        width: 100vw; height: 100vh;
-        background-color: #87CEEB;
-        z-index: 1000;
-        overflow: hidden;
-      }
-      #flappy-game-area {
-        position: relative;
-        width: 100%;
-        height: 100%;
-      }
-      #flappy-bird {
-        position: absolute;
-        left: 20%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        font-size: 2rem;
-      }
-      .obstacle-flappy {
-        position: absolute;
-        width: 60px;
-        background-color: green;
-      }
-      #flappy-start-overlay {
-        position: absolute;
-        top: 0; left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0,0,0,0.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2rem;
-        color: white;
-        z-index: 1100;
-      }
+#flappy-game {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #87CEEB;
+  z-index: 1000;
+  overflow: hidden;
+}
 
-      /* ==============================
+#flappy-game-area {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+#flappy-bird {
+  position: absolute;
+  left: 20%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+}
+
+.obstacle-flappy {
+  position: absolute;
+  width: 60px;
+  background-color: green;
+}
+
+#flappy-start-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: white;
+  z-index: 1100;
+}
+
+/* ==============================
          ESTILOS DE LA TIENDA (Modificados)
       ============================== */
-      #store-icon {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        width: 50px;
-        height: 50px;
-        background-color: var(--color-primary);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        border-radius: 8px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-        font-size: 1.5rem;
-        z-index: 9998; /* Prioridad base, por debajo de los overlays */
-        transition: background-color 0.3s, z-index 0s; /* Añadimos z-index a la transición (con 0s) */
-      }
-      /* ¡NUEVO! Clase para poner el icono por encima de otros elementos */
-      #store-icon.on-top {
-        z-index: 10003; /* Prioridad máxima para estar sobre la tienda */
-      }
-      #store-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        z-index: 10002; /* Prioridad alta para la tienda */
-        overflow-y: auto;
-        padding: 20px;
-      }
-      #store-overlay h2 {
-        text-align: center;
-        margin-bottom: 20px;
-        color: var(--color-primary);
-      }
-      .store-menu {
-        display: flex;
-        justify-content: space-around;
-        flex-wrap: wrap;
-        gap: 20px;
-      }
-      .store-section {
-        flex: 1;
-        min-width: 250px;
-        background: #fafafa;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 10px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-      .store-section h3 {
-        text-align: center;
-        margin: 0;
-        padding-bottom: 5px;
-        border-bottom: 2px solid var(--color-primary);
-        color: var(--color-primary);
-        font-size: 1.1rem;
-      }
+#store-icon {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  background-color: var(--color-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  font-size: 1.5rem;
+  z-index: 9998;
+  /* Prioridad base, por debajo de los overlays */
+  transition: background-color 0.3s, z-index 0s;
+  /* Añadimos z-index a la transición (con 0s) */
+}
 
-      /* --- ESTILOS DE TARJETA DE PRODUCTO (MODIFICADO) --- */
-      .store-item {
-        display: flex;
-        flex-direction: column; /* Apila los elementos verticalmente */
-        align-items: center;   /* Centra horizontalmente */
-        justify-content: space-between; /* Distribuye el espacio */
-        background: #f5efde;
-        border: 1px solid #d4c0a1;
-        border-radius: 10px;
-        padding: 15px 10px;
-        text-align: center;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        gap: 10px; /* Espacio entre nombre, precio y botón */
-      }
+/* ¡NUEVO! Clase para poner el icono por encima de otros elementos */
+#store-icon.on-top {
+  z-index: 10003;
+  /* Prioridad máxima para estar sobre la tienda */
+}
 
-      .store-item:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-      }
+#store-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 10002;
+  /* Prioridad alta para la tienda */
+  overflow-y: auto;
+  padding: 20px;
+}
 
-      .store-item .item-name {
-        font-weight: bold;
-        font-size: 1rem;
-        color: #5a3a1a;
-      }
+#store-overlay h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: var(--color-primary);
+}
 
-      .store-item .item-price {
-        font-size: 0.9rem;
-        color: #8B4513;
-        background-color: #eaddc7;
-        padding: 3px 8px;
-        border-radius: 12px;
-      }
+.store-menu {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 20px;
+}
 
-      .buy-btn {
-        /* --- BOTÓN DE COMPRA MEJORADO --- */
-        width: 80%; /* No ocupa todo el ancho */
-        margin-top: auto; /* Empuja el botón hacia abajo */
-        padding: 8px 12px;
-        font-weight: bold;
-        background-color: var(--color-primary);
-        color: #fff;
-        border: none;
-        border-radius: 4px;
-        padding: 5px 10px;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-      }
+.store-section {
+  flex: 1;
+  min-width: 250px;
+  background: #fafafa;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
-      .buy-btn:hover {
-        background-color: #3a78c2;
-      }
+.store-section h3 {
+  text-align: center;
+  margin: 0;
+  padding-bottom: 5px;
+  border-bottom: 2px solid var(--color-primary);
+  color: var(--color-primary);
+  font-size: 1.1rem;
+}
+
+/* --- ESTILOS DE TARJETA DE PRODUCTO (MODIFICADO) --- */
+.store-item {
+  display: flex;
+  flex-direction: column;
+  /* Apila los elementos verticalmente */
+  align-items: center;
+  /* Centra horizontalmente */
+  justify-content: space-between;
+  /* Distribuye el espacio */
+  background: #f5efde;
+  border: 1px solid #d4c0a1;
+  border-radius: 10px;
+  padding: 15px 10px;
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  gap: 10px;
+  /* Espacio entre nombre, precio y botón */
+}
+
+.store-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.store-item .item-name {
+  font-weight: bold;
+  font-size: 1rem;
+  color: #5a3a1a;
+}
+
+.store-item .item-price {
+  font-size: 0.9rem;
+  color: #8B4513;
+  background-color: #eaddc7;
+  padding: 3px 8px;
+  border-radius: 12px;
+}
+
+.buy-btn {
+  /* --- BOTÓN DE COMPRA MEJORADO --- */
+  width: 80%;
+  /* No ocupa todo el ancho */
+  margin-top: auto;
+  /* Empuja el botón hacia abajo */
+  padding: 8px 12px;
+  font-weight: bold;
+  background-color: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.buy-btn:hover {
+  background-color: #3a78c2;
+}
 
 /* ==============================
    NUEVO: ESTILOS DE LA TIENDA (DISEÑO LIBRO)
@@ -905,10 +1447,12 @@
   max-width: 800px;
   height: 80vh;
   max-height: 600px;
-  background: #fdfaf1; /* Color pergamino */
-  border: 3px solid #8B4513; /* Borde de cuero */
+  background: #fdfaf1;
+  /* Color pergamino */
+  border: 3px solid #8B4513;
+  /* Borde de cuero */
   border-radius: 10px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -925,17 +1469,20 @@
   color: #5a3a1a;
   cursor: pointer;
   z-index: 10;
-  width: auto; /* Reset width */
+  width: auto;
+  line-height: 1;
 }
 
-/* --- ¡CORRECCIÓN! El botón del museo no tenía esta clase asignada antes --- */
+/* Botón de cierre para el museo */
 .close-museum-button {
-  /* Hereda de .close-book-button si es necesario, pero lo definimos explícitamente para claridad */
+  color: #5a3a1a;
 }
 
 .store-page {
-  display: none; /* Ocultas por defecto */
-  height: calc(100% - 60px); /* Altura total menos los controles */
+  display: none;
+  /* Ocultas por defecto */
+  height: calc(100% - 60px);
+  /* Altura total menos los controles */
   overflow-y: auto;
 }
 
@@ -980,20 +1527,27 @@
   /* 1. Convierte el contenedor en una gran área táctil flexible */
   #muñeco-container {
     display: flex;
-    justify-content: center; /* Centra el personaje (<pre>) horizontalmente */
-    align-items: center;   /* Centra el personaje (<pre>) verticalmente */
-    
+    justify-content: center;
+    /* Centra el personaje (<pre>) horizontalmente */
+    align-items: center;
+    /* Centra el personaje (<pre>) verticalmente */
+
     /* 2. Define un tamaño mínimo cómodo para toda el área */
-    min-height: 280px; /* Aumentamos drásticamente la altura mínima para un área táctil mucho más grande */
-    padding: 20px; /* Mantenemos un padding uniforme */
-    
+    min-height: 280px;
+    /* Aumentamos drásticamente la altura mínima para un área táctil mucho más grande */
+    padding: 20px;
+    /* Mantenemos un padding uniforme */
+
     /* 3. Mantiene las mejoras de experiencia táctil */
-    -webkit-tap-highlight-color: transparent; /* Evita el destello azul al tocar */
-    touch-action: manipulation; /* Optimiza la respuesta táctil */
-    
+    -webkit-tap-highlight-color: transparent;
+    /* Evita el destello azul al tocar */
+    touch-action: manipulation;
+    /* Optimiza la respuesta táctil */
+
     /* Resetea transformaciones que pudieran interferir con el centrado flex */
     transform: none;
-    margin-top: 0; /* Resetea el margen superior si no es necesario */
+    margin-top: 0;
+    /* Resetea el margen superior si no es necesario */
   }
 
   /* 4. Asegura que el personaje no tenga márgenes que interfieran con el centrado */
@@ -1007,40 +1561,47 @@
 =================================================================== */
 
 #event-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #111;
-    color: white;
-    display: none; /* Oculto por defecto, se activa con JS */
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    z-index: 11000; /* Prioridad máxima */
-    padding: 20px;
-    font-family: 'Courier New', Courier, monospace;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #111;
+  color: white;
+  display: none;
+  /* Oculto por defecto, se activa con JS */
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  z-index: 11000;
+  /* Prioridad máxima */
+  padding: 20px;
+  font-family: 'Courier New', Courier, monospace;
 }
 
 #event-character {
-    font-size: 3rem;
-    white-space: pre;
-    margin-bottom: 20px;
+  font-size: 3rem;
+  white-space: pre;
+  margin-bottom: 20px;
 }
 
 #event-dialog {
-    font-size: 1.5rem;
-    min-height: 100px;
-    max-width: 80%;
+  font-size: 1.5rem;
+  min-height: 100px;
+  max-width: 80%;
 }
 
 #event-dialog::after {
-    content: '▋';
-    animation: blink 1s step-end infinite;
+  content: '▋';
+  animation: blink 1s step-end infinite;
 }
-@keyframes blink { 50% { opacity: 0; } }
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
 
 /* ===================================================================
    NUEVO: Estilos para el Modo Noche y Atardecer (texto y personaje en blanco)
@@ -1049,17 +1610,434 @@
 /* Se aplica solo si el body tiene 'night-mode' pero NO 'sleeping' */
 body.night-mode:not(.sleeping) #muñeco-container pre,
 body.sunset-mode:not(.sleeping) #muñeco-container pre,
-body.night-mode:not(.sleeping) .stat,
-body.sunset-mode:not(.sleeping) .stat,
+body.night-mode:not(.sleeping) .stat-label,
+body.sunset-mode:not(.sleeping) .stat-label,
 body.night-mode:not(.sleeping) #store-icon,
 body.sunset-mode:not(.sleeping) #store-icon,
 body.night-mode:not(.sleeping) #inventory-icon {
-    color: rgba(255, 255, 255, 0.60); /* Blanco con ligera transparencia */
-    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7); /* Sombra para mejorar legibilidad */
+  color: rgba(255, 255, 255, 0.9);
+  /* Más opaco para mejor legibilidad */
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
 }
 
 /* Los botones de acción también cambian, pero sin sombra para no sobrecargar */
 body.night-mode:not(.sleeping) .buttons-container button,
 body.sunset-mode:not(.sleeping) .buttons-container button {
-    color: rgba(255, 255, 255, 0.85); /* Blanco con ligera transparencia */
+  color: rgba(255, 255, 255, 0.85);
+  /* Blanco con ligera transparencia */
+}
+
+/* ==============================
+   NUEVO: AJUSTES Y MODO MODERNO
+   ============================== */
+#settings-icon {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  /* Top left corner */
+  z-index: 10001;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 1.8rem;
+  cursor: pointer;
+  user-select: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+}
+
+#settings-icon span {
+  display: block;
+  transition: transform 0.3s ease;
+  transform-origin: center;
+  /* Visual correction: many emojis have a slight baseline shift 
+     that makes their rotation look "wobbly". This centers it. */
+  transform: translateY(-2px);
+}
+
+
+
+
+
+/* Emoji Character Styles */
+#emoji-character {
+  font-size: 8rem;
+  /* Start large, JS will scale it */
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  /* Fixed height to match pre */
+  filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.3));
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Toggle Switch Styles */
+.setting-item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: #fff;
+}
+
+.toggle-container {
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mode-btn {
+  flex: 1;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+  border: none;
+  /* Override default button border */
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: center;
+  justify-content: center;
+  margin: 0;
+  /* Reset default margin */
+}
+
+.mode-btn.active {
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* ==============================
+   NUEVO PERSONAJE CSS (MODO MODERNO)
+   ============================== */
+#modern-character {
+  width: 200px;
+  height: 200px;
+  display: flex;
+  /* Flex para centrar el cuerpo dentro */
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+  transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: center center;
+}
+
+.character-body {
+  width: 140px;
+  height: 140px;
+  background: #ffecb3;
+  /* Color normal/crema */
+  border-radius: 50%;
+  /* Make it round */
+  position: relative;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), inset -10px -10px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.5s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Base Face Layout */
+.face {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* EYES */
+.eyes {
+  position: absolute;
+  top: 35%;
+  width: 100%;
+  display: flex;
+  justify-content: space-evenly;
+  padding: 0 25px;
+}
+
+.eye {
+  width: 16px;
+  height: 16px;
+  background: #333;
+  border-radius: 50%;
+  position: relative;
+  transition: all 0.3s;
+}
+
+/* Animations defined below */
+.eye.blink {
+  animation: blinkAnim 0.2s linear;
+}
+
+@keyframes blinkAnim {
+  0% {
+    transform: scaleY(1);
+  }
+
+  50% {
+    transform: scaleY(0.1);
+  }
+
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+/* CHEEKS */
+.cheeks {
+  position: absolute;
+  top: 55%;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
+  opacity: 0;
+  /* Hidden by default */
+  transition: opacity 0.3s;
+}
+
+.cheek {
+  width: 20px;
+  height: 10px;
+  background: rgba(255, 100, 100, 0.4);
+  border-radius: 50%;
+}
+
+/* MOUTH */
+.mouth {
+  position: absolute;
+  bottom: 25%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  /* Ancho boca */
+  height: 20px;
+  /* Alto boca */
+  border-bottom: 4px solid #333;
+  /* Default smile is a border-bottom of a container? No simpler: */
+  border-radius: 0 0 20px 20px;
+  /* Smile shape */
+  transition: all 0.3s;
+}
+
+/* --- STATES --- */
+
+/* Happy */
+.state-happy .character-body {
+  background: #ffd966;
+  /* Color normal cuando está feliz */
+  animation: happyBounce 2s ease-in-out infinite;
+}
+
+.state-happy .cheeks {
+  opacity: 1;
+}
+
+.state-happy .mouth {
+  height: 25px;
+  border-radius: 0 0 25px 25px;
+  border: 4px solid #333;
+  border-top: 0;
+  /* Open smile */
+  background: #333;
+  /* Open mouth? or just line? let's do line first but thicker */
+  background: transparent;
+}
+
+/* Sad / Hungry / Sick */
+.state-sad .character-body {
+  background: #60a5fa;
+  /* Blue */
+}
+
+.state-sad .mouth {
+  height: 20px;
+  border-radius: 20px 20px 0 0;
+  /* Frown */
+  border-top: 4px solid #333;
+  border-bottom: none;
+  bottom: 20%;
+}
+
+/* Neutral State */
+.state-neutral .character-body {
+  background: #ffecb3;
+  /* Normal color */
+}
+
+.state-neutral .mouth {
+  height: 4px;
+  border-radius: 0;
+  border-bottom: 4px solid #333;
+  bottom: 30%;
+}
+
+/* Medium Happy State */
+.state-medium-happy .character-body {
+  background: #ffe082;
+}
+
+.state-medium-happy .mouth {
+  height: 12px;
+  border-radius: 0 0 15px 15px;
+  border-bottom: 4px solid #333;
+  bottom: 28%;
+}
+
+.state-sick .character-body {
+  background: #d9f99d;
+  /* Sickly green */
+}
+
+.state-sick .eye {
+  /* X eyes using pseudo elemns? or just lines. Lets keep simple */
+  height: 4px;
+  border-radius: 2px;
+  transform: rotate(45deg);
+}
+
+/* Sleeping */
+.state-sleeping .character-body {
+  background: #a78bfa;
+  /* Purple */
+  animation: breathing 3s ease-in-out infinite;
+}
+
+.state-sleeping .eye {
+  height: 4px;
+  border-radius: 4px;
+  width: 20px;
+}
+
+.state-sleeping .mouth {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #333;
+  background: transparent;
+}
+
+/* ZZZ Animation */
+.zzz-container {
+  position: absolute;
+  top: 50%;
+  right: 15%;
+  width: 50px;
+  height: 50px;
+  display: none;
+  pointer-events: none;
+}
+
+.state-sleeping .zzz-container {
+  display: block;
+}
+
+.zzz-container span {
+  position: absolute;
+  color: #fff;
+  font-weight: bold;
+  font-family: Arial, sans-serif;
+  opacity: 0;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  animation: floatZZZ 3s infinite linear;
+}
+
+.zzz-container span:nth-child(1) {
+  font-size: 1rem;
+  animation-delay: 0s;
+}
+
+.zzz-container span:nth-child(2) {
+  font-size: 1.4rem;
+  animation-delay: 1s;
+}
+
+.zzz-container span:nth-child(3) {
+  font-size: 1.8rem;
+  animation-delay: 2s;
+}
+
+@keyframes floatZZZ {
+  0% {
+    transform: translate(0, 0) scale(0.5);
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: translate(60px, -60px) scale(1.2);
+    opacity: 0;
+  }
+}
+
+@keyframes breathing {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Dead */
+.state-dead .character-body {
+  background: #9ca3af;
+  /* Gray */
+}
+
+.state-dead .eye {
+  background: transparent;
+  border: none;
+  width: 20px;
+  height: 20px;
+}
+
+.state-dead .eye::before,
+.state-dead .eye::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 9px;
+  width: 2px;
+  height: 20px;
+  background: #333;
+}
+
+.state-dead .eye::before {
+  transform: rotate(45deg);
+}
+
+.state-dead .eye::after {
+  transform: rotate(-45deg);
+}
+
+/* ==============================
+   SHARED CHARACTER ADJUSTMENTS
+   ============================== */
+.modern-character-instance {
+  width: 200px;
+  height: 200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Scale down for smaller containers if needed */
+.scale-small .modern-character-instance {
+  transform: scale(0.5);
+}
+
+.scale-mini .modern-character-instance {
+  transform: scale(0.25);
 }
