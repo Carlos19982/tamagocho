@@ -118,17 +118,7 @@ let currentAdminPageIndex = 0; // <-- ¡NUEVO! Variable para la página de objet
 
 // --- ¡NUEVO! Variables para modo moderno ---
 let blinkInterval = null;
-const emojis = {
-  normal: "😐",
-  happy: "😊",
-  sad: "😢",
-  sleeping: "😴",
-  dead: "💀",
-  clean: "✨",
-  sick: "🤢",
-  poop: "💩",
-  blink: "😑" // Ojos cerrados para parpadeo
-};
+
 
 function setGameMode(mode) {
   if (!tamagotchi) return;
@@ -623,15 +613,17 @@ function actualizarMuñeco() {
     modernChar.style.display = "flex";
 
     // Resetear clases de estado
-    modernChar.classList.remove('state-happy', 'state-sad', 'state-sleeping', 'state-dead', 'state-sick');
+    modernChar.classList.remove('state-happy', 'state-sad', 'state-sleeping', 'state-dead', 'state-sick', 'state-dirty');
+    modernChar.style.animation = "none"; // Reset any animation
 
     if (tamagotchi.estado === "muerto") {
       modernChar.classList.add('state-dead');
     } else if (isDormido) {
       modernChar.classList.add('state-sleeping');
-    } else if (isSucio && !isDormido) {
-      // Si está sucio pero no duerme, ponemos cara triste/enferma y animación de sacudida
-      modernChar.classList.add('state-sad');
+      if (isSucio) modernChar.classList.add('state-dirty');
+    } else if (isSucio) {
+      // Si está sucio ponemos cara de caca y animamos
+      modernChar.classList.add('state-dirty');
       modernChar.style.animation = "shake 0.5s ease-in-out infinite";
     } else if (tamagotchi.enfermo) {
       modernChar.classList.add('state-sick');
@@ -2369,7 +2361,7 @@ function mostrarRequisitosAscenso() {
         cumplido: !tamagotchi.enfermo
       });
       requisitosList.push({
-        text: "Acumular 3 ciclos de buen desempeño",
+        text: "Hacer 3 ciclos sin enfermar en ninguno",
         cumplido: tamagotchi.consecutiveGoodCycles >= 3
       });
       break;

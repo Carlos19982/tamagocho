@@ -1864,6 +1864,83 @@ body.sunset-mode:not(.sleeping) .buttons-container button {
   bottom: 20%;
 }
 
+/* Dirty State (Poops) */
+.poop-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  display: none;
+}
+
+.state-dirty .poop-container {
+  display: block;
+}
+
+.poop {
+  position: absolute;
+  font-size: 2rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  opacity: 0;
+  transform: scale(0);
+}
+
+.state-dirty .poop {
+  animation: poopAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.poop:nth-child(1) {
+  bottom: -10px;
+  right: -20px;
+  animation-delay: 0.2s;
+}
+
+.poop:nth-child(2) {
+  bottom: 20px;
+  left: -30px;
+  animation-delay: 0.4s;
+}
+
+.poop:nth-child(3) {
+  top: -10px;
+  right: -10px;
+  font-size: 1.5rem;
+  animation-delay: 0.6s;
+}
+
+@keyframes poopAppear {
+  0% {
+    opacity: 0;
+    transform: scale(0) translateY(20px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.state-dirty .character-body {
+  background: #92400e;
+  /* Brownish */
+}
+
+.state-dirty .mouth {
+  width: 20px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #333;
+  background: #333;
+  bottom: 25%;
+}
+
+.state-dirty .eye {
+  height: 10px;
+  width: 10px;
+}
+
 /* Neutral State */
 .state-neutral .character-body {
   background: #ffecb3;
