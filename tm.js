@@ -412,14 +412,21 @@ function actualizarInfoContainer() {
   }
 }
 function updateStorePrices() {
-  // Selecciona el elemento span del producto "Pastilla" en la sección de medicinas
-  const pastillaSpan = document.querySelector(".store-section.medicines .store-item span");
-  if (pastillaSpan) {
-    if (tamagotchi && tamagotchi.edad < 10) {
-      pastillaSpan.textContent = "Pastilla - 60 monedas";
-    } else {
-      pastillaSpan.textContent = "Pastilla - 150 monedas";
-    }
+  // Buscar en la página de medicinas
+  const medicinesPage = document.querySelector('.store-page[data-page-id="medicines"]');
+  if (medicinesPage) {
+    const items = medicinesPage.querySelectorAll('.store-item');
+    items.forEach(item => {
+      const nameSpan = item.querySelector('.item-name');
+      const priceSpan = item.querySelector('.item-price');
+      if (nameSpan && nameSpan.textContent.trim().toLowerCase() === "pastilla") {
+        if (tamagotchi && tamagotchi.edad <= 12) {
+          priceSpan.textContent = "60 monedas";
+        } else {
+          priceSpan.textContent = "120 monedas";
+        }
+      }
+    });
   }
 
   // --- ¡NUEVO! Lógica para mostrar/ocultar la insulina ---
