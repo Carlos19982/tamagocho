@@ -2508,10 +2508,10 @@ function resetAdminTap() {
   clearTimeout(adminTapTimeout);
 }
 
-document.getElementById("muñeco-container").addEventListener("click", () => {
+document.getElementById("muñeco-container").addEventListener("pointerdown", () => {
   adminTapCount++;
   if (adminTapCount === 1) {
-    adminTapTimeout = setTimeout(resetAdminTap, 2000); // 2 segundos para la secuencia
+    adminTapTimeout = setTimeout(resetAdminTap, 3000); // 3 segundos para la secuencia (más generoso para móvil)
   }
 
   // Si se detectan 10 pulsaciones en el lapso, se muestra el menú de admin solo si el nombre es "Carlos"
